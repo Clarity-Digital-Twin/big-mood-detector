@@ -19,10 +19,10 @@ if os.getenv("TESTING", "0") == "1":
     from types import SimpleNamespace
 
     import numpy as np
-    
+
     # Mock joblib
     joblib: Any = SimpleNamespace(load=lambda x: None)
-    
+
     # Mock BoosterPredictProbaWrapper
     class BoosterPredictProbaWrapper:
         def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -52,49 +52,49 @@ class XGBoostModelLoader:
     - Manic episode risk
     """
 
-    # Expected feature names based on the papers
+    # Feature names as stored in the trained XGBoost models
     FEATURE_NAMES = [
-        # Sleep percentage features (mean, std, z-score)
-        "sleep_percentage_MN",
-        "sleep_percentage_SD",
-        "sleep_percentage_Z",
-        # Sleep amplitude features
-        "sleep_amplitude_MN",
-        "sleep_amplitude_SD",
-        "sleep_amplitude_Z",
+        # Sleep timing features (ST/WT for long/short windows)
+        "ST_long_MN",
+        "ST_long_SD",
+        "ST_long_Zscore",
+        "ST_short_MN",
+        "ST_short_SD",
+        "ST_short_Zscore",
+        "WT_long_MN",
+        "WT_long_SD",
+        "WT_long_Zscore",
+        "WT_short_MN",
+        "WT_short_SD",
+        "WT_short_Zscore",
         # Long sleep window features
-        "long_num_MN",
-        "long_num_SD",
-        "long_num_Z",
-        "long_len_MN",
-        "long_len_SD",
-        "long_len_Z",
-        "long_ST_MN",
-        "long_ST_SD",
-        "long_ST_Z",
-        "long_WT_MN",
-        "long_WT_SD",
-        "long_WT_Z",
+        "LongSleepWindow_length_MN",
+        "LongSleepWindow_length_SD",
+        "LongSleepWindow_length_Zscore",
+        "LongSleepWindow_number_MN",
+        "LongSleepWindow_number_SD",
+        "LongSleepWindow_number_Zscore",
         # Short sleep window features
-        "short_num_MN",
-        "short_num_SD",
-        "short_num_Z",
-        "short_len_MN",
-        "short_len_SD",
-        "short_len_Z",
-        "short_ST_MN",
-        "short_ST_SD",
-        "short_ST_Z",
-        "short_WT_MN",
-        "short_WT_SD",
-        "short_WT_Z",
+        "ShortSleepWindow_length_MN",
+        "ShortSleepWindow_length_SD",
+        "ShortSleepWindow_length_Zscore",
+        "ShortSleepWindow_number_MN",
+        "ShortSleepWindow_number_SD",
+        "ShortSleepWindow_number_Zscore",
+        # Sleep percentage and amplitude
+        "Sleep_percentage_MN",
+        "Sleep_percentage_SD",
+        "Sleep_percentage_Zscore",
+        "Sleep_amplitude_MN",
+        "Sleep_amplitude_SD",
+        "Sleep_amplitude_Zscore",
         # Circadian rhythm features
-        "circadian_amplitude_MN",
-        "circadian_amplitude_SD",
-        "circadian_amplitude_Z",
-        "circadian_phase_MN",
-        "circadian_phase_SD",
-        "circadian_phase_Z",
+        "Circadian_phase_MN",
+        "Circadian_phase_SD",
+        "Circadian_phase_Zscore",
+        "Circadian_amplitude_MN",
+        "Circadian_amplitude_SD",
+        "Circadian_amplitude_Zscore",
     ]
 
     def __init__(self) -> None:
@@ -199,10 +199,14 @@ class XGBoostModelLoader:
         # Reshape for sklearn
         features_2d = features.reshape(1, -1)
 
-        # Get predictions from each model
-        depression_proba = self.models["depression"].predict_proba(features_2d)[0]
-        hypomanic_proba = self.models["hypomanic"].predict_proba(features_2d)[0]
-        manic_proba = self.models["manic"].predict_proba(features_2d)[0]
+        # Create DMatrix with feature names for XGBoost
+        import xgboost as xgb
+        dmatrix = xgb.DMatrix(features_2d, feature_names=self.FEATURE_NAMES)
+
+        # Get predictions from each model using DMatrix
+        depression_proba = self.models["depression"].predict_proba(dmatrix)[0]
+        hypomanic_proba = self.models["hypomanic"].predict_proba(dmatrix)[0]
+        manic_proba = self.models["manic"].predict_proba(dmatrix)[0]
 
         # Extract positive class probabilities (usually index 1)
         depression_risk = (

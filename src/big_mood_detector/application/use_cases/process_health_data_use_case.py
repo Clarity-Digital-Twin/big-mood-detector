@@ -217,7 +217,7 @@ class MoodPredictionPipeline:
             from big_mood_detector.infrastructure.ml_models.xgboost_models import (
                 XGBoostMoodPredictor,
             )
-            
+
             # Initialize XGBoost predictor for ensemble
             self.xgboost_predictor = XGBoostMoodPredictor()
             model_dir = self.config.model_dir or Path("model_weights/xgboost/converted")
@@ -237,7 +237,7 @@ class MoodPredictionPipeline:
             else:
                 logger.warning("PAT model not available - TensorFlow not installed")
 
-            # Check if PAT model loaded successfully  
+            # Check if PAT model loaded successfully
             if pat_model is not None and not skip_loading:
                 if not pat_model.is_loaded:
                     logger.warning("Failed to load PAT model weights")

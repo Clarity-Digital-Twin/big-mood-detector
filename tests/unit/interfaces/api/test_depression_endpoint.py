@@ -41,7 +41,7 @@ class TestDepressionPredictionEndpoint:
             mock_container = MagicMock()
             mock_container.resolve.return_value = mock_pat_predictor
             mock_get_container.return_value = mock_container
-            
+
             # This will fail initially (RED)
             response = client.post("/predictions/depression")
             assert response.status_code != 404

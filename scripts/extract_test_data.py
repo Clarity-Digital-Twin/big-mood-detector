@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Extract a week of real Apple Health data for testing."""
 
-import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -12,12 +11,12 @@ START_DATE = END_DATE - timedelta(days=7)
 def main():
     source_file = Path("/mnt/c/Users/JJ/Desktop/Clarity-Digital-Twin/big-mood-detector/data/input/apple_export/export.xml")
     output_file = Path("/mnt/c/Users/JJ/Desktop/Clarity-Digital-Twin/big-mood-detector/tests/fixtures/health/week_sample.xml")
-    
+
     output_file.parent.mkdir(parents=True, exist_ok=True)
-    
-    with open(source_file, 'r', encoding='utf-8') as f_in, \
+
+    with open(source_file, encoding='utf-8') as f_in, \
          open(output_file, 'w', encoding='utf-8') as f_out:
-        
+
         # Copy header
         in_header = True
         for line in f_in:
@@ -26,7 +25,7 @@ def main():
                 if '<HealthData' in line:
                     in_header = False
                 continue
-            
+
             # Check if this is a record
             if '<Record' in line:
                 # Extract date from line
@@ -42,7 +41,7 @@ def main():
             elif '</HealthData>' in line:
                 f_out.write(line)
                 break
-    
+
     print(f"Extracted test data to {output_file}")
 
 if __name__ == "__main__":
