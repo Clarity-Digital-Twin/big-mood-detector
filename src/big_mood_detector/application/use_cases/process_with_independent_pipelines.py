@@ -49,7 +49,7 @@ class IndependentPipelineResult:
 class ProcessWithIndependentPipelinesUseCase:
     """
     Process health data using independent PAT and XGBoost pipelines.
-    
+
     This use case:
     1. Parses health data from XML/JSON
     2. Validates data for each pipeline independently
@@ -108,11 +108,11 @@ class ProcessWithIndependentPipelinesUseCase:
     ) -> IndependentPipelineResult:
         """
         Execute the use case.
-        
+
         Args:
             file_path: Path to health data export
             target_date: Date to assess (defaults to today)
-            
+
         Returns:
             IndependentPipelineResult with results from both pipelines
         """
@@ -261,7 +261,7 @@ class ProcessWithIndependentPipelinesUseCase:
     ) -> dict[str, Any]:
         """
         Create temporal ensemble interpretation.
-        
+
         PAT: Assesses current state (past 7 days)
         XGBoost: Predicts future risk (next 24 hours)
         """
