@@ -107,7 +107,19 @@ class ProductionPATLoader(PATPredictorInterface):
             normalizer: Optional pre-configured normalizer.
         """
         if model_path is None:
+            # Try new path first
             model_path = Path("model_weights/pat/production/pat_conv_l_v0.5929.pth")
+            
+            # Fallback to old path with deprecation warning
+            if not model_path.exists():
+                old_path = Path("model_weights/production/pat_conv_l_v0.5929.pth")
+                if old_path.exists():
+                    logger.warning(
+                        "DEPRECATION: Found model weights at old location "
+                        "model_weights/production/. Please move to "
+                        "model_weights/pat/production/ in next release."
+                    )
+                    model_path = old_path
 
         self.model_path = model_path
 

@@ -36,7 +36,19 @@ class NHANESNormalizer:
                        Defaults to production stats.
         """
         if stats_path is None:
+            # Try new path first
             stats_path = Path("model_weights/pat/production/nhanes_scaler_stats.json")
+            
+            # Fallback to old path with deprecation warning
+            if not stats_path.exists():
+                old_path = Path("model_weights/production/nhanes_scaler_stats.json")
+                if old_path.exists():
+                    logger.warning(
+                        "DEPRECATION: Found NHANES stats at old location "
+                        "model_weights/production/. Please move to "
+                        "model_weights/pat/production/ in next release."
+                    )
+                    stats_path = old_path
 
         self.stats_path = stats_path
         self.mean: NDArray[np.float32] | None = None
