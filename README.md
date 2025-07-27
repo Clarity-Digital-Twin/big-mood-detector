@@ -2,7 +2,7 @@
 
 **Objective mood-episode risk from your Apple Watch — clinically informed, privacy-first, open-source.**
 
-> **The clinical problem:** Psychiatrists can't objectively distinguish unipolar depression from early bipolar or borderline mood swings. Big Mood Detector surfaces the physiologic signals hiding in your actigraphy, giving clinicians objective biomarkers before crises begin.
+> **The clinical problem:** No objective tool exist for predicting mood episodes or distinguishing unipolar from bipolar depression or borderline personality disorder. Clinicians rely on subjective recall; patients often seek help after crises begin.
 
 [![Version](https://img.shields.io/badge/version-0.5.0-blue)](CHANGELOG.md) [![Tests](https://img.shields.io/badge/tests-1230%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-72%25-yellow)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
