@@ -1,16 +1,16 @@
 # 🧠 Big Mood Detector
 
-**Predict mood episodes from your wearable data — clinically informed, privacy-first, open-source.**
+**Objective mood-episode risk from your Apple Watch — clinically informed, privacy-first, open-source.**
+
+> **The clinical problem:** Psychiatrists can't objectively distinguish unipolar depression from early bipolar or borderline mood swings. Big Mood Detector surfaces the physiologic signals hiding in your actigraphy, giving clinicians objective biomarkers before crises begin.
 
 [![Version](https://img.shields.io/badge/version-0.5.0-blue)](CHANGELOG.md) [![Tests](https://img.shields.io/badge/tests-1230%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-72%25-yellow)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. Two complementary models: PAT transformer screens for current depression, XGBoost predicts tomorrow's depression/mania/hypomania risk. Built by a clinical psychiatrist, implementing published research, runs 100% locally.
+Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. Two complementary models: PAT transformer screens for current depression, XGBoost predicts tomorrow's depression/mania/hypomania risk. Built by a clinical psychiatrist, implementing published research — runs 100% on-device, no cloud, no signup.
 
 **Current status**: Research prototype — the first of its kind, but not yet clinically validated.
 
 ## Why Use Big Mood Detector?
-
-**The clinical problem**: No objective tools exist for predicting mood episodes or distinguishing unipolar from bipolar depression or borderline personality disorder. Clinicians rely on subjective recall; patients often seek help after crises begin.
 
 **Our breakthrough**:
 - **Early detection**: Spot mood episode risk before symptoms spiral
@@ -21,7 +21,7 @@ Big Mood Detector analyzes your Apple Health data to predict mood episode risk u
   - PAT: [Dartmouth Foundation Model](https://github.com/Computational-Psychiatry/pat)
 - **Privacy-first**: Runs entirely on your device — your data never leaves your machine
 
-For researchers: Validate these approaches across populations, build the evidence base for digital mental health.
+**For researchers**: Validate these approaches across populations, build the evidence base for digital mental health. See [PAT model training details](docs/training/PAT_DEPRESSION_TRAINING.md) for replication.
 
 ## 🚀 Quick Start
 
@@ -114,7 +114,7 @@ PAT = transformer AI, XGBoost = gradient boosting, ensemble = enhanced reliabili
 |----------|------------|
 | **Users** | [Quick Start Guide](docs/user/QUICK_START_GUIDE.md) |
 | **Developers** | [Architecture Overview](docs/developer/ARCHITECTURE_OVERVIEW.md) |
-| **Researchers** | [Clinical Requirements](docs/clinical/CLINICAL_REQUIREMENTS_DOCUMENT.md) |
+| **Researchers** | [Clinical Requirements](docs/clinical/CLINICAL_REQUIREMENTS_DOCUMENT.md) • [PAT Training Details](docs/training/PAT_DEPRESSION_TRAINING.md) |
 | **AI Assistants** | [CLAUDE.md](CLAUDE.md) |
 
 ## Contributing
