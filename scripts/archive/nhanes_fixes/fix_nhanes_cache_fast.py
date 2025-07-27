@@ -98,7 +98,7 @@ if __name__ == "__main__":
     X_train, X_val, y_train, y_val, scaler_info = fix_cache()
     
     print("\n" + "="*60)
-    print("✅ NHANES Cache Fixed with Proper Normalization\!")
+    print("✅ NHANES Cache Fixed with Proper Normalization!")
     print("="*60)
     print(f"Train samples: {len(X_train)}")
     print(f"Val samples: {len(X_val)}")
@@ -111,4 +111,3 @@ if __name__ == "__main__":
     print(f"  Original data mean: {scaler_info['mean'].mean():.6f}")
     print(f"  Original data std: {scaler_info['scale'].mean():.6f}")
     print("="*60)
-EOF < /dev/null
