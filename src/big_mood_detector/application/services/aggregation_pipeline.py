@@ -66,6 +66,52 @@ class DailyMetrics:
         return result
 
 
+# Feature name mapping from our internal names to model's expected names
+XGBOOST_FEATURE_NAME_MAP: dict[str, str] = {
+    # Sleep percentage features (no change needed)
+    "sleep_percentage_MN": "Sleep_percentage_MN",
+    "sleep_percentage_SD": "Sleep_percentage_SD", 
+    "sleep_percentage_Z": "Sleep_percentage_Zscore",
+    # Sleep amplitude features (no change needed)
+    "sleep_amplitude_MN": "Sleep_amplitude_MN",
+    "sleep_amplitude_SD": "Sleep_amplitude_SD",
+    "sleep_amplitude_Z": "Sleep_amplitude_Zscore",
+    # Long sleep window features
+    "long_num_MN": "LongSleepWindow_number_MN",
+    "long_num_SD": "LongSleepWindow_number_SD",
+    "long_num_Z": "LongSleepWindow_number_Zscore",
+    "long_len_MN": "LongSleepWindow_length_MN",
+    "long_len_SD": "LongSleepWindow_length_SD",
+    "long_len_Z": "LongSleepWindow_length_Zscore",
+    "long_ST_MN": "ST_long_MN",
+    "long_ST_SD": "ST_long_SD",
+    "long_ST_Z": "ST_long_Zscore",
+    "long_WT_MN": "WT_long_MN",
+    "long_WT_SD": "WT_long_SD",
+    "long_WT_Z": "WT_long_Zscore",
+    # Short sleep window features
+    "short_num_MN": "ShortSleepWindow_number_MN",
+    "short_num_SD": "ShortSleepWindow_number_SD",
+    "short_num_Z": "ShortSleepWindow_number_Zscore",
+    "short_len_MN": "ShortSleepWindow_length_MN",
+    "short_len_SD": "ShortSleepWindow_length_SD",
+    "short_len_Z": "ShortSleepWindow_length_Zscore",
+    "short_ST_MN": "ST_short_MN",
+    "short_ST_SD": "ST_short_SD",
+    "short_ST_Z": "ST_short_Zscore",
+    "short_WT_MN": "WT_short_MN",
+    "short_WT_SD": "WT_short_SD",
+    "short_WT_Z": "WT_short_Zscore",
+    # Circadian features
+    "circadian_amplitude_MN": "Circadian_amplitude_MN",
+    "circadian_amplitude_SD": "Circadian_amplitude_SD",
+    "circadian_amplitude_Z": "Circadian_amplitude_Zscore",
+    "circadian_phase_MN": "Circadian_phase_MN",
+    "circadian_phase_SD": "Circadian_phase_SD",
+    "circadian_phase_Z": "Circadian_phase_Zscore",
+}
+
+
 @dataclass
 class DailyFeatures:
     """
@@ -244,6 +290,20 @@ class DailyFeatures:
             "circadian_phase_SD": self.circadian_phase_std,
             "circadian_phase_Z": self.circadian_phase_zscore,
         }
+
+    def to_model_dict(self) -> dict[str, float]:
+        """
+        Convert to dictionary with XGBoost model's expected feature names.
+        
+        This method maps our internal feature names to the exact names
+        that the XGBoost models expect, as stored in their JSON files.
+        
+        Returns:
+            Dictionary with 36 features using model's expected names
+        """
+        raw_dict = self.to_xgboost_dict()
+        # Apply the mapping to match model's expected names
+        return {XGBOOST_FEATURE_NAME_MAP[k]: v for k, v in raw_dict.items()}
 
 
 class AggregationPipeline:

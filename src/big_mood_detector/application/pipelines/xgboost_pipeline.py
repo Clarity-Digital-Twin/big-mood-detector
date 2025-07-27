@@ -167,7 +167,7 @@ class XGBoostPipeline:
                 # For prediction, we can use the most recent day's features
                 # or aggregate them - for now use the most recent
                 latest_features = daily_features_list[-1]
-                xgboost_dict = latest_features.to_xgboost_dict()
+                xgboost_dict = latest_features.to_model_dict()  # Use model's expected names
 
                 # Convert to feature vector in the correct order
                 # The order must match XGBoostModelLoader.FEATURE_NAMES
