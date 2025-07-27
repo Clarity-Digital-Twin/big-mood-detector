@@ -70,7 +70,7 @@ class DailyMetrics:
 XGBOOST_FEATURE_NAME_MAP: dict[str, str] = {
     # Sleep percentage features (no change needed)
     "sleep_percentage_MN": "Sleep_percentage_MN",
-    "sleep_percentage_SD": "Sleep_percentage_SD", 
+    "sleep_percentage_SD": "Sleep_percentage_SD",
     "sleep_percentage_Z": "Sleep_percentage_Zscore",
     # Sleep amplitude features (no change needed)
     "sleep_amplitude_MN": "Sleep_amplitude_MN",
@@ -294,10 +294,10 @@ class DailyFeatures:
     def to_model_dict(self) -> dict[str, float]:
         """
         Convert to dictionary with XGBoost model's expected feature names.
-        
+
         This method maps our internal feature names to the exact names
         that the XGBoost models expect, as stored in their JSON files.
-        
+
         Returns:
             Dictionary with 36 features using model's expected names
         """
