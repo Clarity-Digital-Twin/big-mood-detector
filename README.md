@@ -40,97 +40,49 @@ big-mood predict data/input/apple_export/export.xml --report
 
 See full output in `data/output/clinical_report.txt`
 
-## 📊 What You'll Learn About Your Mental Health
+## How It Works
 
 ```
-====================================
-CLINICAL ASSESSMENT REPORT
-====================================
-Analysis Period: 2024-06-27 to 2024-07-27 (30 days)
-
-CURRENT STATE (PAT Analysis - Last 7 days):
-Depression Risk: 18.4% [LOW]
-
-FUTURE RISK (XGBoost - Next 24-48 hours):
-Depression: 8.2% [LOW]
-Hypomania: 5.3% [LOW]  
-Mania: 2.1% [LOW]
-
-KEY PATTERNS DETECTED:
-- Sleep regularity: STABLE (coefficient of variation: 0.08)
-- Circadian alignment: STRONG (DLMO-sleep interval: 2.1h)
-- Activity consistency: GOOD (autocorrelation: 0.72)
+Your Apple Health Data
+      ↓
+┌─────────────────────┐
+│   Past 7 Days       │ ← PAT (transformer) analyzes activity patterns
+├─────────────────────┤
+│   Past 30 Days      │ ← XGBoost models circadian rhythms  
+└─────────────────────┘
+      ↓
+Research Risk Scores (Not Diagnostic)
 ```
 
-## The Science Behind It
+PAT = transformer AI, XGBoost = gradient boosting, ensemble = enhanced reliability.
 
-### Digital Phenotyping at Work
+## Technical Features
 
-Your wearable captures digital biomarkers that correlate with mood states:
+| Component | Status | Performance |
+|-----------|---------|-------------|
+| Apple Health XML parsing | ✅ | 33MB/s, <100MB RAM |
+| PAT transformer model | ✅ | 0.593 AUC depression (NHANES) |
+| XGBoost circadian model | ✅ | 0.80-0.98 AUC (Korean cohort) |
+| Privacy-first processing | ✅ | 100% local, no data sharing |
+| Clinical feature extraction | ✅ | DSM-5 aligned thresholds |
+| REST API | ✅ | Real-time predictions |
 
-- **Sleep Architecture**: Total sleep time, efficiency, fragmentation
-- **Circadian Rhythms**: Sleep-wake timing, dim light melatonin onset (DLMO)
-- **Activity Patterns**: Steps, sedentary time, exercise consistency
-- **Heart Metrics**: Resting heart rate, heart rate variability
+## Performance Benchmarks
 
-### From Raw Data to Clinical Features
+**Processing Speed**:
+- 365 days of data: 17 seconds
+- Memory usage: <100MB for any file size
+- Parsing throughput: 33MB/s
 
-We implement the exact feature engineering from peer-reviewed studies:
+**Model Accuracy** (from original research):
+- Current depression screening (PAT, general population):
+  - Depression detection: 0.593 AUC (US NHANES 2013-14)¹
+- Next-day episode prediction (XGBoost, mood disorder patients):
+  - Depression episodes: 0.80 AUC (Korean cohort, MDD+BD patients)²
+  - Manic episodes: 0.98 AUC (Korean cohort, BD patients)²
+  - Hypomanic episodes: 0.95 AUC (Korean cohort, BD patients)²
 
-```
-Raw Sensor Data → 36 Statistical Features → Clinical Risk Scores
-                   (mean, SD, CV, etc.)      (validated cutoffs)
-```
-
-These aren't arbitrary metrics — they're the same features used in clinical validation studies with real patients.
-
-### Model Performance
-
-| Model | Clinical Use | Validation | Performance |
-|-------|--------------|------------|-------------|
-| PAT-Conv-L | Depression screening | NHANES cohort | 0.593 AUC |
-| XGBoost | Episode prediction | Korean patients | 0.80-0.98 AUC |
-| Ensemble | Combined assessment | Internal testing | Enhanced accuracy |
-
-## 🛡️ Privacy-First Architecture
-
-Your mental health data is deeply personal. That's why:
-
-- **100% Local Processing**: No cloud, no servers, no data leaves your device
-- **No Account Required**: Use immediately, no registration
-- **Open Source**: Audit the code yourself
-- **Apple Privacy**: Leverages Apple's on-device health data encryption
-
-## Advanced Features
-
-### Personal Baseline Calibration
-
-Everyone's "normal" is different. Enable baseline learning to improve accuracy:
-
-```python
-from pathlib import Path
-pipeline = MoodPredictionPipeline(
-    enable_personal_baseline=True,
-    baseline_dir=Path("data/baselines"),
-    user_id="your_unique_id"
-)
-```
-
-### Research Mode
-
-Access raw features for your own analysis:
-
-```bash
-big-mood process export.xml --save-features
-# Outputs: features.csv with all 36 biomarkers
-```
-
-### Real-Time Monitoring (Coming Soon)
-
-```bash
-big-mood serve --monitor
-# Continuous risk assessment via Apple Health sync
-```
+¹Ruan et al., 2024 | ²Lim et al., 2024
 
 ## 📚 Documentation
 
