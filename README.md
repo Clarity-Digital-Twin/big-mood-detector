@@ -2,246 +2,120 @@
 
 **Predict mood episodes from your wearable data — clinically informed, privacy-first, open-source.**
 
-> **For Researchers**: See [PAT Depression Training](docs/training/PAT_DEPRESSION_TRAINING.md) for PAT model training details
+[![Version](https://img.shields.io/badge/version-0.5.0-blue)](CHANGELOG.md) [![Tests](https://img.shields.io/badge/tests-1230%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-[![Tests](https://img.shields.io/badge/tests-1000%2B%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-72%25-yellow)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
+Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. Two complementary models work together: PAT transformer screens for current depression while XGBoost predicts tomorrow's risk.
 
-Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. 
+**Status**: Production-ready for research use. Not yet clinically validated.
 
-Two complementary models: 
-- PAT transformer screens for current depression
-- XGBoost predicts tomorrow's depression/mania/hypomania risk.
+[📊 Project Status](PROJECT_STATUS.md) | [🚀 Quick Start](#-quick-start) | [📚 Documentation](#-documentation) | [🤝 Contributing](CONTRIBUTING.md)
 
-Built by a clinical psychiatrist, implementing published research, and runs 100% locally.
+## Why Big Mood Detector?
 
-**Current status**: Research prototype — the first of its kind, but not yet clinically validated.
+**The Problem**: Mood episodes often escalate before clinical intervention. Current tools rely on subjective recall and intermittent assessments.
 
-## Why Use Big Mood Detector?
-
-**The clinical problem**: No objective tool exist for predicting mood episodes or distinguishing unipolar from bipolar depression or borderline personality disorder. Clinicians rely on subjective recall; patients often seek help after crises begin.
-
-**Our breakthrough**:
-- **Early detection**: Spot mood episode risk before symptoms spiral
-- **Two applications**: Current depression screening (PAT, general population) + next-day episode prediction (XGBoost, mood disorder patients)
-- **Objective data**: Complement clinical assessment with continuous behavioral biomarkers
-- **Research foundation**: First implementation combining two breakthrough papers:
-  - XGBoost: [Nature Digital Medicine 2024](https://www.nature.com/articles/s41746-024-01333-z) ([GitHub](https://github.com/mcqeen1207/mood_ml))
-  - PAT: [Dartmouth Foundation Model](https://arxiv.org/abs/2411.15240) ([GitHub](https://github.com/njacobsonlab/Pretrained-Actigraphy-Transformer/))
-- **Privacy-first**: Runs entirely on your device — your data never leaves your machine
-
-**For researchers**: Validate these approaches across populations, build the evidence base for digital mental health.
+**Our Solution**:
+- **Early Detection**: Identify risk patterns before symptoms spiral
+- **Dual Approach**: Current state (PAT) + future risk (XGBoost)
+- **Research Foundation**: Implements breakthrough papers from Nature Digital Medicine & Dartmouth
+- **Privacy-First**: 100% local processing - your data never leaves your device
 
 ## 🚀 Quick Start
 
-*Takes 2 minutes on any Mac/PC*
+*2 minutes to insights*
 
 ```bash
-# 1. Install
+# Install
 pip install big-mood-detector
 
-# 2. Export Apple Health data (Settings → Health → Export)
-#    Unzip to get export.xml
-#    Place in: data/input/apple_export/export.xml
+# Export Apple Health data
+# iPhone: Settings → Health → Export All Health Data
+# Place export.xml in: data/input/apple_export/
 
-# 3. Analyze your data (research purposes)
-big-mood process data/input/apple_export/export.xml --days-back 90
+# Analyze (research purposes only)
 big-mood predict data/input/apple_export/export.xml --report
 ```
 
-**Need help?** See the [User Quick Start →](docs/user/QUICK_START_GUIDE.md)
+See full output? Check `data/output/clinical_report.txt`
+
+**Need help?** → [User Guide](docs/user/QUICK_START_GUIDE.md)
 
 ## How It Works
 
 ```
-Your Apple Health Data
-      ↓
-┌─────────────────────┐
-│   Past 7 Days       │ ← PAT (transformer) analyzes activity patterns
-├─────────────────────┤
-│   Past 30 Days      │ ← XGBoost models circadian rhythms  
-└─────────────────────┘
-      ↓
-Research Risk Scores (Not Diagnostic)
+Your Health Data → Feature Extraction → AI Models → Risk Assessment
+                    (36 biomarkers)     (PAT+XGB)    (Not diagnostic)
 ```
 
-**PAT** = transformer AI, **XGBoost** = gradient boosting, **ensemble** = enhanced reliability.
+- **PAT**: Analyzes 7-day activity patterns for depression screening
+- **XGBoost**: Uses 30-day circadian rhythms for next-day prediction
+- **Ensemble**: Combines both for enhanced reliability
 
-[Architecture details →](docs/developer/ARCHITECTURE_OVERVIEW.md)
+[Technical details →](docs/developer/ARCHITECTURE_OVERVIEW.md)
 
-## Technical Features
+## 📊 Performance
 
-| Component | Status | Performance |
-|-----------|--------|-------------|
-| Apple Health XML/JSON parsing | ✅ | 33MB/s, <100MB RAM |
-| PAT transformer model | ✅ | 0.610 AUC depression (NHANES) |
-| XGBoost circadian model | ✅ | 0.80-0.98 AUC (Korean cohort) |
-| Privacy-first processing | ✅ | 100% local, no data sharing |
-| Clinical feature extraction | ✅ | DSM-5 aligned thresholds |
-| REST API | ✅ | Real-time predictions |
-| Population adaptation | 🔬 | Research needed |
-
-## Performance Benchmarks
-
-**Processing Speed**:
-- 365 days of data: 17 seconds
-- Memory usage: <100MB for any file size
-- Parsing throughput: 33MB/s
-
-**Model Accuracy** (from original research):
-
-*Current depression screening (PAT, general population)*:
-- Depression detection: 0.610 AUC (US NHANES 2013-14)¹
-
-*Next-day episode prediction (XGBoost, mood disorder patients)*:
-- Depression episodes: 0.80 AUC (Korean cohort, MDD+BD patients)²
-- Manic episodes: 0.98 AUC (Korean cohort, BD patients)²
-- Hypomanic episodes: 0.95 AUC (Korean cohort, BD patients)²
-
-¹[Ruan et al., 2024](https://arxiv.org/abs/2411.15240) | ²[Lim et al., 2024](https://www.nature.com/articles/s41746-024-01333-z)
-
-[Performance details →](docs/performance/OPTIMIZATION_TRACKING.md)
-
-## What Makes This Revolutionary
-
-**Clinical innovation**: First open-source tool combining two state-of-the-art approaches to predict mood episodes from wearable data
-
-**Scientific rigor**: Faithful implementation of published algorithms:
-- XGBoost circadian model from Seoul National University (Nature Digital Medicine 2024)
-- PAT transformer from Dartmouth (first foundation model for actigraphy)
-
-**Privacy breakthrough**: No cloud dependency, no data collection — your mental health data stays private
-
-**Open research**: Complete transparency enables validation, improvement, and trust
-
-## ⚠️ Research Limitations
-
-**Population specificity**:
-- **XGBoost**: Trained on 168 Korean adults (18-35y) with mood disorders:
-  - 57 (34%) with Major Depressive Disorder (MDD)
-  - 42 (25%) with Bipolar I Disorder (BD1)
-  - 69 (41%) with Bipolar II Disorder (BD2)
-- **PAT depression model**:
-  - **Pre-training**: 21,538 US adults from NHANES (2003-04, 2005-06, 2011-12)
-  - **Fine-tuning (depression task)**: 2,800 participants from NHANES 2013-14 with PHQ-9 scores
-
-**Performance constraints**:
-- Current depression screening: Moderate accuracy (0.610 AUC)
-- Next-day episode prediction: Limited to Korean mood disorder cohort (0.80-0.98 AUC)
-- No validation across ethnicities, age groups, or comorbid conditions
-- Research tool only — not FDA approved or clinically validated
-
-## Installation
-
-### Requirements
-- Python 3.12+
-- 8GB RAM (16GB recommended)
-- macOS, Linux, or Windows WSL2
-
-### From PyPI
-```bash
-pip install big-mood-detector
-```
-
-### From Source
-```bash
-git clone https://github.com/Clarity-Digital-Twin/big-mood-detector.git
-cd big-mood-detector
-pip install -e ".[dev,ml,monitoring]"
-```
-
-## CLI Reference
-
-```bash
-# Core research commands
-big-mood process <export.xml>          # Process health data
-big-mood predict <export.xml> --report # Generate research scores
-big-mood serve                         # Start API server
-
-# Advanced research tools
-big-mood label episode --type <type>   # Annotate historical episodes
-big-mood train --model <model>         # Experiment with personal models
-```
-
-[Full CLI documentation →](docs/user/README.md#cli-command-reference)
-
-## Research Applications
-
-**For researchers**:
-- Validate algorithms across diverse populations
-- Study wearable data patterns in mental health
-- Develop population-specific models
-
-**For developers**:
-- Build mental health applications
-- Integrate mood prediction into health platforms
-- Explore transformer architectures for time-series health data
-
-**For individuals**:
-- Understand your own activity patterns
-- Contribute to research (with appropriate IRB protocols)
-- Explore personal digital biomarkers
+| Metric | Value | Notes |
+|--------|-------|-------|
+| PAT Depression Detection | 0.593 AUC | NHANES validation |
+| XGBoost Episode Prediction | 0.80-0.98 AUC | Korean cohort |
+| Processing Speed | 33 MB/s | 500MB file in ~15s |
+| Memory Usage | <100MB | Streaming architecture |
+| Test Coverage | 90%+ | 1,230 tests |
 
 ## 📚 Documentation
 
-| Audience | Start Here |
-|----------|------------|
-| **Users** | [Quick Start Guide](docs/user/QUICK_START_GUIDE.md) |
-| **Developers** | [Architecture Overview](docs/developer/ARCHITECTURE_OVERVIEW.md) |
-| **Researchers** | [Clinical Requirements](docs/clinical/README.md) |
+### For Different Audiences
+- **👤 Users**: [Quick Start](docs/user/QUICK_START_GUIDE.md) | [Apple Health Export](docs/user/APPLE_HEALTH_EXPORT.md)
+- **💻 Developers**: [Architecture](docs/developer/ARCHITECTURE_OVERVIEW.md) | [API Reference](docs/developer/API_REFERENCE.md)
+- **🔬 Researchers**: [Clinical Requirements](docs/clinical/CLINICAL_REQUIREMENTS_DOCUMENT.md) | [Model Training](docs/training/PAT_DEPRESSION_TRAINING.md)
+- **🤖 AI Assistants**: [CLAUDE.md](CLAUDE.md)
 
-## Research Foundation
+### Key Documents
+- [Roadmap to v1.0](ROADMAP_TO_MVP_V1.0.md)
+- [Model Weights Guide](MODEL_WEIGHTS_GUIDE.md)
+- [Latest Checkpoint](CHECKPOINT_2025_07_27.md)
 
-```bibtex
-@article{lim2024accurately,
-  title={Accurately predicting mood episodes in mood disorder patients 
-         using wearable sleep and circadian rhythm features},
-  author={Lim, Dongju and Jeong, Jaegwon and Song, Yun Min and 
-         Cho, Chul-Hyun and Yeom, Ji Won and Lee, Taek and 
-         Lee, Jung-Been and Lee, Heon-Jeong and Kim, Jae Kyoung},
-  journal={npj Digital Medicine},
-  volume={7},
-  pages={324},
-  year={2024},
-  doi={10.1038/s41746-024-01333-z}
-}
+## 🚀 What's Next?
 
-@article{ruan2024foundation,
-  title={AI Foundation Models for Wearable Movement Data in 
-         Mental Health Research},
-  author={Ruan, Franklin Y. and Zhang, Aiwei and Oh, Jenny Y. and 
-         Jin, SouYoung and Jacobson, Nicholas C.},
-  journal={arXiv preprint arXiv:2411.15240},
-  year={2024}
-}
-```
+### v0.6.0 (Q3 2025)
+- [ ] XML Probe for data transparency ([Issue #64](https://github.com/Clarity-Digital-Twin/big-mood-detector/issues/64))
+- [ ] PAT model improvements (target: 0.65 AUC)
+- [ ] Real-time monitoring mode
 
-## Contributing to Research
+### v1.0.0 (2026)
+- [ ] Clinical validation studies
+- [ ] FDA clearance pathway
+- [ ] Multi-modal integration (voice, environment)
 
-**Critical research needs**:
-- 🏥 Clinical validation across diverse populations
-- 🌍 Multi-ethnic, multi-age cohort studies  
-- 📱 Integration with additional wearable devices
-- 🧪 Improving transformer model accuracy
-- 🔬 Longitudinal outcome studies
+See [full roadmap →](ROADMAP_TO_MVP_V1.0.md)
 
-*For clinical validation collaborations or enterprise applications, open an issue or contact the maintainers.*
+## 🤝 Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for research collaboration guidelines.
+We welcome contributions! Areas of focus:
+- **XML Processing**: Implement probe system for better UX
+- **Model Training**: Improve PAT depression detection
+- **Clinical Validation**: Partner on research studies
+- **Documentation**: Help others use the tool
 
-## License
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-Apache 2.0 - See [LICENSE](LICENSE)
+## ⚖️ Legal & Ethics
 
-## Acknowledgments
+- **License**: Apache 2.0 - use freely, even commercially
+- **Privacy**: No data collection, 100% local processing
+- **Clinical Use**: Research tool only - not for medical decisions
+- **Citations**: Please cite original papers when publishing
 
-Built on pioneering research:
-- **XGBoost models**: Seoul National University, Korea University, KAIST, and collaborators ([Lim et al., 2024](https://www.nature.com/articles/s41746-024-01333-z))
-- **PAT foundation model**: Dartmouth College Center for Technology and Behavioral Health ([Ruan et al., 2024](https://arxiv.org/abs/2411.15240))
+## 🙏 Acknowledgments
 
-This implementation makes their breakthrough algorithms accessible for the first time in a unified, privacy-preserving tool.
+Built on groundbreaking research:
+- Seoul National University Hospital (XGBoost models)
+- Dartmouth PAT team (foundation model)
+- Open source community
 
 ---
 
-**Have feedback? Want to join the next phase of wearable mental health? Open an issue or contact us.**
+*"Making mental health insights accessible to all"*
 
-**For AI agents:** See [CLAUDE.md](CLAUDE.md) for codebase orientation.
+**Questions?** Open an [issue](https://github.com/Clarity-Digital-Twin/big-mood-detector/issues) or see [discussions](https://github.com/Clarity-Digital-Twin/big-mood-detector/discussions).

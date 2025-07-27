@@ -1,72 +1,81 @@
-# Big Mood Detector Documentation
+# Documentation Overview
 
-Documentation for the temporal mood prediction system.
+Welcome to the Big Mood Detector documentation!
 
-## Quick Links
+## 📁 Documentation Structure
 
 ### For Users
-- [Quick Start Guide](user/QUICK_START_GUIDE.md) - Get running in 5 minutes
-- [Apple Health Export](user/APPLE_HEALTH_EXPORT.md) - How to export your data
-- [Understanding Reports](user-guide/APPLICATION_WORKFLOW.md) - What the predictions mean
+- **[user/](user/)** - Getting started guides, usage instructions
+  - [Quick Start Guide](user/QUICK_START_GUIDE.md)
+  - [Apple Health Export Guide](user/APPLE_HEALTH_EXPORT.md)
+  - [Advanced Usage](user/ADVANCED_USAGE.md)
 
 ### For Developers  
-- [Architecture Overview](developer/ARCHITECTURE_OVERVIEW.md) - System design
-- [API Reference](developer/API_REFERENCE.md) - REST endpoints
-- [Deployment Guide](developer/DEPLOYMENT_GUIDE.md) - Production setup
+- **[developer/](developer/)** - Architecture, API references, deployment
+  - [Architecture Overview](developer/ARCHITECTURE_OVERVIEW.md)
+  - [API Reference](developer/API_REFERENCE.md)
+  - [Deployment Guide](developer/DEPLOYMENT_GUIDE.md)
 
 ### For Researchers
-- [Clinical Requirements](clinical/CLINICAL_REQUIREMENTS_DOCUMENT.md) - Research foundation
-- [Feature Reference](models/xgboost-features/FEATURE_REFERENCE.md) - All 36 features explained
-- [Literature](literature/) - Research papers
-
-## Documentation Structure
-
-```
-docs/
-├── user/              # End-user guides
-├── developer/         # Technical documentation
-├── clinical/          # Clinical validation
-├── models/            # ML model details
-├── api/               # API specifications
-└── literature/        # Research papers
-```
-
-## Key Documents
-
-### Understanding the System
-- [Application Workflow](user-guide/APPLICATION_WORKFLOW.md) - How everything fits together
-- [Ensemble Mathematics](models/ensemble/ENSEMBLE_MATHEMATICS.md) - The temporal prediction approach
+- **[clinical/](clinical/)** - Clinical requirements, validation protocols
+  - [Clinical Requirements](clinical/CLINICAL_REQUIREMENTS_DOCUMENT.md)
+  - [Clinical Dossier](clinical/CLINICAL_DOSSIER.md)
 
 ### Technical Deep Dives
-- [Dual Pipeline Architecture](developer/DUAL_PIPELINE_ARCHITECTURE.md) - JSON/XML processing
-- [Model Weight Architecture](developer/MODEL_WEIGHT_ARCHITECTURE.md) - ML model management
-- [Performance Optimization](performance/OPTIMIZATION_TRACKING.md) - Speed improvements
+- **[architecture/](architecture/)** - System design documents
+- **[training/](training/)** - Model training guides and results
+- **[performance/](performance/)** - Optimization tracking
+- **[technical/](technical/)** - Improvement proposals
 
-### Clinical Context
-- [Clinical Dossier](clinical/CLINICAL_DOSSIER.md) - DSM-5 criteria and thresholds
-- [XGBoost Paper](literature/converted_markdown/xgboost-mood/xgboost-mood.md) - Seoul study
-- [PAT Paper](literature/converted_markdown/pretrained-actigraphy-transformer/pretrained-actigraphy-transformer.md) - Dartmouth transformer
+### Testing & Quality
+- **[testing/](testing/)** - Testing guides and checklists
+  - [E2E Testing Guide](testing/E2E_TESTING_GUIDE.md)
 
-## Contributing to Docs
+### Archive
+- **[archive/](archive/)** - Historical documents and analyses
+  - Previous checkpoints
+  - Detailed analyses
+  - Implementation histories
 
-When adding documentation:
-1. Keep it factual and accurate
-2. Include code examples where relevant
-3. Update this index
-4. Test all commands/examples
+## 🔍 Quick Links by Topic
 
-## Version
+### Getting Started
+1. [Quick Start Guide](user/QUICK_START_GUIDE.md)
+2. [Model Weights Guide](../MODEL_WEIGHTS_GUIDE.md)
+3. [Apple Health Export](user/APPLE_HEALTH_EXPORT.md)
 
-Documentation for Big Mood Detector v0.4.1
+### Understanding the System
+1. [Architecture Overview](developer/ARCHITECTURE_OVERVIEW.md)
+2. [Dual Pipeline Architecture](developer/DUAL_PIPELINE_ARCHITECTURE.md)
+3. [Seoul Features Comparison](seoul_features_comparison.md)
 
-## Recent Updates
+### Contributing
+1. [Git Workflow](developer/GIT_WORKFLOW.md)
+2. [API Reference](developer/API_REFERENCE.md)
+3. [Training Models](training/PAT_DEPRESSION_TRAINING.md)
 
-### Training Documentation
-- [PAT-Conv-L Achievement](training/PAT_CONV_L_ACHIEVEMENT.md) - Best model (0.5929 AUC)
-- [Training Summary](training/TRAINING_SUMMARY.md) - Current model status
-- [Training Output Structure](training/TRAINING_OUTPUT_STRUCTURE.md) - Where files go
+### Deployment & Operations
+1. [Deployment Guide](developer/DEPLOYMENT_GUIDE.md)
+2. [Docker Setup](setup/DOCKER_SETUP_GUIDE.md)
+3. [Production Notes](developer/PRODUCTION_NOTES.md)
 
-### Setup & Deployment
-- [Setup Guide](setup/SETUP_GUIDE.md) - Installation instructions
-- [Docker Setup](setup/DOCKER_SETUP_GUIDE.md) - Container deployment
-- [Deployment Readiness](deployment/DEPLOYMENT_READINESS.md) - Production checklist
+## 📊 Documentation Standards
+
+- **Clear Headers**: Use descriptive H1/H2/H3 headers
+- **Code Examples**: Include working examples
+- **Cross-References**: Link to related docs
+- **Update Dates**: Note last updated date
+- **Audience Focus**: Clearly indicate target audience
+
+## 🔄 Keeping Docs Updated
+
+When making changes:
+1. Update relevant documentation
+2. Check cross-references still work
+3. Update this README if structure changes
+4. Archive outdated docs (don't delete)
+
+---
+
+*Documentation for Big Mood Detector v0.5.0*  
+*Last updated: July 27, 2025*
