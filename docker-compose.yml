@@ -1,133 +1,125 @@
+version: '3.8'
+
 services:
-  # Main application
-  app:
+  # Main API with full ML support (XGBoost + PAT)
+  api:
     build:
       context: .
-      target: runtime
+      args:
+        INSTALL_ML: "true"  # Full ML support
     image: big-mood-detector:latest
-    container_name: mood-detector-app
+    container_name: mood-api
     ports:
       - "8000:8000"
     environment:
-      - LOG_LEVEL=INFO
       - ENVIRONMENT=production
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/mood_detector
-      - REDIS_URL=redis://redis:6379/0
-      - BIGMOOD_DATA_DIR=/data
-      - DATA_DIR=/data
-      - LABELS_DB_PATH=/data/labels.db
-      - CLINICAL_CONFIG_PATH=/app/config/clinical_thresholds.yaml
-      - XGBOOST_MODEL_PATH=/model_weights/xgboost/converted
+      - LOG_LEVEL=INFO
+      - WORKERS=${WORKERS:-4}
+      - PORT=8000
+      # ML model paths
+      - XGBOOST_MODEL_PATH=/app/model_weights/xgboost/converted
+      - PAT_MODEL_PATH=/app/model_weights/pat
+      # Optional services
+      - DATABASE_URL=${DATABASE_URL:-}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
     volumes:
-      # Named volume for data (with proper permissions)
-      - app-data:/data
-      # Mount local data for processing (using new structure)
-      - ./data/input:/data/input:ro
-      - ./data/output:/data/output
-      # Model weights mounted at runtime (read-only)
-      - ./model_weights:/model_weights:ro
-      # Config files
+      # Cross-platform compatible paths
+      - ./data:/app/data
+      - ./model_weights:/app/model_weights:ro
       - ./config:/app/config:ro
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s  # Longer for ML models to load
     restart: unless-stopped
     networks:
       - mood-network
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 4G
+          memory: 8G  # Need more for PyTorch/TensorFlow
         reservations:
-          cpus: '1'
-          memory: 2G
+          memory: 4G
 
-  # TODO(gh-106): Add background worker when custom TaskWorker is fully implemented
-  # For now, using FastAPI's BackgroundTasks which runs in the same process
-
-  # PostgreSQL for data persistence
-  db:
-    image: postgres:16-alpine
-    container_name: mood-detector-db
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=mood_detector
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - mood-network
-
-  # Redis for caching and job queue
+  # Redis for caching and background tasks
   redis:
     image: redis:7-alpine
-    container_name: mood-detector-redis
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
+    container_name: mood-redis
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
       - mood-network
 
-  # Monitoring with Prometheus (optional)
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: mood-detector-prometheus
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-    ports:
-      - "9090:9090"
-    networks:
-      - mood-network
-    profiles:
-      - monitoring
-
-  # Grafana for visualization (optional)
-  grafana:
-    image: grafana/grafana:latest
-    container_name: mood-detector-grafana
+  # PostgreSQL (optional - use with --profile db)
+  postgres:
+    image: postgres:16-alpine
+    container_name: mood-db
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - POSTGRES_USER=${POSTGRES_USER:-bigmood}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+      - POSTGRES_DB=${POSTGRES_DB:-bigmood}
     ports:
-      - "3000:3000"
-    depends_on:
-      - prometheus
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bigmood}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
     networks:
       - mood-network
     profiles:
-      - monitoring
+      - db
+
+  # Lightweight worker (optional - use with --profile worker)
+  worker:
+    build:
+      context: .
+      args:
+        INSTALL_ML: "false"  # XGBoost only for workers
+    image: big-mood-detector:worker
+    container_name: mood-worker
+    command: ["worker"]
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - REDIS_URL=redis://redis:6379
+      - XGBOOST_MODEL_PATH=/app/model_weights/xgboost/converted
+    volumes:
+      - ./data:/app/data
+      - ./model_weights:/app/model_weights:ro
+      - logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - mood-network
+    profiles:
+      - worker
+
+volumes:
+  logs:
+    driver: local
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
 
 networks:
   mood-network:
     driver: bridge
-
-volumes:
-  app-data:
-  postgres_data:
-  redis_data:
-  prometheus_data:
-  grafana_data:
