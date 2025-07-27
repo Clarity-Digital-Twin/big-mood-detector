@@ -92,7 +92,7 @@ def main():
         logger.info("Creating mock predictor for performance testing")
         predictor = None
     
-    feature_extractor = SeoulFeatureExtractor()
+    feature_extractor = AggregationPipeline()
     validator = XGBoostValidator()
     
     pipeline = XGBoostPipeline(
