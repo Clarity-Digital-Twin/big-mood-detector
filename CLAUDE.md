@@ -49,7 +49,7 @@ CLI/API → Use Cases → Domain ← Infrastructure
 - **Infrastructure**: ML models, parsers, DB
 - **Interfaces**: CLI commands, FastAPI routes
 
-## Current Capabilities (v0.4.2)
+## Current Capabilities (v0.5.0)
 
 ### ✅ Production Ready
 - **XGBoost**: Depression/mania risk (36 Seoul features)

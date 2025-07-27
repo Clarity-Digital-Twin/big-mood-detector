@@ -1,7 +1,7 @@
 # Documentation Structure Guide
 
 **Last Updated**: July 25, 2025  
-**Version**: v0.4.1
+**Version**: v0.5.0
 
 ## Overview
 

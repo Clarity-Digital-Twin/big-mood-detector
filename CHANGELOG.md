@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-07-27
+
+### Added
+- **Temporal Ensemble Orchestrator** - Proper separation of current state (PAT) vs future risk (XGBoost)
+- **XGBoost Feature Name Mapping** - Automatic conversion between internal names and model expectations
+- **Git Settings Management** - Added .claude/settings.local.json to .gitignore
+- **PAT Inference Smoke Test** - GitHub Actions workflow for model weight validation
+
+### Fixed
+- **Sleep Overlap Calculation** - Correctly handles overlapping records from multiple devices
+- **XGBoost DMatrix Support** - Tests now properly handle DMatrix objects
+- **Feature Name Mismatch** - Fixed "Missing feature: ST_long_MN" errors in tests
+- **Mock Predictor Format** - Tests return proper MoodPrediction objects instead of dicts
+- **Import Order** - Cleaned up whitespace and import organization
+
+### Changed
+- **Test Structure** - Updated all XGBoost tests to use `to_model_dict()` for proper feature mapping
+- **DummyBooster** - Enhanced to handle both numpy arrays and DMatrix objects
+- **Feature Suffixes** - Standardized to "_MN", "_SD", "_Zscore" across all tests
+
+### Technical Details
+- Fixed 10 failing tests related to XGBoost feature naming
+- Proper handling of DMatrix shape attributes
+- Consistent feature name mapping throughout test suite
+- Clean branch management across development → staging → main
+
 ## [0.4.0] - 2025-07-24
 
 ### Added

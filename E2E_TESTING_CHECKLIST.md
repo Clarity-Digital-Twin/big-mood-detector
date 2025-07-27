@@ -5,7 +5,7 @@ This checklist ensures all components work together correctly with real data bef
 
 ## Testing Environment
 - Date: July 26, 2025
-- Version: 0.4.0
+- Version: 0.5.0
 - Python: 3.12 (WSL2)
 - Models: XGBoost (production) + PAT-Conv-L (0.5929 AUC)
 

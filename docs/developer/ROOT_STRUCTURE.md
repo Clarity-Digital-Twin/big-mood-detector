@@ -4,7 +4,7 @@
 
 ### Documentation
 - `README.md` - Project overview and quick start
-- `CLAUDE.md` - AI agent guide (v0.4.0)
+- `CLAUDE.md` - AI agent guide (v0.5.0)
 - `CHANGELOG.md` - Version history
 - `CONTRIBUTING.md` - Contribution guidelines
 - `ROADMAP_TO_MVP_V1.0.md` - Current development roadmap
