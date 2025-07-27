@@ -8,7 +8,7 @@ using 30-60 days of health data.
 import logging
 from dataclasses import dataclass
 from datetime import date, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from big_mood_detector.application.validators.pipeline_validators import (
     ValidationResult,
@@ -97,7 +97,7 @@ class XGBoostPipeline:
         activity_records: list[ActivityRecord],
         heart_records: list[HeartRateRecord],
         target_date: date,
-    ) -> Optional[XGBoostResult]:
+    ) -> XGBoostResult | None:
         """
         Process health data through XGBoost pipeline.
 
@@ -112,14 +112,14 @@ class XGBoostPipeline:
         """
         # Determine data range (use up to 60 days if available)
         all_dates = set()
-        
+
         for sleep_record in sleep_records:
             all_dates.add(sleep_record.start_date.date())
         for activity_record in activity_records:
             all_dates.add(activity_record.start_date.date())
         for heart_record in heart_records:
             all_dates.add(heart_record.timestamp.date())
-        
+
         if len(all_dates) < 30:
             logger.info(f"Insufficient data for XGBoost: only {len(all_dates)} days")
             return None
@@ -132,10 +132,10 @@ class XGBoostPipeline:
             data_dates = [d for d in sorted_dates if d >= start_date]
         else:
             data_dates = sorted_dates
-        
+
         actual_start = min(data_dates)
         actual_end = max(data_dates)
-        
+
         logger.info(
             f"XGBoost using {len(data_dates)} days from {actual_start} to {actual_end}"
         )
@@ -145,9 +145,9 @@ class XGBoostPipeline:
         filtered_sleep = [r for r in sleep_records if r.start_date.date() in data_dates]
         filtered_activity = [r for r in activity_records if r.start_date.date() in data_dates]
         filtered_heart = [r for r in heart_records if r.timestamp.date() in data_dates]
-        
+
         logger.info(f"Filtered records - sleep: {len(filtered_sleep)}, activity: {len(filtered_activity)}, heart: {len(filtered_heart)}")
-        
+
         try:
             # Check if we're using the AggregationPipeline (CORRECT implementation)
             if hasattr(self.feature_extractor, 'aggregate_seoul_features'):
@@ -159,16 +159,16 @@ class XGBoostPipeline:
                     start_date=actual_start,
                     end_date=actual_end,
                 )
-                
+
                 if not daily_features_list:
                     logger.error("No daily features extracted")
                     return None
-                
+
                 # For prediction, we can use the most recent day's features
                 # or aggregate them - for now use the most recent
                 latest_features = daily_features_list[-1]
                 xgboost_dict = latest_features.to_xgboost_dict()
-                
+
                 # Convert to feature vector in the correct order
                 # The order must match XGBoostModelLoader.FEATURE_NAMES
                 from big_mood_detector.infrastructure.ml_models.xgboost_models import (
@@ -176,7 +176,7 @@ class XGBoostPipeline:
                 )
                 loader = XGBoostModelLoader()
                 feature_vector = [xgboost_dict[name] for name in loader.FEATURE_NAMES]
-                
+
             # Check if we're using the optimized Seoul extractor
             elif hasattr(self.feature_extractor, 'extract_seoul_features'):
                 # Use optimized extractor
@@ -196,26 +196,26 @@ class XGBoostPipeline:
                     target_date=target_date,
                     include_pat_sequence=False,
                 )
-                
+
                 if not clinical_features or not clinical_features.seoul_features:
                     logger.error("Failed to extract Seoul features")
                     return None
-                    
+
                 feature_vector = clinical_features.seoul_features.to_xgboost_features()
-            
+
             # Validate feature vector
             if len(feature_vector) != 36:
                 logger.error(f"Invalid feature vector length: {len(feature_vector)}, expected 36")
                 return None
-                
+
             # Check for NaN or inf values
             import math
             if any(math.isnan(f) or math.isinf(f) for f in feature_vector):
                 logger.error("Feature vector contains NaN or inf values")
                 return None
-            
+
             logger.debug(f"Feature vector stats - min: {min(feature_vector):.3f}, max: {max(feature_vector):.3f}")
-            
+
             # Run prediction
             predictions = self.predictor.predict_mood_episodes(
                 features=feature_vector,
@@ -228,10 +228,10 @@ class XGBoostPipeline:
                 "mania": predictions["mania"]["probability"],
                 "hypomania": predictions["hypomania"]["probability"],
             }
-            
+
             highest_risk = max(risks, key=lambda k: risks[k])
             highest_prob = risks[highest_risk]
-            
+
             # Clinical interpretation
             if highest_prob < 0.3:
                 interpretation = "Low risk for mood episodes in next 24 hours"

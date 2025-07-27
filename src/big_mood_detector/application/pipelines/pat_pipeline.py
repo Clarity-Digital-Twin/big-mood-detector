@@ -7,8 +7,8 @@ using 7 consecutive days of activity data.
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
-from typing import Any, Optional, Union
+from datetime import date, timedelta
+from typing import Any
 
 import numpy as np
 
@@ -94,7 +94,7 @@ class PatPipeline:
         self,
         activity_records: list[ActivityRecord],
         target_date: date,
-    ) -> Optional[PATResult]:
+    ) -> PATResult | None:
         """
         Process activity data through PAT pipeline.
 
@@ -124,14 +124,14 @@ class PatPipeline:
         ]
 
         # Extract minute-level sequence (10,080 minutes for 7 days)
-        sequences: list[Union[list[float], Any]] = []
+        sequences: list[list[float] | Any] = []
         for day_offset in range(7):
             current_date = window_start + timedelta(days=day_offset)
             day_records = [
                 r for r in window_records
                 if r.start_date.date() == current_date
             ]
-            
+
             if day_records:
                 # Extract 1440-minute sequence for this day
                 day_sequence = self.sequence_extractor.extract_daily_sequence(
@@ -157,10 +157,10 @@ class PatPipeline:
             depression_score = self.pat_loader.predict_depression_from_activity(
                 np.array(full_sequence, dtype=np.float32)
             )
-            
+
             # PAT doesn't provide confidence directly, use a default
             confidence = 0.85 if 0.2 < depression_score < 0.8 else 0.95
-            
+
             # Clinical interpretation
             if depression_score < 0.3:
                 interpretation = "Low risk for current depression"
@@ -189,7 +189,7 @@ class PatPipeline:
         self,
         activity_records: list[ActivityRecord],
         target_date: date,
-    ) -> Optional[tuple[date, date]]:
+    ) -> tuple[date, date] | None:
         """
         Find the best 7-day consecutive window closest to target date.
 
@@ -208,13 +208,13 @@ class PatPipeline:
 
         # Find all possible 7-day consecutive windows
         valid_windows = []
-        
+
         for i in range(len(dates_with_data) - 6):
             # Check if we have 7 consecutive days
             window_start = dates_with_data[i]
             expected_end = window_start + timedelta(days=6)
             actual_end = dates_with_data[i + 6]
-            
+
             if actual_end == expected_end:
                 # Valid 7-day window
                 valid_windows.append((window_start, actual_end))

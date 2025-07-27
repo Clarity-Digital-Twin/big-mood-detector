@@ -19,10 +19,10 @@ if os.getenv("TESTING", "0") == "1":
     from types import SimpleNamespace
 
     import numpy as np
-    
+
     # Mock joblib
     joblib: Any = SimpleNamespace(load=lambda x: None)
-    
+
     # Mock BoosterPredictProbaWrapper
     class BoosterPredictProbaWrapper:
         def __init__(self, *args: Any, **kwargs: Any) -> None:

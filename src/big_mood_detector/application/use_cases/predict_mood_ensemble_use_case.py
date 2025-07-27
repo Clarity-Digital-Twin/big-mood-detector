@@ -106,7 +106,7 @@ class EnsembleOrchestrator:
 
     def __init__(
         self,
-        xgboost_predictor: "XGBoostMoodPredictor",
+        xgboost_predictor: XGBoostMoodPredictor,
         pat_model: PATModelInterface | None = None,
         config: EnsembleConfig | None = None,
         personal_calibrator: Any | None = None,

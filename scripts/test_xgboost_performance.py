@@ -33,16 +33,16 @@ logger = logging.getLogger(__name__)
 def create_large_dataset(days: int = 60, records_per_day: int = 1000):
     """Create a large synthetic dataset to test performance."""
     logger.info(f"Creating {days} days with {records_per_day} HR records/day = {days * records_per_day} total")
-    
+
     sleep_records = []
     activity_records = []
     heart_records = []
-    
+
     base_date = datetime(2025, 6, 1, tzinfo=UTC)
-    
+
     for day in range(days):
         current_date = base_date + timedelta(days=day)
-        
+
         # Sleep record (one per night)
         sleep_records.append(
             SleepRecord(
@@ -52,7 +52,7 @@ def create_large_dataset(days: int = 60, records_per_day: int = 1000):
                 state=SleepState.ASLEEP,
             )
         )
-        
+
         # Activity record (one per day)
         activity_records.append(
             ActivityRecord(
@@ -64,7 +64,7 @@ def create_large_dataset(days: int = 60, records_per_day: int = 1000):
                 unit="count",
             )
         )
-        
+
         # Many heart rate records throughout the day
         for hour in range(24):
             for minute in range(0, 60, 5):  # Every 5 minutes
@@ -77,7 +77,7 @@ def create_large_dataset(days: int = 60, records_per_day: int = 1000):
                         unit="count/min",
                     )
                 )
-    
+
     return sleep_records, activity_records, heart_records
 
 
@@ -91,32 +91,32 @@ def main():
         logger.warning(f"Could not load XGBoost models: {e}")
         logger.info("Creating mock predictor for performance testing")
         predictor = None
-    
+
     feature_extractor = AggregationPipeline()
     validator = XGBoostValidator()
-    
+
     pipeline = XGBoostPipeline(
         feature_extractor=feature_extractor,
         predictor=predictor,
         validator=validator,
     )
-    
+
     # Test with different dataset sizes
     for days in [30, 60, 90]:
         logger.info(f"\n{'='*60}")
         logger.info(f"Testing with {days} days of data")
         logger.info(f"{'='*60}")
-        
+
         sleep_records, activity_records, heart_records = create_large_dataset(days=days)
-        
+
         total_records = len(sleep_records) + len(activity_records) + len(heart_records)
         logger.info(f"Total records: {total_records:,}")
-        
+
         target_date = date(2025, 6, 1) + timedelta(days=days-1)
-        
+
         # Time the feature extraction
         start_time = time.time()
-        
+
         if predictor:
             result = pipeline.process(
                 sleep_records=sleep_records,
@@ -133,18 +133,18 @@ def main():
                 target_date=target_date,
             )
             result = seoul_features
-        
+
         end_time = time.time()
         duration = end_time - start_time
-        
+
         logger.info(f"Processing time: {duration:.2f} seconds")
         logger.info(f"Records/second: {total_records/duration:,.0f}")
-        
+
         if result:
             logger.info("✓ Feature extraction successful")
         else:
             logger.error("✗ Feature extraction failed")
-        
+
         # Warn if approaching timeout
         if duration > 30:
             logger.warning(f"⚠️  Processing took {duration:.1f}s - approaching 60s timeout!")

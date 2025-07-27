@@ -6,7 +6,6 @@ works correctly through the entire aggregation pipeline.
 """
 
 from datetime import UTC, date, datetime
-from pathlib import Path
 
 import pytest
 
@@ -17,11 +16,6 @@ from big_mood_detector.application.services.aggregation_pipeline import (
 from big_mood_detector.domain.entities.activity_record import (
     ActivityRecord,
     ActivityType,
-)
-from big_mood_detector.domain.entities.heart_rate_record import (
-    HeartMetricType,
-    HeartRateRecord,
-    MotionContext,
 )
 from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 
@@ -50,17 +44,17 @@ class TestAggregationOverlapFix:
         """Create overlapping sleep records simulating iPhone + Apple Watch."""
         records = []
         base_date = date(2025, 7, 20)
-        
+
         # Create 7 days of overlapping sleep data
         for day_offset in range(7):
             sleep_date = datetime(
-                base_date.year, 
+                base_date.year,
                 base_date.month,
                 base_date.day + day_offset,
                 22, 0, 0,  # 10 PM
                 tzinfo=UTC
             )
-            
+
             # iPhone records 10pm-6am (8 hours)
             records.append(
                 SleepRecord(
@@ -70,7 +64,7 @@ class TestAggregationOverlapFix:
                     state=SleepState.ASLEEP,
                 )
             )
-            
+
             # Apple Watch records 10:30pm-6:30am (8 hours, overlapping)
             records.append(
                 SleepRecord(
@@ -80,7 +74,7 @@ class TestAggregationOverlapFix:
                     state=SleepState.ASLEEP,
                 )
             )
-        
+
         return records
 
     @pytest.fixture
@@ -88,16 +82,16 @@ class TestAggregationOverlapFix:
         """Create minimal activity records for the test period."""
         records = []
         base_date = date(2025, 7, 20)
-        
+
         for day_offset in range(7):
             activity_date = datetime(
                 base_date.year,
-                base_date.month, 
+                base_date.month,
                 base_date.day + day_offset,
                 12, 0, 0,  # Noon
                 tzinfo=UTC
             )
-            
+
             records.append(
                 ActivityRecord(
                     source_name="iPhone",
@@ -108,7 +102,7 @@ class TestAggregationOverlapFix:
                     unit="count",
                 )
             )
-        
+
         return records
 
     def test_aggregation_with_overlapping_sleep(
@@ -121,7 +115,7 @@ class TestAggregationOverlapFix:
         # Define date range
         start_date = date(2025, 7, 20)
         end_date = date(2025, 7, 26)
-        
+
         # Run aggregation
         features = pipeline.aggregate_daily_features(
             sleep_records=overlapping_sleep_records,
@@ -130,20 +124,20 @@ class TestAggregationOverlapFix:
             start_date=start_date,
             end_date=end_date,
         )
-        
+
         # Should have features for days 3-6 (window size requirement)
         assert len(features) >= 4
-        
+
         # Check each day's sleep duration
         for feature_set in features:
             # Sleep duration should be ~8.5 hours (merged overlap)
             # NOT 16 hours (sum of both records)
             seoul_features = feature_set.seoul_features
             assert seoul_features is not None
-            
+
             # The actual sleep duration should be realistic
             assert 7.0 <= seoul_features.sleep_duration_hours <= 9.0
-            
+
             # Specifically should NOT be 16 hours
             assert seoul_features.sleep_duration_hours < 10.0
 
@@ -156,7 +150,7 @@ class TestAggregationOverlapFix:
         # Create records from 3 devices all recording the same sleep
         sleep_records = []
         test_date = date(2025, 7, 20)
-        
+
         for day_offset in range(7):
             sleep_start = datetime(
                 test_date.year,
@@ -165,7 +159,7 @@ class TestAggregationOverlapFix:
                 22, 0, 0,
                 tzinfo=UTC
             )
-            
+
             # Three devices all recording ~8 hours of sleep
             for device, offset_minutes in [
                 ("iPhone", 0),
@@ -179,7 +173,7 @@ class TestAggregationOverlapFix:
                     hour=6,
                     minute=offset_minutes
                 ).replace(day=records_start.day + 1)
-                
+
                 sleep_records.append(
                     SleepRecord(
                         source_name=device,
@@ -188,7 +182,7 @@ class TestAggregationOverlapFix:
                         state=SleepState.ASLEEP,
                     )
                 )
-        
+
         # Run aggregation
         features = pipeline.aggregate_daily_features(
             sleep_records=sleep_records,
@@ -197,15 +191,15 @@ class TestAggregationOverlapFix:
             start_date=test_date,
             end_date=test_date.replace(day=26),
         )
-        
+
         # Check results
         for feature_set in features:
             seoul_features = feature_set.seoul_features
             assert seoul_features is not None
-            
+
             # Should be ~8.5 hours (22:00 to 06:30), NOT 24 hours
             assert 7.0 <= seoul_features.sleep_duration_hours <= 9.0
-            
+
             # Definitely should not exceed 24 hours
             assert seoul_features.sleep_duration_hours <= 24.0
 
@@ -217,10 +211,10 @@ class TestAggregationOverlapFix:
         """Test that non-overlapping naps are correctly preserved."""
         sleep_records = []
         test_date = date(2025, 7, 20)
-        
+
         for day_offset in range(7):
             current_date = test_date.replace(day=test_date.day + day_offset)
-            
+
             # Night sleep: 11pm-7am (8 hours)
             sleep_records.append(
                 SleepRecord(
@@ -242,7 +236,7 @@ class TestAggregationOverlapFix:
                     state=SleepState.ASLEEP,
                 )
             )
-            
+
             # Afternoon nap: 2pm-3pm (1 hour)
             sleep_records.append(
                 SleepRecord(
@@ -264,7 +258,7 @@ class TestAggregationOverlapFix:
                     state=SleepState.ASLEEP,
                 )
             )
-        
+
         # Run aggregation
         features = pipeline.aggregate_daily_features(
             sleep_records=sleep_records,
@@ -273,11 +267,11 @@ class TestAggregationOverlapFix:
             start_date=test_date,
             end_date=test_date.replace(day=26),
         )
-        
+
         # Check results
         for feature_set in features:
             seoul_features = feature_set.seoul_features
             assert seoul_features is not None
-            
+
             # Should be ~9 hours total (8 + 1), not merged since no overlap
             assert 8.5 <= seoul_features.sleep_duration_hours <= 9.5

@@ -11,7 +11,6 @@ import pytest
 
 from big_mood_detector.application.validators.pipeline_validators import (
     PATValidator,
-    ValidationResult,
     XGBoostValidator,
 )
 from big_mood_detector.domain.entities.activity_record import (
@@ -36,7 +35,7 @@ class TestPATValidator:
         # Create exactly 7 consecutive days of activity data
         base_date = date(2025, 7, 20)
         records = []
-        
+
         for day_offset in range(7):
             activity_date = datetime(
                 base_date.year,
@@ -55,14 +54,14 @@ class TestPATValidator:
                     unit="count",
                 )
             )
-        
+
         # Validate
         result = validator.validate(
             activity_records=records,
             start_date=base_date,
             end_date=base_date + timedelta(days=6),
         )
-        
+
         assert result.is_valid is True
         assert result.can_run is True
         assert result.consecutive_days == 7
@@ -76,7 +75,7 @@ class TestPATValidator:
         """Test that PAT fails when there are gaps in the data."""
         base_date = date(2025, 7, 20)
         records = []
-        
+
         # Create data with a gap on day 3
         for day_offset in [0, 1, 2, 4, 5, 6, 7]:  # Missing day 3
             activity_date = datetime(
@@ -96,13 +95,13 @@ class TestPATValidator:
                     unit="count",
                 )
             )
-        
+
         result = validator.validate(
             activity_records=records,
             start_date=base_date,
             end_date=base_date + timedelta(days=7),
         )
-        
+
         assert result.is_valid is False
         assert result.can_run is False
         assert result.consecutive_days == 4  # Longest consecutive run (days 4-7)
@@ -116,7 +115,7 @@ class TestPATValidator:
         """Test that PAT can find a valid 7-day window within sparse data."""
         base_date = date(2025, 7, 1)
         records = []
-        
+
         # Create sparse data with a 7-day consecutive window in the middle
         # Days 1-3: sparse
         for day in [1, 3]:
@@ -131,7 +130,7 @@ class TestPATValidator:
                     unit="count",
                 )
             )
-        
+
         # Days 10-16: consecutive (7 days)
         for day in range(10, 17):
             activity_date = datetime(2025, 7, day, 12, 0, 0, tzinfo=UTC)
@@ -145,7 +144,7 @@ class TestPATValidator:
                     unit="count",
                 )
             )
-        
+
         # Days 20, 22: sparse
         for day in [20, 22]:
             activity_date = datetime(2025, 7, day, 12, 0, 0, tzinfo=UTC)
@@ -159,13 +158,13 @@ class TestPATValidator:
                     unit="count",
                 )
             )
-        
+
         result = validator.validate(
             activity_records=records,
             start_date=date(2025, 7, 1),
             end_date=date(2025, 7, 31),
         )
-        
+
         assert result.is_valid is True
         assert result.can_run is True
         assert result.consecutive_days == 7
@@ -177,7 +176,7 @@ class TestPATValidator:
         """Test PAT validation with only 5 consecutive days."""
         base_date = date(2025, 7, 20)
         records = []
-        
+
         # Only 5 consecutive days
         for day_offset in range(5):
             activity_date = datetime(
@@ -197,13 +196,13 @@ class TestPATValidator:
                     unit="count",
                 )
             )
-        
+
         result = validator.validate(
             activity_records=records,
             start_date=base_date,
             end_date=base_date + timedelta(days=4),
         )
-        
+
         assert result.is_valid is False
         assert result.can_run is False
         assert result.consecutive_days == 5
@@ -225,7 +224,7 @@ class TestXGBoostValidator:
         # Create 35 days of sparse data (every other day)
         sleep_records = []
         activity_records = []
-        
+
         for day in range(0, 70, 2):  # Every other day for 35 days
             # Sleep record
             sleep_date = datetime(2025, 7, 1, 22, 0, 0, tzinfo=UTC) + timedelta(days=day)
@@ -237,7 +236,7 @@ class TestXGBoostValidator:
                     state=SleepState.ASLEEP,
                 )
             )
-            
+
             # Activity record
             activity_date = datetime(2025, 7, 1, 12, 0, 0, tzinfo=UTC) + timedelta(days=day)
             activity_records.append(
@@ -250,14 +249,14 @@ class TestXGBoostValidator:
                     unit="count",
                 )
             )
-        
+
         result = validator.validate(
             sleep_records=sleep_records,
             activity_records=activity_records,
             start_date=date(2025, 7, 1),
             end_date=date(2025, 9, 8),
         )
-        
+
         assert result.is_valid is True
         assert result.can_run is True
         assert result.days_available == 35
@@ -271,7 +270,7 @@ class TestXGBoostValidator:
         """Test that XGBoost fails with less than 30 days."""
         # Create only 20 days of data
         sleep_records = []
-        
+
         for day in range(20):
             sleep_date = datetime(2025, 7, 1, 22, 0, 0, tzinfo=UTC) + timedelta(days=day)
             sleep_records.append(
@@ -282,14 +281,14 @@ class TestXGBoostValidator:
                     state=SleepState.ASLEEP,
                 )
             )
-        
+
         result = validator.validate(
             sleep_records=sleep_records,
             activity_records=[],
             start_date=date(2025, 7, 1),
             end_date=date(2025, 7, 20),
         )
-        
+
         assert result.is_valid is False
         assert result.can_run is False
         assert result.days_available == 20
@@ -302,7 +301,7 @@ class TestXGBoostValidator:
         """Test that XGBoost recognizes optimal 60+ days."""
         # Create 65 days of data
         activity_records = []
-        
+
         for day in range(65):
             activity_date = datetime(2025, 5, 1, 12, 0, 0, tzinfo=UTC) + timedelta(days=day)
             activity_records.append(
@@ -315,14 +314,14 @@ class TestXGBoostValidator:
                     unit="count",
                 )
             )
-        
+
         result = validator.validate(
             sleep_records=[],
             activity_records=activity_records,
             start_date=date(2025, 5, 1),
             end_date=date(2025, 7, 4),
         )
-        
+
         assert result.is_valid is True
         assert result.can_run is True
         assert result.days_available == 65
@@ -334,7 +333,7 @@ class TestXGBoostValidator:
         """Test that XGBoost works with some days having only sleep or activity."""
         sleep_records = []
         activity_records = []
-        
+
         # Days 1-15: Only sleep data
         for day in range(15):
             sleep_date = datetime(2025, 7, 1, 22, 0, 0, tzinfo=UTC) + timedelta(days=day)
@@ -346,7 +345,7 @@ class TestXGBoostValidator:
                     state=SleepState.ASLEEP,
                 )
             )
-        
+
         # Days 10-25: Only activity data (overlap with sleep on days 10-15)
         for day in range(10, 25):
             activity_date = datetime(2025, 7, 1, 12, 0, 0, tzinfo=UTC) + timedelta(days=day)
@@ -360,7 +359,7 @@ class TestXGBoostValidator:
                     unit="count",
                 )
             )
-        
+
         # Days 20-35: Both sleep and activity
         for day in range(20, 35):
             sleep_date = datetime(2025, 7, 1, 22, 0, 0, tzinfo=UTC) + timedelta(days=day)
@@ -372,14 +371,14 @@ class TestXGBoostValidator:
                     state=SleepState.ASLEEP,
                 )
             )
-        
+
         result = validator.validate(
             sleep_records=sleep_records,
             activity_records=activity_records,
             start_date=date(2025, 7, 1),
             end_date=date(2025, 8, 4),
         )
-        
+
         # Total unique days: 1-35 = 35 days
         assert result.is_valid is True
         assert result.can_run is True

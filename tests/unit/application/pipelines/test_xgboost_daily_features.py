@@ -4,10 +4,11 @@ Test XGBoostPipeline uses DailyFeatures from AggregationPipeline.
 This is the CORRECT implementation that has existed since July 23, 2025.
 """
 
-import pytest
-from datetime import datetime, date, timedelta
-from unittest.mock import Mock, MagicMock, patch
+from datetime import date, datetime, timedelta
+from unittest.mock import Mock
+
 import numpy as np
+import pytest
 
 from big_mood_detector.application.pipelines.xgboost_pipeline import (
     XGBoostPipeline,
@@ -17,10 +18,18 @@ from big_mood_detector.application.services.aggregation_pipeline import (
     AggregationPipeline,
     DailyFeatures,
 )
-from big_mood_detector.application.validators.pipeline_validators import XGBoostValidator
+from big_mood_detector.application.validators.pipeline_validators import (
+    XGBoostValidator,
+)
+from big_mood_detector.domain.entities.activity_record import (
+    ActivityRecord,
+    ActivityType,
+)
+from big_mood_detector.domain.entities.heart_rate_record import (
+    HeartMetricType,
+    HeartRateRecord,
+)
 from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
-from big_mood_detector.domain.entities.activity_record import ActivityRecord, ActivityType
-from big_mood_detector.domain.entities.heart_rate_record import HeartRateRecord, HeartMetricType
 
 
 class TestXGBoostPipelineWithDailyFeatures:
@@ -76,14 +85,14 @@ class TestXGBoostPipelineWithDailyFeatures:
 
     def test_xgboost_pipeline_uses_aggregation_pipeline(self, sleep_records, activity_records, heart_records):
         """Verify XGBoostPipeline uses AggregationPipeline.aggregate_seoul_features()."""
-        
+
         # Create aggregation pipeline
         aggregation_pipeline = AggregationPipeline()
-        
+
         # Create mock predictor
         mock_predictor = Mock()
         captured_features = None
-        
+
         def capture_features(features, user_id):
             nonlocal captured_features
             captured_features = features
@@ -92,19 +101,19 @@ class TestXGBoostPipelineWithDailyFeatures:
                 "mania": {"probability": 0.1},
                 "hypomania": {"probability": 0.15},
             }
-        
+
         mock_predictor.predict_mood_episodes.side_effect = capture_features
-        
+
         # Create validator
         validator = XGBoostValidator()
-        
+
         # Create pipeline with aggregation pipeline
         pipeline = XGBoostPipeline(
             feature_extractor=aggregation_pipeline,  # Pass AggregationPipeline
             predictor=mock_predictor,
             validator=validator,
         )
-        
+
         # Run pipeline
         result = pipeline.process(
             sleep_records=sleep_records,
@@ -112,26 +121,28 @@ class TestXGBoostPipelineWithDailyFeatures:
             heart_records=heart_records,
             target_date=date(2024, 3, 1),
         )
-        
+
         # Verify result
         assert result is not None
         assert isinstance(result, XGBoostResult)
-        
+
         # Verify features were extracted
         assert captured_features is not None
         assert len(captured_features) == 36
-        
+
         # Verify it's a list (XGBoost expects a list/array)
         assert isinstance(captured_features, (list, np.ndarray))
 
     def test_daily_features_format_matches_xgboost_expectations(self):
         """Verify DailyFeatures produces the correct feature dictionary."""
         # Create a sample DailyFeatures
-        from big_mood_detector.infrastructure.ml_models.xgboost_models import XGBoostModelLoader
-        
+        from big_mood_detector.infrastructure.ml_models.xgboost_models import (
+            XGBoostModelLoader,
+        )
+
         # This is what should happen inside the pipeline
         aggregation_pipeline = AggregationPipeline()
-        
+
         # Mock some daily features
         daily_features = DailyFeatures(
             date=date(2024, 1, 1),
@@ -173,15 +184,15 @@ class TestXGBoostPipelineWithDailyFeatures:
             circadian_phase_std=1.0,
             circadian_phase_zscore=0.0,
         )
-        
+
         # Get XGBoost dict
         xgboost_dict = daily_features.to_xgboost_dict()
-        
+
         # Verify all expected features are present
         loader = XGBoostModelLoader()
         for feature_name in loader.FEATURE_NAMES:
             assert feature_name in xgboost_dict, f"Missing feature: {feature_name}"
-        
+
         # Verify we can convert to list in correct order
         feature_vector = [xgboost_dict[name] for name in loader.FEATURE_NAMES]
         assert len(feature_vector) == 36

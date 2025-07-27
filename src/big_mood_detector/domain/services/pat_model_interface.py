@@ -17,12 +17,12 @@ class PATModelInterface(Protocol):
     
     Both TensorFlow and PyTorch implementations must satisfy this contract.
     """
-    
+
     @property
     def is_loaded(self) -> bool:
         """Check if model weights are loaded."""
         ...
-    
+
     def extract_features(self, sequence: Any) -> NDArray[np.float32]:
         """
         Extract 96-dimensional embeddings from activity sequence.
@@ -34,7 +34,7 @@ class PATModelInterface(Protocol):
             96-dimensional embedding vector
         """
         ...
-    
+
     def predict(self, features: NDArray[np.float32]) -> Any:
         """
         Make predictions from features.

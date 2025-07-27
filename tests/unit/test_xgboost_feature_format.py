@@ -7,26 +7,17 @@ This test will help us understand:
 3. Whether there's a mismatch
 """
 
-import json
-from pathlib import Path
-from unittest.mock import Mock, patch
 
-import pytest
 
-from big_mood_detector.application.pipelines.xgboost_pipeline import XGBoostPipeline
 from big_mood_detector.application.services.aggregation_pipeline import (
     AggregationPipeline,
     DailyFeatures,
-)
-from big_mood_detector.application.validators.pipeline_validators import (
-    XGBoostValidator,
 )
 from big_mood_detector.domain.services.clinical_feature_extractor import (
     SeoulXGBoostFeatures,
 )
 from big_mood_detector.infrastructure.ml_models.xgboost_models import (
     XGBoostModelLoader,
-    XGBoostMoodPredictor,
 )
 
 
@@ -36,22 +27,22 @@ class TestXGBoostFeatureFormat:
     def test_xgboost_model_expects_daily_features_format(self):
         """Verify what feature names the XGBoost models expect."""
         loader = XGBoostModelLoader()
-        
+
         # These are the features the models expect
         expected_features = loader.FEATURE_NAMES
-        
+
         print("\n=== XGBoost Model Expected Features ===")
         print(f"Total features: {len(expected_features)}")
         print("\nFirst 10 features:")
         for i, feature in enumerate(expected_features[:10]):
             print(f"  {i+1}. {feature}")
-        
+
         # Verify they all have _MN, _SD, or _Z suffixes
         assert all(
-            feature.endswith(("_MN", "_SD", "_Z")) 
+            feature.endswith(("_MN", "_SD", "_Z"))
             for feature in expected_features
         ), "All features should have statistical suffixes"
-        
+
         # Verify we have 36 features
         assert len(expected_features) == 36
 
@@ -63,16 +54,16 @@ class TestXGBoostFeatureFormat:
             # Mock all required fields with 0.0
             **{field.name: 0.0 for field in DailyFeatures.__dataclass_fields__.values() if field.name != 'date'}
         )
-        
+
         # Get the XGBoost dict
         xgboost_dict = daily_features.to_xgboost_dict()
-        
+
         print("\n=== DailyFeatures XGBoost Dict ===")
         print(f"Total features: {len(xgboost_dict)}")
         print("\nFirst 10 features:")
         for i, (key, value) in enumerate(list(xgboost_dict.items())[:10]):
             print(f"  {i+1}. {key}: {value}")
-        
+
         # Verify format matches
         loader = XGBoostModelLoader()
         for feature_name in loader.FEATURE_NAMES:
@@ -130,20 +121,20 @@ class TestXGBoostFeatureFormat:
             # Metadata
             data_completeness=1.0,
         )
-        
+
         # Get feature vector
         feature_vector = seoul_features.to_xgboost_features()
-        
+
         print("\n=== SeoulXGBoostFeatures Vector ===")
         print(f"Total features: {len(feature_vector)}")
         print(f"Type: {type(feature_vector)}")
         print(f"First 10 values: {feature_vector[:10]}")
-        
+
         # This returns a list, not a dict with named features!
         # The XGBoost models need a dict with specific feature names
         assert isinstance(feature_vector, list)
         assert len(feature_vector) == 36
-        
+
         # But the models expect a dict with named features!
         print("\n⚠️  MISMATCH: SeoulXGBoostFeatures returns a list, not a dict!")
         print("XGBoost models expect a dict with keys like 'sleep_percentage_MN'")
@@ -152,20 +143,20 @@ class TestXGBoostFeatureFormat:
         """Test what the current XGBoostPipeline is using."""
         # The XGBoostPipeline now uses AggregationPipeline
         extractor = AggregationPipeline()
-        
+
         print("\n=== Current XGBoostPipeline Usage ===")
         print(f"Feature extractor type: {type(extractor).__name__}")
-        print(f"Returns: DailyFeatures via aggregate_seoul_features()")
-        print(f"Format: Dictionary with paper's 36 statistical features")
+        print("Returns: DailyFeatures via aggregate_seoul_features()")
+        print("Format: Dictionary with paper's 36 statistical features")
         print("\n✅ This MATCHES what XGBoost models expect!")
-        
+
     def test_aggregation_pipeline_has_correct_features(self):
         """Verify AggregationPipeline has the correct implementation."""
         pipeline = AggregationPipeline()
-        
+
         # Check if it has the aggregate_seoul_features method
         assert hasattr(pipeline, 'aggregate_seoul_features')
-        
+
         print("\n=== AggregationPipeline ===")
         print("✅ Has aggregate_seoul_features() method")
         print("✅ Returns DailyFeatures with correct format")
