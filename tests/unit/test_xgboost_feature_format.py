@@ -37,9 +37,9 @@ class TestXGBoostFeatureFormat:
         for i, feature in enumerate(expected_features[:10]):
             print(f"  {i+1}. {feature}")
 
-        # Verify they all have _MN, _SD, or _Z suffixes
+        # Verify they all have _MN, _SD, or _Zscore suffixes
         assert all(
-            feature.endswith(("_MN", "_SD", "_Z"))
+            feature.endswith(("_MN", "_SD", "_Zscore"))
             for feature in expected_features
         ), "All features should have statistical suffixes"
 
@@ -55,8 +55,8 @@ class TestXGBoostFeatureFormat:
             **{field.name: 0.0 for field in DailyFeatures.__dataclass_fields__.values() if field.name != 'date'}
         )
 
-        # Get the XGBoost dict
-        xgboost_dict = daily_features.to_xgboost_dict()
+        # Get the XGBoost dict with mapped feature names
+        xgboost_dict = daily_features.to_model_dict()
 
         print("\n=== DailyFeatures XGBoost Dict ===")
         print(f"Total features: {len(xgboost_dict)}")
@@ -160,7 +160,7 @@ class TestXGBoostFeatureFormat:
         print("\n=== AggregationPipeline ===")
         print("✅ Has aggregate_seoul_features() method")
         print("✅ Returns DailyFeatures with correct format")
-        print("✅ DailyFeatures.to_xgboost_dict() returns expected format")
+        print("✅ DailyFeatures.to_model_dict() returns expected format")
 
 
 if __name__ == "__main__":

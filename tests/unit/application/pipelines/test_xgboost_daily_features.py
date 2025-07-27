@@ -90,19 +90,22 @@ class TestXGBoostPipelineWithDailyFeatures:
         aggregation_pipeline = AggregationPipeline()
 
         # Create mock predictor
+        from big_mood_detector.domain.services.mood_predictor import MoodPrediction
+        
         mock_predictor = Mock()
         captured_features = None
 
-        def capture_features(features, user_id):
+        def capture_features(features):
             nonlocal captured_features
             captured_features = features
-            return {
-                "depression": {"probability": 0.2},
-                "mania": {"probability": 0.1},
-                "hypomania": {"probability": 0.15},
-            }
+            return MoodPrediction(
+                depression_risk=0.2,
+                manic_risk=0.1,
+                hypomanic_risk=0.15,
+                confidence=0.8
+            )
 
-        mock_predictor.predict_mood_episodes.side_effect = capture_features
+        mock_predictor.predict.side_effect = capture_features
 
         # Create validator
         validator = XGBoostValidator()
@@ -185,8 +188,8 @@ class TestXGBoostPipelineWithDailyFeatures:
             circadian_phase_zscore=0.0,
         )
 
-        # Get XGBoost dict
-        xgboost_dict = daily_features.to_xgboost_dict()
+        # Get XGBoost dict with mapped feature names
+        xgboost_dict = daily_features.to_model_dict()
 
         # Verify all expected features are present
         loader = XGBoostModelLoader()

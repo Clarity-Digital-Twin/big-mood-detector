@@ -41,7 +41,7 @@ class TestXGBoostFeatureValidation:
         # Mock DailyFeatures
         mock_daily = Mock()
         # Return dict with all expected feature names
-        mock_daily.to_xgboost_dict.return_value = dict.fromkeys(loader.FEATURE_NAMES, 0.5)
+        mock_daily.to_model_dict.return_value = dict.fromkeys(loader.FEATURE_NAMES, 0.5)
 
         # Mock aggregate_seoul_features to return list of DailyFeatures
         mock.aggregate_seoul_features.return_value = [mock_daily]
@@ -58,12 +58,15 @@ class TestXGBoostFeatureValidation:
     @pytest.fixture
     def mock_predictor(self) -> Mock:
         """Mock XGBoost predictor."""
+        from big_mood_detector.domain.services.mood_predictor import MoodPrediction
+        
         mock = Mock()
-        mock.predict_mood_episodes.return_value = {
-            "depression": {"probability": 0.15, "risk_level": "low"},
-            "mania": {"probability": 0.98, "risk_level": "high"},  # High mania risk!
-            "hypomania": {"probability": 0.45, "risk_level": "medium"},
-        }
+        mock.predict.return_value = MoodPrediction(
+            depression_risk=0.15,
+            manic_risk=0.98,  # High mania risk!
+            hypomanic_risk=0.45,
+            confidence=0.9
+        )
         return mock
 
     @pytest.fixture
@@ -90,7 +93,7 @@ class TestXGBoostFeatureValidation:
         # For new interface
         mock_daily = Mock()
         # Return dict with only 35 features (missing one)
-        mock_daily.to_xgboost_dict.return_value = {
+        mock_daily.to_model_dict.return_value = {
             name: 0.5 for name in loader.FEATURE_NAMES[:-1]  # Skip last feature
         }
         mock_feature_extractor.aggregate_seoul_features.return_value = [mock_daily]
@@ -139,7 +142,7 @@ class TestXGBoostFeatureValidation:
         # Create dict with one NaN value
         feature_dict = dict.fromkeys(loader.FEATURE_NAMES, 0.5)
         feature_dict[loader.FEATURE_NAMES[-1]] = float('nan')  # Last feature is NaN
-        mock_daily.to_xgboost_dict.return_value = feature_dict
+        mock_daily.to_model_dict.return_value = feature_dict
         mock_feature_extractor.aggregate_seoul_features.return_value = [mock_daily]
 
         # Also update old interface
@@ -186,7 +189,7 @@ class TestXGBoostFeatureValidation:
         # Create dict with one Inf value
         feature_dict = dict.fromkeys(loader.FEATURE_NAMES, 0.5)
         feature_dict[loader.FEATURE_NAMES[-1]] = float('inf')  # Last feature is Inf
-        mock_daily.to_xgboost_dict.return_value = feature_dict
+        mock_daily.to_model_dict.return_value = feature_dict
         mock_feature_extractor.aggregate_seoul_features.return_value = [mock_daily]
 
         # Also update old interface
@@ -265,9 +268,14 @@ class TestXGBoostFeatureValidation:
         assert result.confidence_level in ["high", "medium", "low"]
 
         # Verify predictor was called with valid features
-        mock_predictor.predict_mood_episodes.assert_called_once()
-        call_args = mock_predictor.predict_mood_episodes.call_args
-        features = call_args[1]['features']
+        mock_predictor.predict.assert_called_once()
+        call_args = mock_predictor.predict.call_args
+        # Check if it's called with keyword argument
+        if 'features' in call_args.kwargs:
+            features = call_args.kwargs['features']
+        else:
+            # First positional argument
+            features = call_args.args[0]
         assert len(features) == 36
         assert all(not math.isnan(f) and not math.isinf(f) for f in features)
 
