@@ -1,16 +1,15 @@
 # XGBoost Models
 
 ## Status
-XGBoost models are part of the temporal ensemble system but are not included in the repository due to:
-- File size (PKL files can be large)
-- Security (pickle files can contain arbitrary code)
-- Focus on PAT-Conv-L for initial MVP
+XGBoost models from Seoul National University study have been converted from PKL to JSON format for security and portability.
 
-## Models Needed
-For the full temporal ensemble, we need:
-- `depression_model.pkl` - Depression risk prediction
-- `mania_model.pkl` - Mania risk prediction  
-- `hypomania_model.pkl` - Hypomania risk prediction
+## Models Included
+The `converted/` directory contains:
+- `XGBoost_DE.json` - Depression episode prediction (AUC 0.80)
+- `XGBoost_ME.json` - Manic episode prediction (AUC 0.98)  
+- `XGBoost_HME.json` - Hypomanic episode prediction (AUC 0.95)
+
+These models expect 36 features as described in the Nature Digital Medicine paper.
 
 ## How to Obtain
 

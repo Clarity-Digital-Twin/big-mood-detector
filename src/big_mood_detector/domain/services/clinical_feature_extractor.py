@@ -48,6 +48,15 @@ class SeoulXGBoostFeatures:
     Complete 36-feature set from Seoul National University study.
 
     These features achieved AUC 0.80-0.98 for mood episode prediction.
+
+    DEPRECATED: This implementation does NOT match the paper's exact features.
+    Use PaperFeatureExtractor instead, which correctly implements:
+    - 12 base indexes (sleep_amplitude, long_ST, short_WT, etc.)
+    - Mean, SD, and Z-score for each index = 36 total features
+    - Proper 3.75h sleep window threshold
+    - Coefficient of variation for sleep amplitude
+
+    This class will be removed in a future version.
     """
 
     date: date
@@ -115,7 +124,18 @@ class SeoulXGBoostFeatures:
         Convert to 36-element feature vector for XGBoost model.
 
         Order must match the Seoul study's trained model exactly.
+
+        DEPRECATED: This does NOT produce the correct features for the XGBoost models.
+        The models expect features like 'sleep_percentage_MN', 'long_ST_SD', etc.
+        Use PaperFeatureExtractor.extract_statistical_features() instead.
         """
+        import warnings
+        warnings.warn(
+            "SeoulXGBoostFeatures.to_xgboost_features() is deprecated and produces "
+            "incorrect features. Use PaperFeatureExtractor instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         return [
             # Basic sleep (1-5)
             self.sleep_duration_hours,

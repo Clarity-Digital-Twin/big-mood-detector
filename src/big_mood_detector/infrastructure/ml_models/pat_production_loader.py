@@ -24,13 +24,13 @@ if os.getenv("TESTING", "0") == "1":
     # Lightweight stub for testing
     from types import SimpleNamespace
     from typing import Any
-    
+
     class NoGradContext:
         def __enter__(self) -> "NoGradContext":
             return self
         def __exit__(self, *args: Any) -> None:
             return None
-    
+
     torch = SimpleNamespace(
         device=lambda x: SimpleNamespace(type=x.split(":")[0] if isinstance(x, str) else "cpu"),
         cuda=SimpleNamespace(is_available=lambda: False),
@@ -45,25 +45,25 @@ if os.getenv("TESTING", "0") == "1":
         load=lambda path, **kwargs: {"model_state_dict": {}, "val_auc": 0.5929, "epoch": 1},
         sigmoid=lambda x: SimpleNamespace(item=lambda: 0.5)
     )
-    
+
     class SimplePATConvLModel:
         def __init__(self, *args: Any, **kwargs: Any) -> None:
             self.encoder = lambda x: SimpleNamespace(cpu=lambda: SimpleNamespace(numpy=lambda: SimpleNamespace(squeeze=lambda: np.random.rand(96))))
             self.head = lambda x: 0.0
-            
+
         def __call__(self, x: Any) -> float:
             # Model is called with input tensor
             return 0.0
-            
+
         def to(self, device: Any) -> "SimplePATConvLModel":
             return self
-            
+
         def eval(self) -> None:
             pass
-            
+
         def load_state_dict(self, state_dict: Any) -> None:
             pass
-    
+
     class NHANESNormalizer:
         def __init__(self) -> None:
             pass
@@ -270,10 +270,10 @@ class ProductionPATLoader(PATPredictorInterface):
         # Ensure proper shape
         if activity_data.ndim == 0:
             raise ValueError(f"Expected 1D array, got scalar value: {activity_data}")
-        
+
         # Ensure 1D array
         activity_data = activity_data.flatten()
-        
+
         # Validate size - must be exactly 7 days of minute-level data
         if activity_data.size != 10080:
             raise ValueError(

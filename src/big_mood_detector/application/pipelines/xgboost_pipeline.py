@@ -1,0 +1,273 @@
+"""
+XGBoost Pipeline for mood prediction.
+
+Independent pipeline for predicting tomorrow's mood episode risk
+using 30-60 days of health data.
+"""
+
+import logging
+from dataclasses import dataclass
+from datetime import date, timedelta
+from typing import Any
+
+from big_mood_detector.application.validators.pipeline_validators import (
+    ValidationResult,
+    XGBoostValidator,
+)
+from big_mood_detector.domain.entities.activity_record import ActivityRecord
+from big_mood_detector.domain.entities.heart_rate_record import HeartRateRecord
+from big_mood_detector.domain.entities.sleep_record import SleepRecord
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class XGBoostResult:
+    """Result from XGBoost mood prediction."""
+
+    depression_probability: float  # 0.0 to 1.0
+    mania_probability: float  # 0.0 to 1.0
+    hypomania_probability: float  # 0.0 to 1.0
+    prediction_window: str  # e.g., "next 24 hours"
+    data_days_used: int  # Number of days with data
+    clinical_interpretation: str
+    highest_risk_episode: str  # "depression", "mania", "hypomania", or "stable"
+    confidence_level: str  # "high", "medium", "low" based on data quality
+
+
+class XGBoostPipeline:
+    """
+    Independent pipeline for XGBoost mood prediction.
+
+    This pipeline:
+    1. Validates that 30+ days of data are available (sparse OK)
+    2. Extracts Seoul features from available data
+    3. Runs XGBoost models for tomorrow's mood prediction
+    """
+
+    def __init__(
+        self,
+        feature_extractor: Any,  # Clinical feature extractor (avoiding circular imports)
+        predictor: Any,  # XGBoost predictor (avoiding circular imports)
+        validator: XGBoostValidator,
+    ):
+        """
+        Initialize XGBoost pipeline.
+
+        Args:
+            feature_extractor: Clinical feature extractor instance
+            predictor: XGBoost predictor instance
+            validator: XGBoost data validator
+        """
+        self.feature_extractor = feature_extractor
+        self.predictor = predictor
+        self.validator = validator
+
+    def can_run(
+        self,
+        sleep_records: list[SleepRecord],
+        activity_records: list[ActivityRecord],
+        heart_records: list[HeartRateRecord],
+        start_date: date,
+        end_date: date,
+    ) -> ValidationResult:
+        """
+        Check if XGBoost can run with available data.
+
+        Args:
+            sleep_records: Available sleep records
+            activity_records: Available activity records
+            heart_records: Available heart rate records
+            start_date: Start of analysis period
+            end_date: End of analysis period
+
+        Returns:
+            ValidationResult with details about data sufficiency
+        """
+        return self.validator.validate(
+            sleep_records=sleep_records,
+            activity_records=activity_records,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+    def process(
+        self,
+        sleep_records: list[SleepRecord],
+        activity_records: list[ActivityRecord],
+        heart_records: list[HeartRateRecord],
+        target_date: date,
+    ) -> XGBoostResult | None:
+        """
+        Process health data through XGBoost pipeline.
+
+        Args:
+            sleep_records: All available sleep records
+            activity_records: All available activity records
+            heart_records: All available heart rate records
+            target_date: Date to predict for (predicts next day)
+
+        Returns:
+            XGBoostResult if sufficient data, None otherwise
+        """
+        # Determine data range (use up to 60 days if available)
+        all_dates = set()
+
+        for sleep_record in sleep_records:
+            all_dates.add(sleep_record.start_date.date())
+        for activity_record in activity_records:
+            all_dates.add(activity_record.start_date.date())
+        for heart_record in heart_records:
+            all_dates.add(heart_record.timestamp.date())
+
+        if len(all_dates) < 30:
+            logger.info(f"Insufficient data for XGBoost: only {len(all_dates)} days")
+            return None
+
+        # Use most recent 60 days (or all available if less)
+        sorted_dates = sorted(all_dates)
+        if len(sorted_dates) > 60:
+            # Use most recent 60 days
+            start_date = target_date - timedelta(days=59)
+            data_dates = [d for d in sorted_dates if d >= start_date]
+        else:
+            data_dates = sorted_dates
+
+        actual_start = min(data_dates)
+        actual_end = max(data_dates)
+
+        logger.info(
+            f"XGBoost using {len(data_dates)} days from {actual_start} to {actual_end}"
+        )
+
+        # Extract clinical features (Seoul features)
+        # Filter records to just the date range we need to avoid timeout
+        filtered_sleep = [r for r in sleep_records if r.start_date.date() in data_dates]
+        filtered_activity = [r for r in activity_records if r.start_date.date() in data_dates]
+        filtered_heart = [r for r in heart_records if r.timestamp.date() in data_dates]
+
+        logger.info(f"Filtered records - sleep: {len(filtered_sleep)}, activity: {len(filtered_activity)}, heart: {len(filtered_heart)}")
+
+        try:
+            # Check if we're using the AggregationPipeline (CORRECT implementation)
+            if hasattr(self.feature_extractor, 'aggregate_seoul_features'):
+                # Use the correct DailyFeatures implementation
+                daily_features_list = self.feature_extractor.aggregate_seoul_features(
+                    sleep_records=filtered_sleep,
+                    activity_records=filtered_activity,
+                    heart_records=filtered_heart,
+                    start_date=actual_start,
+                    end_date=actual_end,
+                )
+
+                if not daily_features_list:
+                    logger.error("No daily features extracted")
+                    return None
+
+                # For prediction, we can use the most recent day's features
+                # or aggregate them - for now use the most recent
+                latest_features = daily_features_list[-1]
+                xgboost_dict = latest_features.to_model_dict()  # Use model's expected names
+
+                # Convert to feature vector in the correct order
+                # The order must match XGBoostModelLoader.FEATURE_NAMES
+                from big_mood_detector.infrastructure.ml_models.xgboost_models import (
+                    XGBoostModelLoader,
+                )
+                loader = XGBoostModelLoader()
+                feature_vector = [xgboost_dict[name] for name in loader.FEATURE_NAMES]
+
+            # Check if we're using the optimized Seoul extractor
+            elif hasattr(self.feature_extractor, 'extract_seoul_features'):
+                # Use optimized extractor
+                seoul_features = self.feature_extractor.extract_seoul_features(
+                    sleep_records=filtered_sleep,
+                    activity_records=filtered_activity,
+                    heart_records=filtered_heart,
+                    target_date=target_date,
+                )
+                feature_vector = seoul_features.to_xgboost_features()
+            else:
+                # Fallback to clinical feature extractor
+                clinical_features = self.feature_extractor.extract_clinical_features(
+                    sleep_records=filtered_sleep,
+                    activity_records=filtered_activity,
+                    heart_records=filtered_heart,
+                    target_date=target_date,
+                    include_pat_sequence=False,
+                )
+
+                if not clinical_features or not clinical_features.seoul_features:
+                    logger.error("Failed to extract Seoul features")
+                    return None
+
+                feature_vector = clinical_features.seoul_features.to_xgboost_features()
+
+            # Validate feature vector
+            if len(feature_vector) != 36:
+                logger.error(f"Invalid feature vector length: {len(feature_vector)}, expected 36")
+                return None
+
+            # Check for NaN or inf values
+            import math
+            if any(math.isnan(f) or math.isinf(f) for f in feature_vector):
+                logger.error("Feature vector contains NaN or inf values")
+                return None
+
+            logger.debug(f"Feature vector stats - min: {min(feature_vector):.3f}, max: {max(feature_vector):.3f}")
+
+            # Run prediction (convert list to numpy array)
+            import numpy as np
+            feature_array = np.array(feature_vector, dtype=np.float64)
+            prediction = self.predictor.predict(features=feature_array)
+
+            # Determine highest risk
+            risks = {
+                "depression": prediction.depression_risk,
+                "mania": prediction.manic_risk,
+                "hypomania": prediction.hypomanic_risk,
+            }
+
+            highest_risk = max(risks, key=lambda k: risks[k])
+            highest_prob = risks[highest_risk]
+
+            # Clinical interpretation
+            if highest_prob < 0.3:
+                interpretation = "Low risk for mood episodes in next 24 hours"
+                risk_episode = "stable"
+            elif highest_prob < 0.5:
+                interpretation = f"Moderate risk for {highest_risk} in next 24 hours - monitor symptoms"
+                risk_episode = highest_risk
+            elif highest_prob < 0.7:
+                interpretation = f"Elevated risk for {highest_risk} in next 24 hours - consider preventive measures"
+                risk_episode = highest_risk
+            else:
+                interpretation = f"High risk for {highest_risk} in next 24 hours - clinical intervention recommended"
+                risk_episode = highest_risk
+
+            # Confidence based on data completeness
+            data_coverage = len(data_dates) / (actual_end - actual_start).days
+            if data_coverage > 0.8:
+                confidence = "high"
+            elif data_coverage > 0.5:
+                confidence = "medium"
+            else:
+                confidence = "low"
+
+            return XGBoostResult(
+                depression_probability=prediction.depression_risk,
+                mania_probability=prediction.manic_risk,
+                hypomania_probability=prediction.hypomanic_risk,
+                prediction_window="next 24 hours",
+                data_days_used=len(data_dates),
+                clinical_interpretation=interpretation,
+                highest_risk_episode=risk_episode,
+                confidence_level=confidence,
+            )
+
+        except Exception as e:
+            logger.exception("XGBoost prediction failed")
+            # Include sanitized error message for debugging
+            error_msg = str(e).replace('\n', ' ')[:200]  # Limit length
+            logger.error(f"XGBoost error details: {error_msg}")
+            return None

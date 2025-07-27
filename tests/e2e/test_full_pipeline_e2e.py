@@ -193,20 +193,20 @@ class TestFullPipeline:
             PipelineConfig,
         )
         from big_mood_detector.test_support.predictors import ConstantMoodPredictor
-        
+
         config = PipelineConfig(min_days_required=7)
         pipeline = MoodPredictionPipeline.for_testing(
             predictor=ConstantMoodPredictor(),
             config=config,
             disable_ensemble=True
         )
-        
+
         result = pipeline.process_apple_health_file(
             file_path=xml_file,
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 7),
         )
-        
+
         # Then: Should handle gracefully with warnings
         assert result is not None
         assert result.has_warnings is True

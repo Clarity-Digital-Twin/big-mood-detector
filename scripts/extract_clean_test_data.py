@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Extract a clean week of Apple Health data for testing."""
 
-import sys
-import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -13,14 +11,14 @@ START_DATE = END_DATE - timedelta(days=7)
 def main():
     source_file = Path("/mnt/c/Users/JJ/Desktop/Clarity-Digital-Twin/big-mood-detector/data/input/apple_export/export.xml")
     output_file = Path("/mnt/c/Users/JJ/Desktop/Clarity-Digital-Twin/big-mood-detector/tests/fixtures/health/week_sample_clean.xml")
-    
+
     output_file.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # Parse and filter
     print("Parsing large XML file...")
     records = []
-    
-    with open(source_file, 'r', encoding='utf-8') as f:
+
+    with open(source_file, encoding='utf-8') as f:
         # Read header
         header_lines = []
         for line in f:
@@ -28,7 +26,7 @@ def main():
                 header_lines.append(line)
                 break
             header_lines.append(line)
-        
+
         # Process records one by one
         record_count = 0
         for line in f:
@@ -48,17 +46,17 @@ def main():
                         pass
             elif '</HealthData>' in line:
                 break
-    
+
     # Write clean output
     with open(output_file, 'w', encoding='utf-8') as f:
         for line in header_lines:
             f.write(line)
-        
+
         for record in records:
             f.write(record)
-        
+
         f.write('</HealthData>\n')
-    
+
     print(f"Extracted {len(records)} records to {output_file}")
 
 if __name__ == "__main__":
