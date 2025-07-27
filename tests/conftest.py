@@ -147,23 +147,44 @@ class DummyBooster:
         """Mock predict method returning consistent probabilities."""
         import numpy as np
 
-        # Return single probability value per sample
-        if len(X.shape) == 1:
-            return np.array([self.probability])
-        else:
-            return np.full((X.shape[0],), self.probability)
+        # Handle DMatrix objects
+        if hasattr(X, 'num_row'):  # DMatrix has num_row() method
+            n_samples = X.num_row()
+            return np.full((n_samples,), self.probability)
+        
+        # Handle numpy arrays
+        if hasattr(X, 'shape'):
+            if len(X.shape) == 1:
+                return np.array([self.probability])
+            else:
+                return np.full((X.shape[0],), self.probability)
+        
+        # Fallback
+        return np.array([self.probability])
 
     def predict_proba(self, X, **kwargs):
         """Mock predict_proba for sklearn compatibility."""
         import numpy as np
 
-        # Return probability array with shape (n_samples, 2)
-        # First column is 1-probability, second is probability
-        if len(X.shape) == 1:
-            X = X.reshape(1, -1)
-        n_samples = X.shape[0]
+        # Handle DMatrix objects
+        if hasattr(X, 'num_row'):  # DMatrix has num_row() method
+            n_samples = X.num_row()
+            neg_prob = 1 - self.probability
+            return np.array([[neg_prob, self.probability]] * n_samples)
+        
+        # Handle numpy arrays
+        if hasattr(X, 'shape'):
+            # Return probability array with shape (n_samples, 2)
+            # First column is 1-probability, second is probability
+            if len(X.shape) == 1:
+                X = X.reshape(1, -1)
+            n_samples = X.shape[0]
+            neg_prob = 1 - self.probability
+            return np.array([[neg_prob, self.probability]] * n_samples)
+        
+        # Fallback for single prediction
         neg_prob = 1 - self.probability
-        return np.array([[neg_prob, self.probability]] * n_samples)
+        return np.array([[neg_prob, self.probability]])
 
 
 @pytest.fixture

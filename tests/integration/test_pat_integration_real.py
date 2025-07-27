@@ -212,7 +212,7 @@ class TestPATRealIntegration:
         # XGBoost might fail if features aren't provided with correct names
         # PAT embeddings should always be extracted
         assert "pat_embeddings" in result.models_used or "xgboost" in result.models_used
-        
+
         # Should have processing times
         assert result.processing_time_ms["total"] > 0
 

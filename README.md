@@ -6,13 +6,19 @@
 
 [![Tests](https://img.shields.io/badge/tests-1000%2B%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-72%25-yellow)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. Two complementary models: PAT transformer screens for current depression, XGBoost predicts tomorrow's depression/mania/hypomania risk. Built by a clinical psychiatrist, implementing published research, and runs 100% locally.
+Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. 
+
+Two complementary models: 
+- PAT transformer screens for current depression
+- XGBoost predicts tomorrow's depression/mania/hypomania risk.
+
+Built by a clinical psychiatrist, implementing published research, and runs 100% locally.
 
 **Current status**: Research prototype — the first of its kind, but not yet clinically validated.
 
 ## Why Use Big Mood Detector?
 
-**The clinical problem**: No objective tools exist for predicting mood episodes or distinguishing unipolar from bipolar depression or borderline personality disorder. Clinicians rely on subjective recall; patients often seek help after crises begin.
+**The clinical problem**: No objective tool exist for predicting mood episodes or distinguishing unipolar from bipolar depression or borderline personality disorder. Clinicians rely on subjective recall; patients often seek help after crises begin.
 
 **Our breakthrough**:
 - **Early detection**: Spot mood episode risk before symptoms spiral

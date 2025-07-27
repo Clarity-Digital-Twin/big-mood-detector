@@ -47,13 +47,13 @@ class TestXGBoostModels:
 
         # Check for key features mentioned in the papers
         expected_features = [
-            "sleep_percentage_MN",
-            "sleep_percentage_SD",
-            "sleep_percentage_Z",
-            "circadian_amplitude_MN",
-            "circadian_phase_MN",
-            "long_num_MN",
-            "short_num_MN",
+            "Sleep_percentage_MN",
+            "Sleep_percentage_SD",
+            "Sleep_percentage_Zscore",
+            "Circadian_amplitude_MN",
+            "Circadian_phase_MN",
+            "LongSleepWindow_number_MN",
+            "ShortSleepWindow_number_MN",
         ]
 
         for feature in expected_features:

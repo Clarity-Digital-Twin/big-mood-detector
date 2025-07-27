@@ -7,8 +7,6 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-import pytest
-
 from big_mood_detector.application.use_cases.process_health_data_use_case import (
     MoodPredictionPipeline,
     PipelineConfig,
@@ -77,7 +75,7 @@ class TestMoodPredictionPipeline:
 
         # Create pipeline for testing with mock predictor
         from big_mood_detector.test_support.predictors import ConstantMoodPredictor
-        
+
         pipeline = MoodPredictionPipeline.for_testing(
             predictor=ConstantMoodPredictor(),
             config=PipelineConfig(min_days_required=7),

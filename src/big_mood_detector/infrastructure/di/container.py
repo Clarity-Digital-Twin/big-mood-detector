@@ -444,7 +444,7 @@ def _initialize_container(container: Container) -> None:
     # Register application services
     container.register_singleton(DataParsingService)
     container.register_singleton(AggregationPipeline)
-    
+
     # Register ML models
     # Register PAT production loader as singleton
     import os
