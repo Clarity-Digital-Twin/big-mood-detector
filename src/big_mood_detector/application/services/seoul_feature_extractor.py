@@ -113,6 +113,33 @@ class SeoulFeatureExtractor:
         short_sleep_pct = len([s for s in sleep_days if s.total_sleep_hours < 6]) / max(1, len(sleep_days))
         long_sleep_pct = len([s for s in sleep_days if s.total_sleep_hours > 10]) / max(1, len(sleep_days))
         
+        # Calculate z-scores (using population norms)
+        # Population norms from literature:
+        # Sleep: 7.5 ± 1.5 hours
+        # Steps: 7500 ± 3000 steps
+        # Resting HR: 70 ± 10 bpm
+        # HRV SDNN: 50 ± 20 ms
+        sleep_zscore = (avg_sleep - 7.5) / 1.5 if avg_sleep > 0 else 0.0
+        activity_zscore = (avg_steps - 7500) / 3000 if avg_steps > 0 else 0.0
+        hr_zscore = (avg_resting_hr - 70) / 10 if avg_resting_hr != 70 else 0.0
+        hrv_zscore = (avg_hrv - 50) / 20 if avg_hrv != 50 else 0.0
+        
+        # Calculate data completeness
+        all_dates = []
+        for r in sleep_records:
+            all_dates.append(r.start_date.date())
+        for r in activity_records:
+            all_dates.append(r.start_date.date())
+        for r in heart_records:
+            all_dates.append(r.timestamp.date())  # HeartRateRecord uses timestamp, not start_date
+        
+        if all_dates:
+            expected_days = min(60, (target_date - min(all_dates)).days + 1)
+            data_completeness = len(sleep_days) / max(1, expected_days)
+        else:
+            expected_days = 0
+            data_completeness = 0.0
+        
         # Create Seoul features with correct field names
         return SeoulXGBoostFeatures(
             date=target_date,
@@ -154,6 +181,13 @@ class SeoulFeatureExtractor:
             circadian_phase_delay=0.0,  # Not calculated
             dlmo_confidence=0.0,  # Not calculated
             pat_hour=14.0,  # Default PAT
+            # Z-Score Features (33-36)
+            sleep_duration_zscore=sleep_zscore,
+            activity_zscore=activity_zscore,
+            hr_zscore=hr_zscore,
+            hrv_zscore=hrv_zscore,
+            # Metadata
+            data_completeness=data_completeness,
         )
     
     def _calculate_variance(self, values: list[float]) -> float:
