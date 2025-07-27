@@ -259,12 +259,16 @@ class TestXGBoostPipeline:
     @pytest.fixture
     def mock_xgboost_predictor(self) -> Mock:
         """Mock XGBoost predictor."""
+        from big_mood_detector.domain.services.mood_predictor import MoodPrediction
+        
         mock = Mock()
-        mock.predict_mood_episodes.return_value = {
-            "depression": {"probability": 0.25, "risk_level": "low"},
-            "mania": {"probability": 0.15, "risk_level": "low"},
-            "hypomania": {"probability": 0.20, "risk_level": "low"},
-        }
+        # Return a proper MoodPrediction object
+        mock.predict.return_value = MoodPrediction(
+            depression_risk=0.25,
+            hypomanic_risk=0.20,
+            manic_risk=0.15,
+            confidence=0.8,
+        )
         return mock
 
     @pytest.fixture
