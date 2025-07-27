@@ -8,7 +8,8 @@
 
 Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. Two complementary models: 
 - PAT transformer screens for current depression. 
-- XGBoost predicts tomorrow's depression/mania/hypomania risk.  
+- XGBoost predicts tomorrow's depression/mania/hypomania risk.
+
 Built by a clinical psychiatrist, implementing published research — runs 100% on-device, no cloud, no signup.
 
 **Current status**: Research prototype — the first of its kind, but not yet clinically validated.
