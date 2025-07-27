@@ -250,6 +250,6 @@ class TestXGBoostFeatureMismatch:
             assert expected_name in feature_dict, f"Missing XGBoost feature: {expected_name}"
 
         # Verify the mapping is correct
-        assert feature_dict["sleep_percentage_MN"] == 0.3
-        assert feature_dict["sleep_percentage_SD"] == 0.1
-        assert feature_dict["sleep_percentage_Z"] == 0.5
+        assert feature_dict["Sleep_percentage_MN"] == 0.3
+        assert feature_dict["Sleep_percentage_SD"] == 0.1
+        assert feature_dict["Sleep_percentage_Zscore"] == 0.5

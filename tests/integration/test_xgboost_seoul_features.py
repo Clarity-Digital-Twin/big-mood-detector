@@ -108,9 +108,9 @@ class TestXGBoostSeoulFeatures:
         assert len(feature_dict) == 36, f"Expected 36 features, got {len(feature_dict)}"
 
         # Spot check some values
-        assert 0 <= feature_dict["sleep_percentage_MN"] <= 1
-        assert feature_dict["sleep_percentage_SD"] >= 0
-        assert isinstance(feature_dict["long_num_MN"], int | float)
+        assert 0 <= feature_dict["Sleep_percentage_MN"] <= 1
+        assert feature_dict["Sleep_percentage_SD"] >= 0
+        assert isinstance(feature_dict["LongSleepWindow_number_MN"], int | float)
 
     @pytest.mark.integration
     @pytest.mark.skipif(
@@ -214,13 +214,13 @@ class TestXGBoostSeoulFeatures:
         feature_dict = daily_features.to_model_dict()
 
         # Verify the mapping produces XGBoost expected names
-        assert feature_dict["sleep_percentage_MN"] == 0.35
-        assert feature_dict["sleep_percentage_SD"] == 0.05
-        assert feature_dict["sleep_percentage_Z"] == 0.2
+        assert feature_dict["Sleep_percentage_MN"] == 0.35
+        assert feature_dict["Sleep_percentage_SD"] == 0.05
+        assert feature_dict["Sleep_percentage_Zscore"] == 0.2
 
-        assert feature_dict["long_num_MN"] == 1.2
-        assert feature_dict["long_ST_MN"] == 7.2  # Note uppercase ST
-        assert feature_dict["circadian_phase_MN"] == 22.5
+        assert feature_dict["LongSleepWindow_number_MN"] == 1.2
+        assert feature_dict["ST_long_MN"] == 7.2  # Note uppercase ST
+        assert feature_dict["Circadian_phase_MN"] == 22.5
 
         # Verify all expected XGBoost features are present
         expected_features = XGBoostModelLoader.FEATURE_NAMES
