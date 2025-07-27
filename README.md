@@ -1,31 +1,27 @@
 # 🧠 Big Mood Detector
 
-**Revolutionary computational psychiatry: Predict depression & bipolar episodes from your Apple Watch**
+**Predict mood episodes from your wearable data — clinically informed, privacy-first, open-source.**
 
-[![Version](https://img.shields.io/badge/version-0.5.0-blue)](CHANGELOG.md) [![Tests](https://img.shields.io/badge/tests-1230%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.5.0-blue)](CHANGELOG.md) [![Tests](https://img.shields.io/badge/tests-1230%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-72%25-yellow)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-Big Mood Detector bridges the gap between consumer wearables and clinical psychiatry. By implementing state-of-the-art research from Seoul National University Hospital and Dartmouth, we transform your health data into actionable mental health insights — all while keeping your data 100% private on your device.
+Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. Two complementary models: PAT transformer screens for current depression, XGBoost predicts tomorrow's depression/mania/hypomania risk. Built by a clinical psychiatrist, implementing published research, runs 100% locally.
 
-**🚨 Research Tool Notice**: While based on peer-reviewed clinical studies, this tool provides risk assessments, not diagnoses. Always consult healthcare professionals for medical decisions.
+**Current status**: Research prototype — the first of its kind, but not yet clinically validated.
 
-## The Problem We're Solving
+## Why Use Big Mood Detector?
 
-Mental health episodes don't happen overnight. The warning signs are there — in your sleep patterns, activity levels, and circadian rhythms — often days or weeks before symptoms become noticeable. But current mental health tools miss these digital biomarkers entirely.
+**The clinical problem**: No objective tools exist for predicting mood episodes or distinguishing unipolar from bipolar depression or borderline personality disorder. Clinicians rely on subjective recall; patients often seek help after crises begin.
 
-Traditional approaches fail because they:
-- Rely on subjective symptom reporting after problems arise
-- Miss the physiological patterns that precede mood episodes  
-- Can't provide continuous, objective monitoring
-- Don't leverage the rich sensor data from modern wearables
+**Our breakthrough**:
+- **Early detection**: Spot mood episode risk before symptoms spiral
+- **Two applications**: Current depression screening (PAT) + next-day episode prediction (XGBoost)
+- **Objective data**: Complement clinical assessment with continuous behavioral biomarkers
+- **Research foundation**: First implementation combining two breakthrough papers:
+  - XGBoost: [Nature Digital Medicine 2024](https://github.com/KAIST-Behavioral-AI-Lab/MoodML_NatureDM2024)
+  - PAT: [Dartmouth Foundation Model](https://github.com/Computational-Psychiatry/pat)
+- **Privacy-first**: Runs entirely on your device — your data never leaves your machine
 
-## Our Solution: Clinical-Grade AI, Consumer Hardware
-
-Big Mood Detector implements two groundbreaking models from leading psychiatric research:
-
-1. **PAT Transformer (Dartmouth)**: Analyzes 7-day activity patterns to screen for current depression
-2. **XGBoost Ensemble (Seoul)**: Uses 30-day circadian features to predict tomorrow's episode risk
-
-Together, they provide a temporal separation that's crucial for clinical utility: understanding your current state while predicting future risk.
+For researchers: Validate these approaches across populations, build the evidence base for digital mental health.
 
 ## 🚀 Quick Start
 
