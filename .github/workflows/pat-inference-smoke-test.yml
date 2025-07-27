@@ -1,0 +1,69 @@
+name: PAT Inference Smoke Test
+
+on:
+  pull_request:
+    paths:
+      - 'src/big_mood_detector/infrastructure/ml_models/pat_*.py'
+      - 'src/big_mood_detector/application/pipelines/pat_pipeline.py'
+      - 'src/big_mood_detector/domain/services/pat_*.py'
+      - '.github/workflows/pat-inference-smoke-test.yml'
+      - 'scripts/validate_pat_*.py'
+      - 'scripts/test_independent_pipelines.py'
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[ml,dev]"
+        
+    - name: Download model weights
+      run: |
+        # Check if weights exist (they should be in the repo)
+        if [ ! -f "model_weights/production/pat_conv_l_v0.5929.pth" ]; then
+          echo "ERROR: PAT model weights not found in repo"
+          exit 1
+        fi
+        
+    - name: Validate PAT inference integration
+      run: |
+        # Test that PAT models can load and make predictions
+        python scripts/validate_pat_depression_integration.py
+        
+    - name: Verify PAT can load and predict
+      run: |
+        # Run a simple test to ensure PAT models work
+        python -c "
+import sys
+sys.path.insert(0, '.')
+from big_mood_detector.infrastructure.ml_models.pat_production_loader import ProductionPATLoader
+import numpy as np
+
+# Test loading
+loader = ProductionPATLoader()
+loader.load_model()
+
+# Test prediction with synthetic data
+activity = np.random.rand(10080).astype(np.float32)
+result = loader.predict_depression(activity)
+print(f'PAT inference test passed: depression risk = {result.depression_risk:.2%}')
+"
