@@ -1,6 +1,12 @@
 # Multi-stage build for optimized image size - 2025 best practices
+# Build args for flexibility (default: full ML support)
+ARG INSTALL_ML=true
+
 # Stage 1: Builder with all dependencies
 FROM python:3.12-slim-bookworm AS builder
+
+# Accept build args
+ARG INSTALL_ML
 
 # Security: Run as non-root user
 RUN useradd -m -u 1000 appuser
@@ -24,9 +30,17 @@ COPY src/ ./src/
 RUN python -m venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Install dependencies - include dev for testing in CI
+# Install dependencies based on build arg
+# Default: Full ML support (both XGBoost and PAT)
+# Override with --build-arg INSTALL_ML=false for lighter image
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -e ".[dev]" && \
+    if [ "$INSTALL_ML" = "true" ]; then \
+        echo "Installing with ML support (PyTorch + TensorFlow)..." && \
+        pip install --no-cache-dir -e ".[dev,ml,monitoring]"; \
+    else \
+        echo "Installing without ML support (XGBoost only)..." && \
+        pip install --no-cache-dir -e ".[dev,monitoring]"; \
+    fi && \
     pip install --no-cache-dir gunicorn
 
 # Stage 2: Runtime image (smaller, secure)
@@ -48,22 +62,16 @@ COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 # Set working directory
 WORKDIR /app
 
-# Copy less frequently changing files first (better caching)
-# Copy configuration files (rarely change)
+# Copy application files
 COPY --chown=appuser:appuser config/ ./config/
-
-# Copy application code
 COPY --chown=appuser:appuser src/ ./src/
-
-# Copy model weights (required for predictions)
 COPY --chown=appuser:appuser model_weights/ ./model_weights/
 
-# Create symlinks for expected model names
-RUN ln -s /app/model_weights/xgboost/converted/XGBoost_DE.json /app/model_weights/xgboost/converted/depression_risk.json && \
-    ln -s /app/model_weights/xgboost/converted/XGBoost_HME.json /app/model_weights/xgboost/converted/hypomanic_risk.json && \
-    ln -s /app/model_weights/xgboost/converted/XGBoost_ME.json /app/model_weights/xgboost/converted/manic_risk.json
+# Create required directories
+RUN mkdir -p /app/logs /app/data /app/uploads && \
+    chown -R appuser:appuser /app
 
-# Copy entrypoint and healthcheck scripts
+# Copy and setup entrypoint
 COPY --chown=appuser:appuser docker/entrypoint.sh /entrypoint.sh
 COPY --chown=appuser:appuser docker/healthcheck.py /healthcheck.py
 RUN chmod +x /entrypoint.sh /healthcheck.py
@@ -74,10 +82,13 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONHASHSEED=random \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    # Default to production settings
+    ENVIRONMENT=production \
+    LOG_LEVEL=INFO
 
-# Health check with dependency verification
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD python /healthcheck.py || exit 1
 
 # Switch to non-root user
@@ -86,13 +97,11 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Set up volume for data (user uploads/outputs)
-VOLUME /data
-
-# Set default data directory to /data for volume mounts
-# This ensures all user data goes to the mounted volume
-ENV BIGMOOD_DATA_DIR=/data
-ENV DATA_DIR=/data
+# Volumes for persistent data
+VOLUME ["/app/data", "/app/logs", "/app/model_weights"]
 
 # Use entrypoint for flexible execution
 ENTRYPOINT ["/entrypoint.sh"]
+
+# Default command (can be overridden)
+CMD ["serve"]
