@@ -25,21 +25,20 @@ For researchers: Validate these approaches across populations, build the evidenc
 
 ## 🚀 Quick Start
 
-*From data export to clinical insights in 2 minutes*
+*Takes 2 minutes on any Mac/PC*
 
 ```bash
-# Install
+# 1. Install
 pip install big-mood-detector
 
-# Export your Apple Health data
-# iPhone → Settings → Health → Export All Health Data
-# Place the export.xml file in: data/input/apple_export/
+# 2. Export Apple Health data (Settings → Health → Export)
+#    Place export.xml in: data/input/apple_export/
 
-# Generate risk assessment
+# 3. Analyze your data (research purposes)
 big-mood predict data/input/apple_export/export.xml --report
 ```
 
-Your personalized report appears in `data/output/clinical_report.txt`
+See full output in `data/output/clinical_report.txt`
 
 ## 📊 What You'll Learn About Your Mental Health
 
