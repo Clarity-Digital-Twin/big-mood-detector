@@ -41,10 +41,11 @@ pip install big-mood-detector
 
 # 2. Export Apple Health data (Settings → Health → Export)
 #    Unzip to get export.xml
+#    Place in: data/input/apple_export/export.xml
 
 # 3. Analyze your data (research purposes)
-big-mood process export.xml --days-back 90
-big-mood predict export.xml --report
+big-mood process data/input/apple_export/export.xml --days-back 90
+big-mood predict data/input/apple_export/export.xml --report
 ```
 
 **Need help?** See the [User Quick Start →](docs/user/QUICK_START_GUIDE.md)

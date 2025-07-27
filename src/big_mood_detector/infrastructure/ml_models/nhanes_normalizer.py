@@ -36,7 +36,7 @@ class NHANESNormalizer:
                        Defaults to production stats.
         """
         if stats_path is None:
-            stats_path = Path("model_weights/production/nhanes_scaler_stats.json")
+            stats_path = Path("model_weights/pat/production/nhanes_scaler_stats.json")
 
         self.stats_path = stats_path
         self.mean: NDArray[np.float32] | None = None

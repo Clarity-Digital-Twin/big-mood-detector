@@ -125,7 +125,7 @@ def main():
     mean, std = compute_scaler_stats(X_train)
 
     # Save statistics
-    output_path = Path("model_weights/production/nhanes_scaler_stats.json")
+    output_path = Path("model_weights/pat/production/nhanes_scaler_stats.json")
     save_scaler_stats(mean, std, output_path)
 
     # Update with sample count

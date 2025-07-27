@@ -94,8 +94,8 @@ class TestXGBoostSeoulFeatures:
 
         # Get the last day's features
         latest_features = daily_features[-1]
-        # Use to_xgboost_dict() to get only the 36 Seoul features
-        feature_dict = latest_features.to_xgboost_dict()
+        # Use to_model_dict() to get the 36 Seoul features with mapped names
+        feature_dict = latest_features.to_model_dict()
         print(f"Feature dict keys: {list(feature_dict.keys())}")
 
         # Verify all Seoul features are present

@@ -130,7 +130,7 @@ def validate_with_mock_normalizer():
 
     except FileNotFoundError as e:
         logger.error(f"❌ Model weights not found: {e}")
-        logger.error("Please ensure pat_conv_l_v0.5929.pth is in model_weights/production/")
+        logger.error("Please ensure pat_conv_l_v0.5929.pth is in model_weights/pat/production/")
         return False
     except Exception as e:
         logger.error(f"❌ Validation failed: {e}")
@@ -177,7 +177,7 @@ def check_model_info():
     logger.info("Model Information")
     logger.info("=" * 60)
 
-    model_path = Path("model_weights/production/pat_conv_l_v0.5929.pth")
+    model_path = Path("model_weights/pat/production/pat_conv_l_v0.5929.pth")
 
     if model_path.exists():
         logger.info(f"✅ Model file exists: {model_path}")
@@ -200,7 +200,7 @@ def check_model_info():
 
     else:
         logger.error(f"❌ Model file not found: {model_path}")
-        logger.info("Please download or copy pat_conv_l_v0.5929.pth to model_weights/production/")
+        logger.info("Please download or copy pat_conv_l_v0.5929.pth to model_weights/pat/production/")
 
 
 def main():

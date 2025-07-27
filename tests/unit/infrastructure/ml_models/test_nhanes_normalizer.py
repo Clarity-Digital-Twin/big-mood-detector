@@ -35,7 +35,7 @@ class TestNHANESNormalizer:
 
         normalizer = NHANESNormalizer()
 
-        expected_path = Path("model_weights/production/nhanes_scaler_stats.json")
+        expected_path = Path("model_weights/pat/production/nhanes_scaler_stats.json")
         assert normalizer.stats_path == expected_path
 
     def test_loads_statistics_from_json(self):

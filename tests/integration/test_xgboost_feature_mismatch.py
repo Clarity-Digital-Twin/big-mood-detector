@@ -242,9 +242,8 @@ class TestXGBoostFeatureMismatch:
             circadian_phase_zscore=0.0
         )
 
-        # Get the dictionary representation
-        feature_dict = daily_features.to_dict()
-        feature_dict.pop('date', None)
+        # Get the dictionary representation with mapped feature names
+        feature_dict = daily_features.to_model_dict()
 
         # Verify all expected features are present
         for expected_name in xgboost_expected:

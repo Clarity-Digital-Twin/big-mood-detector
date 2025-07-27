@@ -107,7 +107,7 @@ class ProductionPATLoader(PATPredictorInterface):
             normalizer: Optional pre-configured normalizer.
         """
         if model_path is None:
-            model_path = Path("model_weights/production/pat_conv_l_v0.5929.pth")
+            model_path = Path("model_weights/pat/production/pat_conv_l_v0.5929.pth")
 
         self.model_path = model_path
 
@@ -136,7 +136,7 @@ class ProductionPATLoader(PATPredictorInterface):
             if not self.model_path.exists():
                 raise FileNotFoundError(
                     f"Production model not found at {self.model_path}. "
-                    "Please ensure pat_conv_l_v0.5929.pth is in model_weights/production/"
+                    "Please ensure pat_conv_l_v0.5929.pth is in model_weights/pat/production/"
                 )
             self._load_weights()
         else:
