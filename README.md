@@ -84,102 +84,59 @@ PAT = transformer AI, XGBoost = gradient boosting, ensemble = enhanced reliabili
 
 ¹Ruan et al., 2024 | ²Lim et al., 2024
 
+## What Makes This Different
+
+1. **Clinical innovation**: First open-source tool combining two state-of-the-art approaches to predict mood episodes from wearable data
+
+2. **Scientific rigor**: Faithful implementation of published algorithms:
+   - XGBoost circadian model from Seoul National University (Nature Digital Medicine 2024)
+   - PAT transformer from Dartmouth (first foundation model for actigraphy)
+
+3. **Privacy breakthrough**: No cloud dependency, no data collection — your mental health data stays private
+
+4. **Open research**: Complete transparency enables validation, improvement, and trust
+
+## ⚠️ Research Limitations
+
+**Population specificity**:
+- XGBoost: Trained on 168 Korean adults (18-35y) with mood disorders
+- PAT: Pre-trained on 21,538 US adults, fine-tuned on 2,800 with PHQ-9 scores
+
+**Performance constraints**:
+- Current depression screening: Moderate accuracy (0.593 AUC)
+- Next-day episode prediction: High accuracy but limited to Korean cohort (0.80-0.98 AUC)
+- No validation across ethnicities, age groups, or comorbid conditions
+- Research tool only — not FDA approved or clinically validated
+
 ## 📚 Documentation
 
-### Getting Started
-- [Quick Start Guide](docs/user/QUICK_START_GUIDE.md) - First-time setup
-- [Apple Health Export](docs/user/APPLE_HEALTH_EXPORT.md) - Data export walkthrough
-- [Understanding Your Report](docs/user/APPLICATION_WORKFLOW.md) - Interpret results
+| Audience | Start Here |
+|----------|------------|
+| **Users** | [Quick Start Guide](docs/user/QUICK_START_GUIDE.md) |
+| **Developers** | [Architecture Overview](docs/developer/ARCHITECTURE_OVERVIEW.md) |
+| **Researchers** | [Clinical Requirements](docs/clinical/CLINICAL_REQUIREMENTS_DOCUMENT.md) |
+| **AI Assistants** | [CLAUDE.md](CLAUDE.md) |
 
-### Technical Deep Dives
-- [Architecture Overview](docs/developer/ARCHITECTURE_OVERVIEW.md) - System design
-- [Clinical Requirements](docs/clinical/CLINICAL_REQUIREMENTS_DOCUMENT.md) - Medical accuracy standards
-- [Model Training](docs/training/PAT_DEPRESSION_TRAINING.md) - Reproduce our results
+## Contributing
 
-### For Contributors
-- [Developer Setup](CONTRIBUTING.md) - Build from source
-- [API Reference](docs/developer/API_REFERENCE.md) - Code documentation
-- [AI Assistant Guide](CLAUDE.md) - For LLM-assisted development
+Critical research needs:
+- 🏥 Clinical validation across diverse populations
+- 🌍 Multi-ethnic, multi-age cohort studies
+- 📱 Integration with additional wearable devices
+- 🧪 Improving transformer model accuracy
 
-## 🚀 Roadmap
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### v0.6.0 - Enhanced Transparency (Q3 2025)
-- [ ] XML Probe for data preview ([Issue #64](https://github.com/Clarity-Digital-Twin/big-mood-detector/issues/64))
-- [ ] Explainable AI dashboard
-- [ ] Multi-language support
+## License
 
-### v0.7.0 - Multimodal Fusion (Q4 2025)
-- [ ] Environmental factors (weather, pollution)
-- [ ] Social digital biomarkers
-- [ ] Medication tracking integration
+Apache 2.0 - Use freely, even commercially. See [LICENSE](LICENSE).
 
-### v1.0.0 - Clinical Validation (2026)
-- [ ] IRB-approved validation studies
-- [ ] FDA 510(k) pathway planning
-- [ ] Healthcare provider tools
+## Acknowledgments
 
-[Full roadmap →](ROADMAP_TO_MVP_V1.0.md)
-
-## 💪 Proven Performance
-
-- **Processing Speed**: 33 MB/s (10x faster than v0.1)
-- **Memory Efficiency**: <100MB RAM for any file size
-- **Test Coverage**: 90%+ with 1,230 tests
-- **Type Safety**: 100% mypy compliant
-- **Production Ready**: Clean architecture, dependency injection
-
-## 🤝 Join the Revolution
-
-This is more than code — it's the future of mental healthcare. Help us build it:
-
-### Contribute Code
-- **XML Processing**: Speed up data ingestion
-- **Model Training**: Improve prediction accuracy  
-- **UI/UX**: Build beautiful visualizations
-- **DevOps**: Enhance CI/CD pipelines
-
-### Contribute Science
-- **Clinical Validation**: Partner on studies
-- **Feature Engineering**: Propose new biomarkers
-- **Model Architecture**: Experiment with new approaches
-- **Literature Review**: Stay current with research
-
-### Contribute Community
-- **Documentation**: Help others understand
-- **Testing**: Find edge cases
-- **Translations**: Make it globally accessible
-- **Advocacy**: Spread the word
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
-
-## ⚖️ Ethical AI Commitment
-
-- **Transparency**: Open source everything, including model weights
-- **Accountability**: Clear limitations and appropriate use cases
-- **Fairness**: Tested across diverse populations
-- **Privacy**: Your data never leaves your control
-
-## 🙏 Standing on the Shoulders of Giants
-
-Built on groundbreaking research:
-- **Seoul National University Hospital** - XGBoost circadian models
-- **Dartmouth PAT Team** - Foundation model architecture
-- **NHANES** - Population health validation
-- **Open source community** - Countless contributions
-
-## Get Started Now
-
-```bash
-# The future of mental health monitoring starts with one command
-pip install big-mood-detector
-```
+Built on pioneering research:
+- **XGBoost models**: Seoul National University, Korea University, KAIST ([Lim et al., 2024](https://doi.org/10.1038/s41746-024-01333-z))
+- **PAT foundation model**: Dartmouth College ([Ruan et al., 2024](https://arxiv.org/abs/2411.15240))
 
 ---
 
-*"Your mind matters. Your privacy matters. Both are possible."*
-
-**Questions?** → [Discussions](https://github.com/Clarity-Digital-Twin/big-mood-detector/discussions)  
-**Issues?** → [Bug Reports](https://github.com/Clarity-Digital-Twin/big-mood-detector/issues)  
-**Updates?** → [Changelog](CHANGELOG.md)
-
-[![Star History](https://api.star-history.com/svg?repos=Clarity-Digital-Twin/big-mood-detector&type=Date)](https://github.com/Clarity-Digital-Twin/big-mood-detector/stargazers)
+**Have feedback?** Open an [issue](https://github.com/Clarity-Digital-Twin/big-mood-detector/issues) or see [discussions](https://github.com/Clarity-Digital-Twin/big-mood-detector/discussions).
