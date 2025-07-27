@@ -216,17 +216,16 @@ class XGBoostPipeline:
 
             logger.debug(f"Feature vector stats - min: {min(feature_vector):.3f}, max: {max(feature_vector):.3f}")
 
-            # Run prediction
-            predictions = self.predictor.predict_mood_episodes(
-                features=feature_vector,
-                user_id="default",  # Can be customized later
-            )
+            # Run prediction (convert list to numpy array)
+            import numpy as np
+            feature_array = np.array(feature_vector, dtype=np.float64)
+            prediction = self.predictor.predict(features=feature_array)
 
             # Determine highest risk
             risks = {
-                "depression": predictions["depression"]["probability"],
-                "mania": predictions["mania"]["probability"],
-                "hypomania": predictions["hypomania"]["probability"],
+                "depression": prediction.depression_risk,
+                "mania": prediction.manic_risk,
+                "hypomania": prediction.hypomanic_risk,
             }
 
             highest_risk = max(risks, key=lambda k: risks[k])
@@ -256,9 +255,9 @@ class XGBoostPipeline:
                 confidence = "low"
 
             return XGBoostResult(
-                depression_probability=predictions["depression"]["probability"],
-                mania_probability=predictions["mania"]["probability"],
-                hypomania_probability=predictions["hypomania"]["probability"],
+                depression_probability=prediction.depression_risk,
+                mania_probability=prediction.manic_risk,
+                hypomania_probability=prediction.hypomanic_risk,
                 prediction_window="next 24 hours",
                 data_days_used=len(data_dates),
                 clinical_interpretation=interpretation,

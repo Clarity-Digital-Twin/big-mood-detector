@@ -35,7 +35,8 @@ class BoosterPredictProbaWrapper:
 
         # Convert to DMatrix if needed
         if not isinstance(X, xgb.DMatrix):
-            X = xgb.DMatrix(X)
+            # Pass data WITHOUT feature names to avoid validation errors
+            X = xgb.DMatrix(X, feature_names=None)
 
         return np.array(self.booster.predict(X), dtype=np.float64)
 
