@@ -210,8 +210,8 @@ class TestXGBoostSeoulFeatures:
             circadian_phase_zscore=0.1
         )
 
-        # Convert to dict using XGBoost-specific method
-        feature_dict = daily_features.to_xgboost_dict()
+        # Convert to dict using model-specific method with feature name mapping
+        feature_dict = daily_features.to_model_dict()
 
         # Verify the mapping produces XGBoost expected names
         assert feature_dict["sleep_percentage_MN"] == 0.35
