@@ -37,7 +37,7 @@ setup: install-dev pre-commit
 
 # Testing targets (TDD focused)
 test:  ## Run all tests except slow_finetune and large files
-	$(PYTEST) -n auto --cov=big_mood_detector --cov-report=term-missing
+	TESTING=1 $(PYTEST) -n auto --cov=big_mood_detector --cov-report=term-missing
 
 test-quick:  ## Quick test run with minimal output
 	pytest -x --tb=short -q
@@ -49,10 +49,10 @@ test-parallel:
 	pytest -n auto --cov=big_mood_detector --cov-report=term-missing
 
 test-fast:
-	pytest -m "not slow and not integration and not slow_finetune" -x --tb=short
+	TESTING=1 pytest -m "not slow and not integration and not slow_finetune" -x --tb=short
 
 test-unit:
-	pytest tests/unit -x --tb=short -q
+	TESTING=1 pytest tests/unit -x --tb=short -q
 
 test-slow: ## Run slow performance tests (requires --runslow flag)
 	pytest --runslow -m "slow" -v
