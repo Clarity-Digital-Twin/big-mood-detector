@@ -16,12 +16,12 @@ from big_mood_detector.application.pipelines.xgboost_pipeline import XGBoostPipe
 from big_mood_detector.application.services.data_parsing_service import (
     DataParsingService,
 )
+from big_mood_detector.application.services.aggregation_pipeline import (
+    AggregationPipeline,
+)
 from big_mood_detector.application.validators.pipeline_validators import (
     PATValidator,
     XGBoostValidator,
-)
-from big_mood_detector.application.services.seoul_feature_extractor import (
-    SeoulFeatureExtractor,
 )
 from big_mood_detector.infrastructure.ml_models.xgboost_models import (
     XGBoostMoodPredictor,
@@ -89,11 +89,11 @@ class ProcessWithIndependentPipelinesUseCase:
                 predictor = XGBoostMoodPredictor()
                 predictor.load_models(Path("model_weights/xgboost/converted"))
                 
-                # Use optimized Seoul feature extractor
-                feature_extractor = SeoulFeatureExtractor()
+                # Use AggregationPipeline for correct DailyFeatures
+                aggregation_pipeline = AggregationPipeline()
                 
                 self.xgboost_pipeline = XGBoostPipeline(
-                    feature_extractor=feature_extractor,
+                    feature_extractor=aggregation_pipeline,
                     predictor=predictor,
                     validator=XGBoostValidator(),
                 )

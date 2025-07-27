@@ -149,8 +149,36 @@ class XGBoostPipeline:
         logger.info(f"Filtered records - sleep: {len(filtered_sleep)}, activity: {len(filtered_activity)}, heart: {len(filtered_heart)}")
         
         try:
+            # Check if we're using the AggregationPipeline (CORRECT implementation)
+            if hasattr(self.feature_extractor, 'aggregate_seoul_features'):
+                # Use the correct DailyFeatures implementation
+                daily_features_list = self.feature_extractor.aggregate_seoul_features(
+                    sleep_records=filtered_sleep,
+                    activity_records=filtered_activity,
+                    heart_records=filtered_heart,
+                    start_date=actual_start,
+                    end_date=actual_end,
+                )
+                
+                if not daily_features_list:
+                    logger.error("No daily features extracted")
+                    return None
+                
+                # For prediction, we can use the most recent day's features
+                # or aggregate them - for now use the most recent
+                latest_features = daily_features_list[-1]
+                xgboost_dict = latest_features.to_xgboost_dict()
+                
+                # Convert to feature vector in the correct order
+                # The order must match XGBoostModelLoader.FEATURE_NAMES
+                from big_mood_detector.infrastructure.ml_models.xgboost_models import (
+                    XGBoostModelLoader,
+                )
+                loader = XGBoostModelLoader()
+                feature_vector = [xgboost_dict[name] for name in loader.FEATURE_NAMES]
+                
             # Check if we're using the optimized Seoul extractor
-            if hasattr(self.feature_extractor, 'extract_seoul_features'):
+            elif hasattr(self.feature_extractor, 'extract_seoul_features'):
                 # Use optimized extractor
                 seoul_features = self.feature_extractor.extract_seoul_features(
                     sleep_records=filtered_sleep,

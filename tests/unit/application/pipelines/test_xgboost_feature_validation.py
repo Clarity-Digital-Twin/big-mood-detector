@@ -6,17 +6,23 @@ and handles errors gracefully.
 """
 
 import math
-from datetime import date, datetime, timedelta, UTC
-from unittest.mock import Mock, MagicMock
+from datetime import UTC, date, datetime, timedelta
+from unittest.mock import MagicMock, Mock
+
 import pytest
 
 from big_mood_detector.application.pipelines.xgboost_pipeline import (
     XGBoostPipeline,
     XGBoostResult,
 )
-from big_mood_detector.application.validators.pipeline_validators import XGBoostValidator
+from big_mood_detector.application.validators.pipeline_validators import (
+    XGBoostValidator,
+)
+from big_mood_detector.domain.entities.activity_record import (
+    ActivityRecord,
+    ActivityType,
+)
 from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
-from big_mood_detector.domain.entities.activity_record import ActivityRecord, ActivityType
 
 
 class TestXGBoostFeatureValidation:
@@ -25,17 +31,28 @@ class TestXGBoostFeatureValidation:
     @pytest.fixture
     def mock_feature_extractor(self) -> Mock:
         """Mock feature extractor that returns valid features."""
+        from big_mood_detector.infrastructure.ml_models.xgboost_models import XGBoostModelLoader
+        
         mock = Mock()
+        loader = XGBoostModelLoader()
         
-        # Create mock Seoul features
+        # Mock DailyFeatures
+        mock_daily = Mock()
+        # Return dict with all expected feature names
+        mock_daily.to_xgboost_dict.return_value = {
+            name: 0.5 for name in loader.FEATURE_NAMES
+        }
+        
+        # Mock aggregate_seoul_features to return list of DailyFeatures
+        mock.aggregate_seoul_features.return_value = [mock_daily]
+        
+        # Keep old interface for backward compatibility if needed
         mock_seoul = Mock()
-        mock_seoul.to_xgboost_features.return_value = [0.5] * 36  # Valid 36 features
-        
-        # Create mock clinical features
+        mock_seoul.to_xgboost_features.return_value = [0.5] * 36
         mock_features = Mock()
         mock_features.seoul_features = mock_seoul
-        
         mock.extract_clinical_features.return_value = mock_features
+        
         return mock
     
     @pytest.fixture
@@ -64,7 +81,19 @@ class TestXGBoostFeatureValidation:
         mock_feature_extractor: Mock,
     ) -> None:
         """Test that pipeline validates feature vector has exactly 36 features."""
+        from big_mood_detector.infrastructure.ml_models.xgboost_models import XGBoostModelLoader
+        loader = XGBoostModelLoader()
+        
         # Create invalid feature vector with wrong length
+        # For new interface
+        mock_daily = Mock()
+        # Return dict with only 35 features (missing one)
+        mock_daily.to_xgboost_dict.return_value = {
+            name: 0.5 for name in loader.FEATURE_NAMES[:-1]  # Skip last feature
+        }
+        mock_feature_extractor.aggregate_seoul_features.return_value = [mock_daily]
+        
+        # For old interface (if still used)
         mock_seoul = Mock()
         mock_seoul.to_xgboost_features.return_value = [0.5] * 35  # Only 35 features!
         mock_features = Mock()

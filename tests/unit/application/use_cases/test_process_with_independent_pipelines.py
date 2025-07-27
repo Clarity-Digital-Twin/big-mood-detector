@@ -4,17 +4,18 @@ Unit tests for ProcessWithIndependentPipelinesUseCase.
 Tests the orchestration of independent PAT and XGBoost pipelines.
 """
 
-import pytest
-from datetime import date, datetime, timedelta, UTC
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
-from big_mood_detector.application.use_cases.process_with_independent_pipelines import (
-    ProcessWithIndependentPipelinesUseCase,
-    IndependentPipelineResult,
-)
+import pytest
+
 from big_mood_detector.application.pipelines.pat_pipeline import PATResult
 from big_mood_detector.application.pipelines.xgboost_pipeline import XGBoostResult
+from big_mood_detector.application.use_cases.process_with_independent_pipelines import (
+    IndependentPipelineResult,
+    ProcessWithIndependentPipelinesUseCase,
+)
 from big_mood_detector.domain.entities.activity_record import (
     ActivityRecord,
     ActivityType,

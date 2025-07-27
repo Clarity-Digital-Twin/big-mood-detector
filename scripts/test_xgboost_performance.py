@@ -3,16 +3,28 @@
 
 import logging
 import time
-from datetime import UTC, datetime, timedelta, date
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 from big_mood_detector.application.pipelines.xgboost_pipeline import XGBoostPipeline
-from big_mood_detector.application.services.seoul_feature_extractor import SeoulFeatureExtractor
-from big_mood_detector.application.validators.pipeline_validators import XGBoostValidator
-from big_mood_detector.domain.entities.heart_rate_record import HeartRateRecord, HeartMetricType
+from big_mood_detector.application.services.aggregation_pipeline import (
+    AggregationPipeline,
+)
+from big_mood_detector.application.validators.pipeline_validators import (
+    XGBoostValidator,
+)
+from big_mood_detector.domain.entities.activity_record import (
+    ActivityRecord,
+    ActivityType,
+)
+from big_mood_detector.domain.entities.heart_rate_record import (
+    HeartMetricType,
+    HeartRateRecord,
+)
 from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
-from big_mood_detector.domain.entities.activity_record import ActivityRecord, ActivityType
-from big_mood_detector.infrastructure.ml_models.xgboost_models import XGBoostMoodPredictor
+from big_mood_detector.infrastructure.ml_models.xgboost_models import (
+    XGBoostMoodPredictor,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
