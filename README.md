@@ -21,8 +21,8 @@ Built by a clinical psychiatrist, implementing published research — runs 100% 
 - **Two applications**: Current depression screening (PAT) + next-day episode prediction (XGBoost)
 - **Objective data**: Complement clinical assessment with continuous behavioral biomarkers
 - **Research foundation**: First implementation combining two breakthrough papers:
-  - XGBoost: [Nature Digital Medicine 2024](https://github.com/KAIST-Behavioral-AI-Lab/MoodML_NatureDM2024)
   - PAT: [Dartmouth Foundation Model](https://github.com/Computational-Psychiatry/pat)
+  - XGBoost: [Nature Digital Medicine 2024](https://github.com/KAIST-Behavioral-AI-Lab/MoodML_NatureDM2024)
 - **Privacy-first**: Runs entirely on your device — your data never leaves your machine
 
 **For researchers**: Validate these approaches across populations, build the evidence base for digital mental health. See [PAT model training details](docs/training/PAT_DEPRESSION_TRAINING.md) for replication.
