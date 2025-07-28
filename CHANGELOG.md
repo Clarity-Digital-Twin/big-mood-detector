@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2025-07-28
+
 ### Added
 - **Temporal Ensemble Integration** - Switched API & CLI to TemporalEnsembleOrchestrator
   - PAT assesses current state (NOW) - "Are you depressed right now?"
@@ -15,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Temporal concordance analysis between current state and future risk
   - Clinical guidance based on temporal patterns
   - Backward compatible - existing endpoints maintain same response format
+
+### Fixed
+- **PAT Integration** - PAT model was loaded but never used in predictions
+  - Discovered ensemble predictions were just XGBoost results
+  - TemporalEnsembleOrchestrator existed but wasn't connected
+  - Now properly integrated throughout API and CLI
 
 ## [0.5.1] - 2025-07-28
 
