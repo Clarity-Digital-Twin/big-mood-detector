@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-07-28
+
 ### Changed
 - **Baseline Calculation** - Removed BaselineRepository in favor of rolling window normalization
   - XGBoost models now use 30-60 day rolling windows for Z-score calculation
@@ -20,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `file_baseline_repository.py`
   - `timescale_baseline_repository.py`
   - `baseline_repository_factory.py`
+  - 13 associated test files
+
+### Fixed
+- **Model Requirements Understanding** - Clarified that XGBoost models are population-based
+  - Models work immediately with 30+ days of sleep data
+  - No mood episode labeling required for predictions
+  - Resolved Issue #65 with definitive answers
 
 ## [0.5.0] - 2025-07-27
 
