@@ -110,7 +110,7 @@ class MoodPredictionPipeline:
         sparse_handler: SparseDataHandler | None = None,
         data_parsing_service: DataParsingService | None = None,
         aggregation_pipeline: AggregationPipeline | None = None,
-        baseline_repository: Any | None = None,  # NEW: Accept baseline repository
+        # baseline_repository: Any | None = None,  # REMOVED: Using rolling window baselines
         di_container: Any | None = None,  # NEW: Accept DI container
     ):
         """
@@ -128,30 +128,8 @@ class MoodPredictionPipeline:
         # Initialize clinical_extractor - will be set below
         self.clinical_extractor: Any  # Union of ClinicalFeatureExtractor and OrchestratorAdapter
 
-        # Create ClinicalFeatureExtractor with personal calibration support
-        # Use injected baseline repository or get from DI container or create default
-        if self.config.enable_personal_calibration and self.config.user_id:
-            if baseline_repository:
-                # Use explicitly provided repository
-                self.baseline_repository = baseline_repository
-            elif di_container:
-                # Get from DI container
-                from big_mood_detector.domain.repositories.baseline_repository_interface import (
-                    BaselineRepositoryInterface,
-                )
-
-                self.baseline_repository = di_container.resolve(
-                    BaselineRepositoryInterface
-                )
-            else:
-                # Fallback to creating FileBaselineRepository for backward compatibility
-                from big_mood_detector.infrastructure.repositories.file_baseline_repository import (
-                    FileBaselineRepository,
-                )
-
-                baselines_dir = Path("data/baselines")
-                baselines_dir.mkdir(parents=True, exist_ok=True)
-                self.baseline_repository = FileBaselineRepository(baselines_dir)
+        # REMOVED: Baseline repository - now using rolling window baselines in AggregationPipeline
+        self.baseline_repository = None
         else:
             self.baseline_repository = None
 
