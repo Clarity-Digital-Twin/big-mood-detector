@@ -9,8 +9,10 @@ from typing import cast
 
 from fastapi import Request
 
+from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
+    TemporalEnsembleOrchestrator,
+)
 from big_mood_detector.application.use_cases.predict_mood_ensemble_use_case import (
-    EnsembleConfig,
     EnsembleOrchestrator,
 )
 from big_mood_detector.application.use_cases.process_health_data_use_case import (
@@ -51,7 +53,7 @@ def get_mood_pipeline() -> MoodPredictionPipeline:
 
 
 @lru_cache(maxsize=1)
-def get_ensemble_orchestrator() -> EnsembleOrchestrator | None:
+def get_ensemble_orchestrator() -> EnsembleOrchestrator | TemporalEnsembleOrchestrator | None:
     """
     Get singleton EnsembleOrchestrator instance.
 
@@ -79,7 +81,11 @@ def get_ensemble_orchestrator() -> EnsembleOrchestrator | None:
 
     # Initialize PAT model through DI
     pat_predictor = None
+    pat_encoder = None
     try:
+        from big_mood_detector.domain.services.pat_model_interface import (
+            PATModelInterface,
+        )
         from big_mood_detector.domain.services.pat_predictor import (
             PATPredictorInterface,
         )
@@ -87,20 +93,25 @@ def get_ensemble_orchestrator() -> EnsembleOrchestrator | None:
 
         container = get_container()
         pat_predictor = container.resolve(PATPredictorInterface)  # type: ignore[type-abstract]
+        pat_encoder = container.resolve(PATModelInterface)  # type: ignore[type-abstract]
         logger.info("PAT production model (0.5929 AUC) loaded successfully for API")
     except Exception as e:
         logger.warning(f"Could not initialize PAT production model: {e}")
         pat_predictor = None
+        pat_encoder = None
 
-    # Create ensemble orchestrator
-    config = EnsembleConfig.from_settings()
-    orchestrator = EnsembleOrchestrator(
-        xgboost_predictor=xgboost_predictor,
-        pat_model=pat_predictor,  # type: ignore[arg-type]  # Deprecated, using new interface
-        config=config,
-    )
-
-    return orchestrator
+    # Create temporal ensemble orchestrator (NEW!)
+    # Only create if all components are available
+    if pat_predictor and pat_encoder:
+        orchestrator = TemporalEnsembleOrchestrator(
+            pat_predictor=pat_predictor,
+            xgboost_predictor=xgboost_predictor,
+            pat_encoder=pat_encoder,  # type: ignore[arg-type]
+        )
+        return orchestrator
+    else:
+        logger.warning("Cannot create temporal orchestrator without PAT models")
+        return None
 
 
 def get_mood_predictor_with_state(request: Request) -> MoodPredictor:
@@ -116,12 +127,12 @@ def get_mood_predictor_with_state(request: Request) -> MoodPredictor:
 
 def get_ensemble_orchestrator_with_state(
     request: Request,
-) -> EnsembleOrchestrator | None:
+) -> EnsembleOrchestrator | TemporalEnsembleOrchestrator | None:
     """
     Get EnsembleOrchestrator from app state if available, otherwise create new.
 
     This is better for multi-worker deployments.
     """
     if hasattr(request.app.state, "orchestrator"):
-        return cast(EnsembleOrchestrator | None, request.app.state.orchestrator)
+        return cast(EnsembleOrchestrator | TemporalEnsembleOrchestrator | None, request.app.state.orchestrator)
     return get_ensemble_orchestrator()

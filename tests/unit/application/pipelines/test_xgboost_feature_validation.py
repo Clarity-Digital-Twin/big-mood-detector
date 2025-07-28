@@ -59,7 +59,7 @@ class TestXGBoostFeatureValidation:
     def mock_predictor(self) -> Mock:
         """Mock XGBoost predictor."""
         from big_mood_detector.domain.services.mood_predictor import MoodPrediction
-        
+
         mock = Mock()
         mock.predict.return_value = MoodPrediction(
             depression_risk=0.15,

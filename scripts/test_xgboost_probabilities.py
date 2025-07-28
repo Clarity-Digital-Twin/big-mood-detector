@@ -34,12 +34,12 @@ def create_test_data(days: int = 35):
     sleep_records = []
     activity_records = []
     heart_records = []
-    
+
     base_date = datetime(2025, 6, 1, tzinfo=UTC)
-    
+
     for day in range(days):
         current_date = base_date + timedelta(days=day)
-        
+
         # Sleep record (varying durations)
         sleep_hours = 7 + (day % 3) - 1  # 6-8 hours
         sleep_records.append(
@@ -50,7 +50,7 @@ def create_test_data(days: int = 35):
                 state=SleepState.ASLEEP,
             )
         )
-        
+
         # Activity record (varying steps)
         steps = 5000 + (day * 100) % 10000
         activity_records.append(
@@ -63,7 +63,7 @@ def create_test_data(days: int = 35):
                 unit="count",
             )
         )
-        
+
         # Heart rate record
         heart_records.append(
             HeartRateRecord(
@@ -74,14 +74,14 @@ def create_test_data(days: int = 35):
                 unit="bpm",
             )
         )
-    
+
     return sleep_records, activity_records, heart_records
 
 
 def main():
     """Test XGBoost probability outputs."""
     logger.info("Testing XGBoost probability outputs...")
-    
+
     # Create pipeline
     try:
         predictor = XGBoostMoodPredictor()
@@ -90,16 +90,16 @@ def main():
         logger.error(f"Could not load XGBoost models: {e}")
         logger.info("Make sure model weights are in place")
         return
-    
+
     feature_extractor = AggregationPipeline()
     validator = XGBoostValidator()
-    
+
     pipeline = XGBoostPipeline(
         feature_extractor=feature_extractor,
         predictor=predictor,
         validator=validator,
     )
-    
+
     # Test with different data patterns
     test_cases = [
         ("Normal sleep pattern", 35, 7, 8000),
@@ -107,15 +107,15 @@ def main():
         ("Long sleep (depression risk)", 35, 12, 2000),
         ("Irregular pattern", 35, None, None),
     ]
-    
+
     for test_name, days, sleep_hours, steps in test_cases:
         logger.info(f"\n{'='*60}")
         logger.info(f"Test case: {test_name}")
         logger.info(f"{'='*60}")
-        
+
         # Create data
         sleep_records, activity_records, heart_records = create_test_data(days)
-        
+
         # Modify data for specific test cases
         if sleep_hours is not None:
             # Replace sleep records for last 7 days with custom duration
@@ -127,7 +127,7 @@ def main():
                     end_date=old_record.start_date + timedelta(hours=sleep_hours),
                     state=old_record.state,
                 )
-        
+
         if steps is not None:
             # Replace activity records for last 7 days with custom steps
             for i in range(-7, 0):
@@ -140,7 +140,7 @@ def main():
                     value=float(steps),
                     unit=old_record.unit,
                 )
-        
+
         # Run pipeline
         result = pipeline.process(
             sleep_records=sleep_records,
@@ -148,49 +148,49 @@ def main():
             heart_records=heart_records,
             target_date=datetime.now().date(),
         )
-        
+
         if result:
             logger.info("\n📊 RESULTS:")
             logger.info(f"  Depression: {result.depression_probability:.3f}")
             logger.info(f"  Mania: {result.mania_probability:.3f}")
             logger.info(f"  Hypomania: {result.hypomania_probability:.3f}")
-            
+
             # Check probability sum
-            prob_sum = (result.depression_probability + 
-                       result.mania_probability + 
+            prob_sum = (result.depression_probability +
+                       result.mania_probability +
                        result.hypomania_probability)
-            
+
             logger.info(f"\n  Sum: {prob_sum:.3f}")
-            
+
             if prob_sum > 1.0:
                 logger.error(f"  ❌ ERROR: Probabilities sum to {prob_sum:.3f} > 1.0!")
             else:
                 logger.info(f"  ✅ Valid: Probabilities sum to {prob_sum:.3f} ≤ 1.0")
-            
+
             # Check individual probabilities
             probs = [
                 result.depression_probability,
                 result.mania_probability,
                 result.hypomania_probability
             ]
-            
-            for name, prob in zip(["Depression", "Mania", "Hypomania"], probs):
+
+            for name, prob in zip(["Depression", "Mania", "Hypomania"], probs, strict=False):
                 if not (0.0 <= prob <= 1.0):
                     logger.error(f"  ❌ ERROR: {name} probability {prob:.3f} out of range [0,1]")
                 else:
                     logger.info(f"  ✅ Valid: {name} probability {prob:.3f} in range [0,1]")
-            
+
             logger.info(f"\n  Highest risk: {result.highest_risk_episode}")
             logger.info(f"  Interpretation: {result.clinical_interpretation}")
-            
+
             # Show feature stats
             logger.info("\n📈 FEATURE EXTRACTION:")
             logger.info(f"  Days used: {result.data_days_used}")
             logger.info(f"  Confidence: {result.confidence_level}")
-            
+
         else:
             logger.error("  ❌ Pipeline failed to produce results")
-    
+
     logger.info(f"\n{'='*60}")
     logger.info("✅ PROBABILITY TESTING COMPLETE")
     logger.info(f"{'='*60}")

@@ -12,6 +12,9 @@ from pydantic import BaseModel, Field
 from big_mood_detector.application.services.clinical_helpers import (
     get_clinical_interpretation as interpret_predictions,
 )
+from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
+    TemporalEnsembleOrchestrator,
+)
 from big_mood_detector.application.use_cases.predict_mood_ensemble_use_case import (
     EnsembleOrchestrator,
 )
@@ -441,4 +444,145 @@ async def get_clinical_interpretation(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Clinical interpretation failed: {e}"
+        ) from e
+
+
+class TemporalFeatureInput(BaseModel):
+    """Input for temporal prediction with both statistical features and activity data."""
+
+    statistical_features: FeatureInput = Field(..., description="Statistical features for XGBoost")
+    activity_sequence: list[float] = Field(
+        ...,
+        description="7-day minute-level activity data (10,080 values)",
+        min_length=10080,
+        max_length=10080
+    )
+
+
+class CurrentStateResponse(BaseModel):
+    """Current mood state assessment from PAT."""
+
+    depression_probability: float = Field(..., ge=0, le=1)
+    on_benzodiazepine_probability: float | None = Field(None, ge=0, le=1)
+    confidence: float = Field(..., ge=0, le=1)
+
+
+class FutureRiskResponse(BaseModel):
+    """Future mood risk prediction from XGBoost."""
+
+    depression_risk: float = Field(..., ge=0, le=1)
+    hypomanic_risk: float = Field(..., ge=0, le=1)
+    manic_risk: float = Field(..., ge=0, le=1)
+    confidence: float = Field(..., ge=0, le=1)
+
+
+class TemporalPredictionResponse(BaseModel):
+    """Temporal mood assessment with NOW vs TOMORROW separation."""
+
+    # Temporal assessments
+    current_state: CurrentStateResponse
+    future_risk: FutureRiskResponse
+
+    # Temporal analysis
+    temporal_concordance: float = Field(..., ge=0, le=1)
+    requires_immediate_intervention: bool
+    requires_preventive_action: bool
+
+    # Clinical guidance
+    clinical_guidance: str
+    monitoring_frequency: str
+
+    # Metadata
+    assessment_timestamp: str
+    user_id: str | None = None
+
+
+@router.post("/predict/temporal", response_model=TemporalPredictionResponse)
+@rate_limit("temporal_predict")
+async def predict_temporal(
+    request: Request,
+    features: TemporalFeatureInput,
+    orchestrator: EnsembleOrchestrator | TemporalEnsembleOrchestrator | None = Depends(get_ensemble_orchestrator),
+) -> TemporalPredictionResponse:
+    """
+    Generate temporal mood assessment with NOW vs TOMORROW separation.
+
+    This endpoint provides:
+    - Current state assessment (PAT) - "Are you depressed NOW?"
+    - Future risk prediction (XGBoost) - "Will you have an episode TOMORROW?"
+    - Temporal concordance analysis
+    - Clinical guidance based on temporal patterns
+
+    The temporal separation is critical for clinical validity:
+    - HIGH now + LOW tomorrow = Crisis improving
+    - LOW now + HIGH tomorrow = Warning signs emerging
+    - Both HIGH = Urgent intervention needed
+    - Both LOW = Continue monitoring
+    """
+    try:
+        if orchestrator is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Temporal models not available. Check server logs.",
+            )
+
+        # Check if we have the temporal orchestrator
+        from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
+            TemporalEnsembleOrchestrator,
+        )
+
+        if not isinstance(orchestrator, TemporalEnsembleOrchestrator):
+            raise HTTPException(
+                status_code=501,
+                detail="Temporal orchestrator not properly configured. Using legacy ensemble.",
+            )
+
+        # Convert features to numpy arrays
+        import numpy as np
+
+        # Build XGBoost feature array
+        feature_array = np.zeros(36, dtype=np.float32)
+        feature_dict = features.statistical_features.model_dump(exclude_none=True)
+        for name, idx in API_TO_XGBOOST_MAPPING.items():
+            if name in feature_dict:
+                feature_array[idx] = feature_dict[name]
+
+        # Convert activity sequence to numpy array and reshape to 7x1440
+        activity_array = np.array(features.activity_sequence, dtype=np.float32)
+        pat_sequence = activity_array.reshape(7, 1440)
+
+        # Get temporal assessment
+        assessment = orchestrator.predict(
+            statistical_features=feature_array,
+            pat_sequence=pat_sequence,
+            user_id=None  # Could be passed from auth context
+        )
+
+        # Build response
+        return TemporalPredictionResponse(
+            current_state=CurrentStateResponse(
+                depression_probability=assessment.current_state.depression_probability,
+                on_benzodiazepine_probability=assessment.current_state.on_benzodiazepine_probability,
+                confidence=assessment.current_state.confidence,
+            ),
+            future_risk=FutureRiskResponse(
+                depression_risk=assessment.future_risk.depression_risk,
+                hypomanic_risk=assessment.future_risk.hypomanic_risk,
+                manic_risk=assessment.future_risk.manic_risk,
+                confidence=assessment.future_risk.confidence,
+            ),
+            temporal_concordance=assessment.temporal_concordance,
+            requires_immediate_intervention=assessment.requires_immediate_intervention,
+            requires_preventive_action=assessment.requires_preventive_action,
+            clinical_guidance=assessment.get_clinical_summary()["recommended_action"],
+            monitoring_frequency="Daily" if assessment.requires_immediate_intervention else "Weekly",
+            assessment_timestamp=assessment.assessment_timestamp.isoformat(),
+            user_id=assessment.user_id,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Temporal prediction failed: {e}"
         ) from e
