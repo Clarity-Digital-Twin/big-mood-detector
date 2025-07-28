@@ -6,8 +6,8 @@ This helps us safely remove dead code without breaking anything.
 
 import os
 import re
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
 # Root directory
 ROOT = Path(__file__).parent

@@ -7,6 +7,7 @@ Run this BEFORE and AFTER removing baseline code to ensure predictions stay the 
 import os
 import sys
 from pathlib import Path
+
 import numpy as np
 
 # Add src to path
@@ -18,7 +19,9 @@ def test_xgboost_predictions_without_baseline():
     # Set TESTING=1 to avoid heavy imports
     os.environ["TESTING"] = "1"
     
-    from big_mood_detector.infrastructure.ml_models.xgboost_models import XGBoostModelLoader
+    from big_mood_detector.infrastructure.ml_models.xgboost_models import (
+        XGBoostModelLoader,
+    )
     
     # Create test features matching the 36 expected
     test_features = {
@@ -82,8 +85,10 @@ def test_aggregation_pipeline_without_baseline():
     """Test that AggregationPipeline works without BaselineRepository."""
     
     from datetime import date, timedelta
+
     from big_mood_detector.application.services.aggregation_pipeline import (
-        AggregationPipeline, AggregationConfig
+        AggregationConfig,
+        AggregationPipeline,
     )
     
     # Create pipeline without baseline repository

@@ -656,6 +656,7 @@ def setup_dependencies(settings: Any) -> Container:
     from big_mood_detector.domain.repositories.activity_repository import (
         ActivityRepositoryInterface,
     )
+
     # REMOVED: BaselineRepository - using rolling window baselines
     # from big_mood_detector.domain.repositories.baseline_repository_interface import (
     #     BaselineRepositoryInterface,
@@ -669,6 +670,7 @@ def setup_dependencies(settings: Any) -> Container:
     from big_mood_detector.infrastructure.repositories.file_activity_repository import (
         FileActivityRepository,
     )
+
     # REMOVED: BaselineRepository - using rolling window baselines
     # from big_mood_detector.infrastructure.repositories.file_baseline_repository import (
     #     FileBaselineRepository,
