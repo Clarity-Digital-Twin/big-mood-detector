@@ -110,6 +110,9 @@ See [`docs/PAT_FINE_TUNING_ROADMAP.md`](docs/PAT_FINE_TUNING_ROADMAP.md) for det
 - Python 3.12 or higher (we test on Python 3.12 in CI)
 - Git
 - Make (optional but recommended)
+- Docker (for containerized development)
+
+### Local Development
 
 ```bash
 # Clone the repository
@@ -117,18 +120,75 @@ git clone https://github.com/Clarity-Digital-Twin/big-mood-detector.git
 cd big-mood-detector
 
 # Create virtual environment
-python -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# Install in development mode
-make setup
+# Windows WSL2 users: Use separate venv to avoid conflicts
+python3.12 -m venv .venv-wsl
+source .venv-wsl/bin/activate
 
-# Run tests
+# CRITICAL: Install numpy first to avoid dependency conflicts
+pip install 'numpy<2.0'
+
+# Install with all dependencies
+pip install -e ".[dev,ml,monitoring]"
+
+# Run fast tests (2 minutes)
+export TESTING=1
 make test
 
 # Start development server
 make dev
 ```
+
+### Docker Development
+
+Docker is the recommended way to ensure consistent environments:
+
+```bash
+# 1. Create .env file with secure secrets (REQUIRED)
+cat > .env << EOF
+SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')
+API_KEY_SALT=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')
+EOF
+
+# 2. Build full ML image (includes both XGBoost and PAT)
+docker build --build-arg INSTALL_ML=true -t big-mood-detector:latest .
+
+# 3. Start services
+docker-compose up -d api redis
+
+# 4. Test the setup
+curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/predictions/status
+
+# 5. Process Apple Health data
+docker run --rm \
+  -e BIGMOOD_DATA_DIR=/app/data \
+  -v "$(pwd)/data:/app/data" \
+  -v "$(pwd)/model_weights:/app/model_weights:ro" \
+  big-mood-detector:latest \
+  process /app/data/input/apple_export/export.xml --progress
+```
+
+### Model Weights Setup
+
+You MUST have model weights in place before running:
+
+```bash
+# Ensure these files exist:
+model_weights/
+├── xgboost/converted/
+│   ├── XGBoost_DE.json      # Depression model
+│   ├── XGBoost_HME.json     # Hypomania model
+│   └── XGBoost_ME.json      # Mania model
+├── pat/pretrained/
+│   └── PAT-*.h5             # PAT pretrained weights
+└── production/
+    └── pat_conv_l_v0.5929.pth  # Trained depression head
+```
+
+If missing, copy from `data-dump/model_weights/` or see MODEL_WEIGHTS_GUIDE.md
 
 ## Testing
 

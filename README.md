@@ -29,10 +29,37 @@ Built by a clinical psychiatrist, implementing published research — runs 100% 
 
 ## 🚀 Quick Start
 
-*Takes 2 minutes on any Mac/PC*
+### Option 1: Docker (Recommended)
+*Consistent environment with all dependencies*
 
 ```bash
-# 1. Install
+# 1. Create security credentials
+cat > .env << EOF
+SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')
+API_KEY_SALT=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')
+EOF
+
+# 2. Start services
+docker-compose up -d api redis
+
+# 3. Export Apple Health data (Settings → Health → Export)
+#    Place export.xml in: data/input/apple_export/
+
+# 4. Analyze your data
+docker run --rm \
+  -e BIGMOOD_DATA_DIR=/app/data \
+  -v "$(pwd)/data:/app/data" \
+  -v "$(pwd)/model_weights:/app/model_weights:ro" \
+  big-mood-detector:latest \
+  predict /app/data/input/apple_export/export.xml --report
+```
+
+### Option 2: Local Installation
+*Requires Python 3.12+*
+
+```bash
+# 1. Install (numpy first to avoid conflicts)
+pip install 'numpy<2.0'
 pip install big-mood-detector
 
 # 2. Export Apple Health data (Settings → Health → Export)
