@@ -1,14 +1,17 @@
 # CRITICAL DISCOVERY: Model Requirements for Big Mood Detector
 
-⚠️ **OUTDATED - SEE CORRECTION:** This document contains our initial incorrect understanding. For the corrected interpretation, see `/XGBOOST_MODELS_CORRECTED_UNDERSTANDING.md`
+🚨 **MAJOR CORRECTION (July 28, 2025):** This document was WRONG. XGBoost models do NOT require user-labeled episodes. See `/XGBOOST_FINAL_TRUTH.md` for the correct understanding.
 
-**Date:** July 27, 2025  
+**Date:** July 27, 2025 (Corrected July 28, 2025)
 **Version:** v0.5.0  
 **Discovery by:** Claude (Acting as Technical Co-founder)
 
-## 🚨 CRITICAL FINDING: XGBoost Models REQUIRE User-Labeled Mood Episodes
+## ❌ INCORRECT FINDING: XGBoost Models REQUIRE User-Labeled Mood Episodes
 
-After deep investigation of the primary literature, we've discovered a fundamental misunderstanding about how the models work:
+**CORRECTION:** After AI agent consultation, we learned:
+- Models DO NOT require user mood labels
+- Models DO require 30+ days for baseline calculation
+- "60-day window" was for validation, not user requirement
 
 ### XGBoost Models (Seoul Study)
 - **REQUIRE** user-specific labeled mood episodes to function

@@ -4,11 +4,11 @@
 **Version:** v0.5.0  
 **Critical Documentation**
 
-⚠️ **UPDATE:** After careful re-reading of the paper, we've corrected our understanding. The models DO work "out of the box" without labeling. See `/XGBOOST_MODELS_CORRECTED_UNDERSTANDING.md` for details.
+🚨 **MAJOR UPDATE (July 28, 2025):** After AI agent consultation, we have the FINAL understanding. See `/XGBOOST_FINAL_TRUTH.md` for the complete picture.
 
-## The Fundamental Understanding (CORRECTED)
+## The Fundamental Understanding (FINAL VERSION)
 
-Big Mood Detector CAN predict mood episodes "out of the box" from your Apple Health data. The XGBoost models are population-based, pre-trained on 168 Korean patients.
+Big Mood Detector CAN predict mood episodes WITHOUT labeling, but DOES require 30+ days of sleep data for personal baseline calculation. The XGBoost models are population-based, pre-trained on 168 Korean patients.
 
 ## How Each Model Really Works
 
@@ -18,18 +18,20 @@ Big Mood Detector CAN predict mood episodes "out of the box" from your Apple Hea
 - Trained on Seoul National University cohort (168 Korean patients)
 - Achieved high accuracy (AUC 0.80-0.98) in THAT specific population
 - Use 36 statistical features from sleep/activity/circadian patterns
+- Population models that work for anyone (best for similar demographics)
 
 **What they REQUIRE:**
-- Your personal mood episode history (labeled by you or a clinician)
-- They learn YOUR specific patterns during episodes
-- Minimum ~30-60 days of data with labeled episodes
+- At least 30 days of sleep data for baseline calculation
+- Personal mean/std to compute Z-scores
+- NO mood episode labels needed
 
 **How they work:**
-1. You provide historical data WITH labels of when you had episodes
-2. Model learns YOUR sleep/activity patterns during depression/mania
-3. Model can then predict when similar patterns occur in future
+1. You provide 30+ days of sleep data (no labels needed)
+2. System calculates your personal baseline (mean/std)
+3. Extracts 36 features including Z-scores
+4. Pre-trained model predicts risk based on Korean patterns
 
-**Think of it as:** A personalized AI that learns YOUR unique warning signs
+**Think of it as:** A medical test developed on one population, applied to you
 
 ### 2. PAT Models (Foundation Models)
 

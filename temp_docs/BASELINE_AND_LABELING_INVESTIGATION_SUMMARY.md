@@ -1,13 +1,19 @@
 # Baseline and Labeling Investigation Summary
 
-⚠️ **PARTIAL CORRECTION:** This investigation correctly identified baseline bugs but incorrectly concluded that labeling is required. See `/XGBOOST_MODELS_CORRECTED_UNDERSTANDING.md` for updated model understanding.
+🚨 **MAJOR CORRECTION:** This investigation correctly identified baseline bugs but was WRONG about labeling requirements. See `/XGBOOST_FINAL_TRUTH.md` for the definitive answer.
 
-**Date:** July 27, 2025  
+**Date:** July 27, 2025 (Updated July 28, 2025)  
 **Investigation by:** Claude (Acting as Technical Co-founder)
+
+## UPDATE: What We Got Wrong
+- ❌ Labeling is NOT required for predictions
+- ✅ Baseline calculations ARE required (30+ days)
+- ✅ Models are population-based, work immediately after baseline
+- ❌ "60-day window" was for validation, not user requirement
 
 ## Executive Summary
 
-We investigated the "baseline" implementation after discovering it wasn't working as expected. This led to a MUCH bigger discovery: **the XGBoost models require user-labeled mood episodes to function**. We've been fundamentally misunderstanding how these models work.
+We investigated the "baseline" implementation after discovering it wasn't working as expected. Initially we thought this meant XGBoost models require user-labeled mood episodes, but **we were wrong**. The models DO require personal baselines for Z-score calculation but NOT mood labels.
 
 ## Investigation Journey
 
