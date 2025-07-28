@@ -129,9 +129,7 @@ class MoodPredictionPipeline:
         self.clinical_extractor: Any  # Union of ClinicalFeatureExtractor and OrchestratorAdapter
 
         # REMOVED: Baseline repository - now using rolling window baselines in AggregationPipeline
-        self.baseline_repository = None
-        else:
-            self.baseline_repository = None
+        # self.baseline_repository = None
 
         # Initialize clinical feature extractor with orchestrator adapter if available
         if di_container:
@@ -147,7 +145,7 @@ class MoodPredictionPipeline:
                 orchestrator = di_container.resolve(FeatureEngineeringOrchestrator)
                 self.clinical_extractor = OrchestratorAdapter(
                     orchestrator=orchestrator,
-                    baseline_repository=self.baseline_repository,
+                    # baseline_repository=self.baseline_repository,  # REMOVED: Using rolling windows
                     user_id=(
                         self.config.user_id
                         if self.config.enable_personal_calibration
@@ -163,7 +161,7 @@ class MoodPredictionPipeline:
                 )
                 # Fall back to standard clinical extractor
                 self.clinical_extractor = ClinicalFeatureExtractor(
-                    baseline_repository=self.baseline_repository,
+                    # baseline_repository=self.baseline_repository,  # REMOVED: Using rolling windows
                     user_id=(
                         self.config.user_id
                         if self.config.enable_personal_calibration
@@ -173,7 +171,7 @@ class MoodPredictionPipeline:
         else:
             # No DI container, use standard extractor
             self.clinical_extractor = ClinicalFeatureExtractor(
-                baseline_repository=self.baseline_repository,
+                # baseline_repository=self.baseline_repository,  # REMOVED: Using rolling windows
                 user_id=(
                     self.config.user_id
                     if self.config.enable_personal_calibration
@@ -584,9 +582,9 @@ class MoodPredictionPipeline:
 
             current_date += timedelta(days=1)
 
-        # Persist baselines ONCE after processing all dates
-        if self.config.enable_personal_calibration and self.config.user_id and features:
-            self.clinical_extractor.persist_baselines()
+        # REMOVED: Persist baselines - now using rolling window baselines
+        # if self.config.enable_personal_calibration and self.config.user_id and features:
+        #     self.clinical_extractor.persist_baselines()
 
         return features
 

@@ -49,7 +49,7 @@ class OrchestratorAdapter:
     def __init__(
         self,
         orchestrator: FeatureEngineeringOrchestrator | None = None,
-        baseline_repository: Any | None = None,
+        # baseline_repository: Any | None = None,  # REMOVED: Using rolling window baselines
         user_id: str | None = None,
     ):
         """
@@ -57,11 +57,10 @@ class OrchestratorAdapter:
 
         Args:
             orchestrator: Feature engineering orchestrator instance
-            baseline_repository: Optional baseline repository for personalization
             user_id: Optional user ID for personal baselines
         """
         self.orchestrator = orchestrator or FeatureEngineeringOrchestrator()
-        self.baseline_repository = baseline_repository
+        # self.baseline_repository = baseline_repository  # REMOVED: Using rolling window baselines
         self.user_id = user_id
 
         # Track validation results for later access
@@ -162,13 +161,12 @@ class OrchestratorAdapter:
 
     def persist_baselines(self) -> None:
         """
-        Persist baselines if baseline repository is configured.
+        REMOVED: Persist baselines - now using rolling window baselines.
 
-        This maintains compatibility with the existing interface.
+        This method kept for compatibility but does nothing.
         """
-        if self.baseline_repository and self.user_id:
-            # In full implementation, would persist orchestrator's baselines
-            logger.info("baselines_persisted", user_id=self.user_id)
+        # REMOVED: BaselineRepository - using rolling window baselines in AggregationPipeline
+        pass
 
     def get_completeness_report(
         self,
