@@ -254,16 +254,13 @@ class ClinicalFeatureExtractor:
 
     def __init__(
         self,
-        baseline_repository: Any = None,  # BaselineRepositoryInterface
         user_id: str | None = None,
     ) -> None:
         """Initialize with all required domain services.
 
         Args:
-            baseline_repository: Optional repository for baseline persistence
             user_id: Optional user ID for personal calibration
         """
-        self.baseline_repository = baseline_repository
         self.user_id = user_id
 
         self.sleep_window_analyzer = SleepWindowAnalyzer()
@@ -272,7 +269,6 @@ class ClinicalFeatureExtractor:
 
         # Pass calibration params to advanced feature engineer
         self.advanced_feature_engineer = AdvancedFeatureEngineer(
-            baseline_repository=baseline_repository,
             user_id=user_id,
         )
 
@@ -586,6 +582,5 @@ class ClinicalFeatureExtractor:
         return min_record.timestamp.hour + min_record.timestamp.minute / 60.0
 
     def persist_baselines(self) -> None:
-        """Persist current baselines to repository if configured."""
-        if self.advanced_feature_engineer:
-            self.advanced_feature_engineer.persist_baselines()
+        """No longer needed - baselines calculated via rolling windows."""
+        pass

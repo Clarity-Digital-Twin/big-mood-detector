@@ -1,19 +1,21 @@
 # XGBoost Models - CORRECTED Understanding
 
-**Date:** July 27, 2025  
-**Status:** Major correction after careful paper re-reading
+**Date:** July 28, 2025  
+**Status:** FINAL understanding after AI agent consultation
+**Note:** Superseded by XGBOOST_FINAL_TRUTH.md
 
-## 🔄 Complete Reversal: XGBoost Models ARE Population Models
+## ✅ XGBoost Models ARE Population Models (With Baseline Requirements)
 
-After careful re-reading of the paper and examining the methodology, I must correct our previous understanding:
+After extensive analysis including AI agent consultation, here's the definitive understanding:
 
 ## What The XGBoost Models Actually Are
 
 The models in `/model_weights/xgboost/` are:
 - **Population models** trained on aggregated data from 168 Korean patients
-- **Fully functional** predictors that work "out of the box"  
-- **No labeling required** from users
+- **Fully functional** predictors that work after baseline calculation
+- **No labeling required** from users (but need 30+ days for baseline)
 - **Complete XGBoost trees** with 560 decision trees for depression model
+- **Require personal Z-scores** calculated from individual's sleep data
 
 ## Key Evidence from the Paper
 

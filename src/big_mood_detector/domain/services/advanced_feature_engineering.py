@@ -146,19 +146,16 @@ class AdvancedFeatureEngineer:
     def __init__(
         self,
         config: dict[str, Any] | None = None,
-        baseline_repository: Any = None,  # BaselineRepositoryInterface
         user_id: str | None = None,
     ) -> None:
         """Initialize with baseline statistics tracking.
 
         Args:
             config: Optional configuration dictionary
-            baseline_repository: Optional repository for baseline persistence
-            user_id: Optional user ID for loading/saving baselines
+            user_id: Optional user ID for personal baselines
         """
         self.individual_baselines: dict[str, dict[str, Any]] = {}
         self.population_baselines: dict[str, float] = {}
-        self.baseline_repository = baseline_repository
         self.user_id = user_id
         self._loaded_baseline = (
             None  # Track loaded baseline for data_points accumulation
@@ -170,9 +167,7 @@ class AdvancedFeatureEngineer:
         self.activity_calculator = ActivityFeatureCalculator(config)
         self.temporal_calculator = TemporalFeatureCalculator(config)
 
-        # Load existing baselines if repository and user_id provided
-        if self.baseline_repository and self.user_id:
-            self._load_baselines_from_repository()
+        # Note: Baselines are calculated using rolling windows
 
     def extract_advanced_features(
         self,
@@ -649,90 +644,9 @@ class AdvancedFeatureEngineer:
         }
 
     def _load_baselines_from_repository(self) -> None:
-        """Load existing baselines from repository."""
-        if not self.baseline_repository or not self.user_id:
-            return
-
-        baseline = self.baseline_repository.get_baseline(self.user_id)
-        if not baseline:
-            return
-
-        # Store loaded baseline for data_points accumulation
-        self._loaded_baseline = baseline
-
-        # Convert UserBaseline to internal format
-        self.individual_baselines["sleep"] = {
-            "values": [],  # Historical values not stored
-            "mean": baseline.sleep_mean,
-            "std": baseline.sleep_std,
-        }
-        self.individual_baselines["activity"] = {
-            "values": [],
-            "mean": baseline.activity_mean,
-            "std": baseline.activity_std,
-        }
-        # Load HR/HRV baselines if available (no magic defaults)
-        if baseline.heart_rate_mean is not None:
-            self.individual_baselines["hr"] = {
-                "values": [],
-                "mean": baseline.heart_rate_mean,
-                "std": baseline.heart_rate_std or 0.0,
-            }
-        if baseline.hrv_mean is not None:
-            self.individual_baselines["hrv"] = {
-                "values": [],
-                "mean": baseline.hrv_mean,
-                "std": baseline.hrv_std or 0.0,
-            }
+        """No longer needed - baselines calculated via rolling windows."""
+        pass
 
     def persist_baselines(self) -> None:
-        """Persist current baselines to repository."""
-        if not self.baseline_repository or not self.user_id:
-            return
-
-        # Extract current baseline statistics
-        sleep_baseline = self.individual_baselines.get("sleep", {})
-        activity_baseline = self.individual_baselines.get("activity", {})
-        hr_baseline = self.individual_baselines.get("hr", {})
-        hrv_baseline = self.individual_baselines.get("hrv", {})
-
-        # Calculate circadian phase from recent data if available
-        circadian_phase = 0.0  # Would calculate from recent sleep patterns
-
-        # Count data points - accumulate from previous baseline if exists
-        current_data_points = max(
-            len(sleep_baseline.get("values", [])),
-            len(activity_baseline.get("values", [])),
-        )
-
-        # Add to previous data points if we loaded a baseline
-        previous_data_points = 0
-        if hasattr(self, "_loaded_baseline") and self._loaded_baseline:
-            previous_data_points = self._loaded_baseline.data_points
-
-        data_points = previous_data_points + current_data_points
-
-        # Create UserBaseline object
-        from big_mood_detector.domain.repositories.baseline_repository_interface import (
-            UserBaseline,
-        )
-
-        baseline = UserBaseline(
-            user_id=self.user_id,
-            baseline_date=date.today(),
-            sleep_mean=sleep_baseline.get("mean", 0.0),
-            sleep_std=sleep_baseline.get("std", 0.0),
-            activity_mean=activity_baseline.get("mean", 0.0),
-            activity_std=activity_baseline.get("std", 0.0),
-            circadian_phase=circadian_phase,
-            # Only include HR/HRV if we have actual data (no magic defaults!)
-            heart_rate_mean=hr_baseline.get("mean") if hr_baseline else None,
-            heart_rate_std=hr_baseline.get("std") if hr_baseline else None,
-            hrv_mean=hrv_baseline.get("mean") if hrv_baseline else None,
-            hrv_std=hrv_baseline.get("std") if hrv_baseline else None,
-            last_updated=datetime.now(),
-            data_points=data_points,
-        )
-
-        # Save to repository
-        self.baseline_repository.save_baseline(baseline)
+        """No longer needed - baselines calculated via rolling windows."""
+        pass

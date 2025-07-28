@@ -656,9 +656,6 @@ def setup_dependencies(settings: Any) -> Container:
     from big_mood_detector.domain.repositories.activity_repository import (
         ActivityRepositoryInterface,
     )
-    from big_mood_detector.domain.repositories.baseline_repository_interface import (
-        BaselineRepositoryInterface,
-    )
     from big_mood_detector.domain.repositories.heart_rate_repository import (
         HeartRateRepositoryInterface,
     )
@@ -667,9 +664,6 @@ def setup_dependencies(settings: Any) -> Container:
     )
     from big_mood_detector.infrastructure.repositories.file_activity_repository import (
         FileActivityRepository,
-    )
-    from big_mood_detector.infrastructure.repositories.file_baseline_repository import (
-        FileBaselineRepository,
     )
     from big_mood_detector.infrastructure.repositories.file_heart_rate_repository import (
         FileHeartRateRepository,
@@ -692,9 +686,6 @@ def setup_dependencies(settings: Any) -> Container:
     container.register_singleton(
         FileSleepRepository, lambda: FileSleepRepository(data_dir)
     )
-    container.register_singleton(
-        FileBaselineRepository, lambda: FileBaselineRepository(baselines_dir)
-    )
 
     # Register interfaces to their implementations
     container.register_singleton(
@@ -705,9 +696,6 @@ def setup_dependencies(settings: Any) -> Container:
     )
     container.register_singleton(
         SleepRepositoryInterface, lambda: container.resolve(FileSleepRepository)
-    )
-    container.register_singleton(
-        BaselineRepositoryInterface, lambda: container.resolve(FileBaselineRepository)
     )
 
     logger.info("dependencies_configured", service_count=len(container._services))
