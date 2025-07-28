@@ -30,9 +30,11 @@ from big_mood_detector.application.services.aggregation_pipeline import (
 from big_mood_detector.application.services.data_parsing_service import (
     DataParsingService,
 )
+from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
+    TemporalEnsembleOrchestrator,
+)
 from big_mood_detector.application.use_cases.predict_mood_ensemble_use_case import (
     EnsembleConfig,
-    EnsembleOrchestrator,
 )
 from big_mood_detector.domain.services.activity_sequence_extractor import (
     ActivitySequenceExtractor,
@@ -215,17 +217,36 @@ class MoodPredictionPipeline:
                     logger.info("PAT model loaded successfully")
 
             if self.xgboost_predictor and self.xgboost_predictor.is_loaded:
-                # Will be updated after personal calibrator is initialized
+                # Create temporal ensemble orchestrator for NOW vs TOMORROW separation
                 from typing import cast
-                self.ensemble_orchestrator = EnsembleOrchestrator(
-                    xgboost_predictor=self.xgboost_predictor,
-                    pat_model=cast(PATModelInterface, pat_model) if pat_model else None,
-                    config=self.config.ensemble_config
-                    or EnsembleConfig.from_settings(),
-                )
+
+                # Get PAT predictor from DI if available
+                pat_predictor = None
+                if di_container:
+                    try:
+                        from big_mood_detector.domain.services.pat_predictor import (
+                            PATPredictorInterface,
+                        )
+                        pat_predictor = di_container.resolve(PATPredictorInterface)
+                    except Exception:
+                        logger.warning("PAT predictor not available from DI")
+
+                # Only create temporal orchestrator if all components are available
+                if pat_predictor and pat_model:
+                    self.ensemble_orchestrator = TemporalEnsembleOrchestrator(
+                        pat_predictor=pat_predictor,  # type: ignore[arg-type]
+                        xgboost_predictor=self.xgboost_predictor,
+                        pat_encoder=pat_model,  # type: ignore[arg-type]
+                    )
+                else:
+                    logger.warning("Cannot create temporal orchestrator without PAT models")
+                    self.ensemble_orchestrator = None
 
         # Data parsing service (extracted)
         self.data_parsing_service = data_parsing_service or DataParsingService()
+
+        # Activity sequence extractor for PAT
+        self.activity_sequence_extractor = ActivitySequenceExtractor()
 
         # Aggregation pipeline (extracted)
         self.aggregation_pipeline = aggregation_pipeline or AggregationPipeline(
@@ -258,9 +279,8 @@ class MoodPredictionPipeline:
                     logger.warning(f"Could not load personal model: {e}")
                     # Continue without personal calibration
 
-        # Update ensemble orchestrator with personal calibrator if both exist
-        if self.ensemble_orchestrator and self.personal_calibrator:
-            self.ensemble_orchestrator.personal_calibrator = self.personal_calibrator
+        # Note: TemporalEnsembleOrchestrator doesn't use personal calibrator
+        # as it separates NOW (PAT) from TOMORROW (XGBoost) predictions
 
     @classmethod
     def for_testing(
@@ -441,29 +461,57 @@ class MoodPredictionPipeline:
                             if r.start_date.date() <= feature_date <= r.end_date.date()
                         ]
 
-                        ensemble_result = self.ensemble_orchestrator.predict(
-                            statistical_features=feature_vector,
-                            activity_records=date_activity_records,
-                            prediction_date=np.datetime64(feature_date),
-                        )
+                        # Convert activity records to PAT sequence
+                        pat_sequence = None
+                        if date_activity_records and hasattr(self, 'activity_sequence_extractor'):
+                            try:
+                                # Extract minute sequence and reshape to 7x1440
+                                minute_seq = self.activity_sequence_extractor.extract_minute_sequence(
+                                    date_activity_records,
+                                    days=7
+                                )
+                                # Reshape from (10080,) to (7, 1440)
+                                pat_sequence = minute_seq.reshape(7, 1440)
+                            except Exception as e:
+                                logger.warning(f"Failed to extract PAT sequence: {e}")
 
-                        prediction = ensemble_result.ensemble_prediction
+                        # Get temporal assessment
+                        if pat_sequence is not None:
+                            temporal_result = self.ensemble_orchestrator.predict(
+                                statistical_features=feature_vector,
+                                pat_sequence=pat_sequence,
+                                user_id=self.config.user_id,
+                            )
+                        else:
+                            # Create dummy sequence if PAT unavailable
+                            dummy_sequence = np.zeros((7, 1440), dtype=np.float32)
+                            temporal_result = self.ensemble_orchestrator.predict(
+                                statistical_features=feature_vector,
+                                pat_sequence=dummy_sequence,
+                                user_id=self.config.user_id,
+                            )
+
+                        # Use future risk (XGBoost) for backward compatibility
+                        future_risk = temporal_result.future_risk
 
                         daily_predictions[feature_date] = {
-                            "depression_risk": prediction.depression_risk,
-                            "hypomanic_risk": prediction.hypomanic_risk,
-                            "manic_risk": prediction.manic_risk,
-                            "confidence": prediction.confidence,
-                            "models_used": ensemble_result.models_used,
-                            "confidence_scores": ensemble_result.confidence_scores,
+                            "depression_risk": future_risk.depression_risk,
+                            "hypomanic_risk": future_risk.hypomanic_risk,
+                            "manic_risk": future_risk.manic_risk,
+                            "confidence": future_risk.confidence,
+                            "models_used": ["xgboost", "pat"] if pat_sequence is not None else ["xgboost"],
+                            "confidence_scores": {
+                                "xgboost": future_risk.confidence,
+                                "pat": temporal_result.current_state.confidence,
+                            },
+                            # Add temporal assessment data
+                            "current_depression": temporal_result.current_state.depression_probability,
+                            "temporal_concordance": temporal_result.temporal_concordance,
                         }
 
                         # Add warning if PAT failed
-                        if (
-                            "pat" not in ensemble_result.models_used
-                            or ensemble_result.pat_enhanced_prediction is None
-                        ):
-                            warnings.append("PAT model unavailable")
+                        if pat_sequence is None:
+                            warnings.append("PAT sequence unavailable")
                     else:
                         # Use XGBoost-only predictions
                         prediction = self.mood_predictor.predict(feature_vector)
