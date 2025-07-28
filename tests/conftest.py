@@ -151,14 +151,14 @@ class DummyBooster:
         if hasattr(X, 'num_row'):  # DMatrix has num_row() method
             n_samples = X.num_row()
             return np.full((n_samples,), self.probability)
-        
+
         # Handle numpy arrays
         if hasattr(X, 'shape'):
             if len(X.shape) == 1:
                 return np.array([self.probability])
             else:
                 return np.full((X.shape[0],), self.probability)
-        
+
         # Fallback
         return np.array([self.probability])
 
@@ -171,7 +171,7 @@ class DummyBooster:
             n_samples = X.num_row()
             neg_prob = 1 - self.probability
             return np.array([[neg_prob, self.probability]] * n_samples)
-        
+
         # Handle numpy arrays
         if hasattr(X, 'shape'):
             # Return probability array with shape (n_samples, 2)
@@ -181,7 +181,7 @@ class DummyBooster:
             n_samples = X.shape[0]
             neg_prob = 1 - self.probability
             return np.array([[neg_prob, self.probability]] * n_samples)
-        
+
         # Fallback for single prediction
         neg_prob = 1 - self.probability
         return np.array([[neg_prob, self.probability]])

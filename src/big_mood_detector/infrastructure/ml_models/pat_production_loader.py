@@ -109,7 +109,7 @@ class ProductionPATLoader(PATPredictorInterface):
         if model_path is None:
             # Try new path first
             model_path = Path("model_weights/pat/production/pat_conv_l_v0.5929.pth")
-            
+
             # Fallback to old path with deprecation warning
             if not model_path.exists():
                 old_path = Path("model_weights/production/pat_conv_l_v0.5929.pth")
