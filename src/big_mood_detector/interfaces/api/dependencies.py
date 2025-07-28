@@ -101,13 +101,17 @@ def get_ensemble_orchestrator() -> EnsembleOrchestrator | TemporalEnsembleOrches
         pat_encoder = None
 
     # Create temporal ensemble orchestrator (NEW!)
-    orchestrator = TemporalEnsembleOrchestrator(
-        pat_predictor=pat_predictor,  # type: ignore[arg-type]
-        xgboost_predictor=xgboost_predictor,
-        pat_encoder=pat_encoder,  # type: ignore[arg-type]
-    )
-
-    return orchestrator  # type: ignore[return-value]
+    # Only create if all components are available
+    if pat_predictor and pat_encoder:
+        orchestrator = TemporalEnsembleOrchestrator(
+            pat_predictor=pat_predictor,
+            xgboost_predictor=xgboost_predictor,
+            pat_encoder=pat_encoder,  # type: ignore[arg-type]
+        )
+        return orchestrator
+    else:
+        logger.warning("Cannot create temporal orchestrator without PAT models")
+        return None
 
 
 def get_mood_predictor_with_state(request: Request) -> MoodPredictor:

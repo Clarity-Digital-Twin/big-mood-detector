@@ -35,7 +35,7 @@ print("-"*60)
 
 # Map our names to model names
 mapping = {}
-for i, (our, model) in enumerate(zip(our_names, model_names)):
+for i, (our, model) in enumerate(zip(our_names, model_names, strict=False)):
     print(f"{i+1:2d}. {our:30} -> {model}")
     mapping[our] = model
 

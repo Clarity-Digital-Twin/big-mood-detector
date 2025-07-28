@@ -50,7 +50,6 @@ from big_mood_detector.domain.services.dlmo_calculator import DLMOCalculator
 from big_mood_detector.domain.services.mood_predictor import (
     MoodPredictor,
 )
-from big_mood_detector.domain.services.pat_model_interface import PATModelInterface
 from big_mood_detector.domain.services.sleep_window_analyzer import SleepWindowAnalyzer
 from big_mood_detector.domain.services.sparse_data_handler import (
     SparseDataHandler,
@@ -218,7 +217,6 @@ class MoodPredictionPipeline:
 
             if self.xgboost_predictor and self.xgboost_predictor.is_loaded:
                 # Create temporal ensemble orchestrator for NOW vs TOMORROW separation
-                from typing import cast
 
                 # Get PAT predictor from DI if available
                 pat_predictor = None
@@ -234,7 +232,7 @@ class MoodPredictionPipeline:
                 # Only create temporal orchestrator if all components are available
                 if pat_predictor and pat_model:
                     self.ensemble_orchestrator = TemporalEnsembleOrchestrator(
-                        pat_predictor=pat_predictor,  # type: ignore[arg-type]
+                        pat_predictor=pat_predictor,
                         xgboost_predictor=self.xgboost_predictor,
                         pat_encoder=pat_model,  # type: ignore[arg-type]
                     )

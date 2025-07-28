@@ -84,7 +84,8 @@ async def startup_event() -> None:
         logger.info("Ensemble orchestrator loaded successfully")
         update_model_status("ensemble", True)
 
-        if orchestrator.pat_model:
+        # Check if PAT is available (only EnsembleOrchestrator has pat_model)
+        if hasattr(orchestrator, 'pat_model') and orchestrator.pat_model:
             logger.info("PAT model loaded and available")
             update_model_status("pat", True)
         else:

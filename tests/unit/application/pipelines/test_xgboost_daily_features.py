@@ -91,7 +91,7 @@ class TestXGBoostPipelineWithDailyFeatures:
 
         # Create mock predictor
         from big_mood_detector.domain.services.mood_predictor import MoodPrediction
-        
+
         mock_predictor = Mock()
         captured_features = None
 
