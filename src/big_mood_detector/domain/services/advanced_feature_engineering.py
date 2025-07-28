@@ -146,7 +146,6 @@ class AdvancedFeatureEngineer:
     def __init__(
         self,
         config: dict[str, Any] | None = None,
-        # baseline_repository: Any = None,  # REMOVED: Using rolling window baselines
         user_id: str | None = None,
     ) -> None:
         """Initialize with baseline statistics tracking.
@@ -157,7 +156,6 @@ class AdvancedFeatureEngineer:
         """
         self.individual_baselines: dict[str, dict[str, Any]] = {}
         self.population_baselines: dict[str, float] = {}
-        # self.baseline_repository = baseline_repository  # REMOVED: Using rolling window baselines
         self.user_id = user_id
         self._loaded_baseline = (
             None  # Track loaded baseline for data_points accumulation
@@ -169,9 +167,7 @@ class AdvancedFeatureEngineer:
         self.activity_calculator = ActivityFeatureCalculator(config)
         self.temporal_calculator = TemporalFeatureCalculator(config)
 
-        # REMOVED: Load existing baselines - now using rolling window baselines
-        # if self.baseline_repository and self.user_id:
-        #     self._load_baselines_from_repository()
+        # Note: Baselines are calculated using rolling windows
 
     def extract_advanced_features(
         self,
@@ -647,13 +643,10 @@ class AdvancedFeatureEngineer:
             "activity_intensity_ratio": 0,
         }
 
-    # REMOVED: Load baselines from repository - now using rolling window baselines
-    # def _load_baselines_from_repository(self) -> None:
-    #     """Load existing baselines from repository."""
-    #     pass
+    def _load_baselines_from_repository(self) -> None:
+        """No longer needed - baselines calculated via rolling windows."""
+        pass
 
-    # REMOVED: Persist baselines - now using rolling window baselines
     def persist_baselines(self) -> None:
-        """Persist current baselines to repository."""
-        # REMOVED: BaselineRepository - using rolling window baselines in AggregationPipeline
+        """No longer needed - baselines calculated via rolling windows."""
         pass
