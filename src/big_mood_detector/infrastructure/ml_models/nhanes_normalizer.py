@@ -38,7 +38,7 @@ class NHANESNormalizer:
         if stats_path is None:
             # Try new path first
             stats_path = Path("model_weights/pat/production/nhanes_scaler_stats.json")
-            
+
             # Fallback to old path with deprecation warning
             if not stats_path.exists():
                 old_path = Path("model_weights/production/nhanes_scaler_stats.json")

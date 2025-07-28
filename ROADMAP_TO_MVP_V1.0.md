@@ -1,4 +1,6 @@
-🎯 Current Status Report - Big Mood Detector v0.5.0
+🎯 Current Status Report - Big Mood Detector v0.5.1
+
+**Last Updated:** July 28, 2025
 
   Where We Are Now
 
@@ -24,7 +26,7 @@
   ✅ Core Pipeline
   - Process Apple Health XML/JSON exports
   - Extract clinical features (sleep, activity, heart rate, circadian)
-  - Personal baseline calibration
+  - Rolling window normalization (30-60 days) - BaselineRepository removed in v0.5.1
   - Risk assessment with clinical thresholds
 
   ✅ CLI Commands
@@ -37,10 +39,29 @@
 
   ✅ Architecture
   - Clean Architecture (Domain → Application → Infrastructure)
-  - 976 passing tests (99.9% pass rate)
-  - Type-safe (mostly - 25 minor mypy issues)
+  - 1036+ passing tests (100% pass rate)
+  - Type-safe (0 mypy errors!)
   - Docker ready
   - FastAPI server
+  - 1,139 lines of dead code removed (BaselineRepository)
+
+  Recent Accomplishments (v0.5.0 → v0.5.1)
+
+  ✅ BaselineRepository Removal
+  - Discovered models use rolling window baselines, not persistent storage
+  - Removed 1,139 lines of dead code across 17 files
+  - No functionality changes - models work exactly as before
+
+  ✅ Model Requirements Clarified
+  - Resolved Issue #65 with definitive answers
+  - XGBoost models are population-based (pre-trained)
+  - Work immediately with 30+ days sleep data
+  - No mood labeling required for predictions
+
+  ✅ Documentation Improved
+  - Reorganized temp_docs into proper structure
+  - Updated understanding of model requirements
+  - Clear separation of required vs optional features
 
   Current Gap: PAT Integration
 
@@ -79,10 +100,12 @@
   Phase 2: Production Hardening (3-4 days)
 
   1. ✅ Fix remaining type errors (DONE - 0 mypy errors!)
-  2. ⬜ Add comprehensive error handling for missing data
-  3. ⬜ Performance optimization for large files
-  4. ⬜ Add monitoring/telemetry hooks
-  5. ⬜ Security audit (PHI handling)
+  2. ✅ Remove dead code (BaselineRepository - 1,139 lines removed)
+  3. ✅ Clarify model requirements (Issue #65 resolved)
+  4. ⬜ Add comprehensive error handling for missing data
+  5. ⬜ Performance optimization for large files
+  6. ⬜ Add monitoring/telemetry hooks
+  7. ⬜ Security audit (PHI handling)
 
   Phase 3: User Experience - Progressive Enhancement (2 weeks)
 

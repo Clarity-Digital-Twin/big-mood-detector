@@ -1,8 +1,6 @@
 """Test Docker path configuration and volume mounting."""
 
-import os
 import subprocess
-from pathlib import Path
 
 import pytest
 
@@ -85,7 +83,7 @@ class TestDockerPaths:
             capture_output=True,
             text=True,
         )
-        
+
         # Should not contain permission warnings
         assert "No write permission" not in result.stderr
         assert result.returncode == 0
@@ -107,7 +105,7 @@ class TestDockerPaths:
             capture_output=True,
             text=True,
         )
-        
+
         assert result.returncode == 0
         # After entrypoint runs, these should exist
         expected_dirs = ["output", "uploads", "temp"]
@@ -155,7 +153,7 @@ class TestDockerPaths:
             capture_output=True,
             text=True,
         )
-        
+
         assert result.returncode == 0
         assert "SUCCESS" in result.stdout
         assert (tmp_path / "output" / "test.txt").exists()

@@ -260,7 +260,7 @@ class TestXGBoostPipeline:
     def mock_xgboost_predictor(self) -> Mock:
         """Mock XGBoost predictor."""
         from big_mood_detector.domain.services.mood_predictor import MoodPrediction
-        
+
         mock = Mock()
         # Return a proper MoodPrediction object
         mock.predict.return_value = MoodPrediction(
