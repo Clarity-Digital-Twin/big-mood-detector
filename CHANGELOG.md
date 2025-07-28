@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Baseline Calculation** - Removed BaselineRepository in favor of rolling window normalization
+  - XGBoost models now use 30-60 day rolling windows for Z-score calculation
+  - Removed 1,139 lines of unused baseline repository code
+  - Personal normalization happens automatically in AggregationPipeline
+  - No functionality changes - models work exactly as before
+
+### Removed
+- **BaselineRepository** - Deleted unused baseline persistence infrastructure
+  - `baseline_repository_interface.py`
+  - `file_baseline_repository.py`
+  - `timescale_baseline_repository.py`
+  - `baseline_repository_factory.py`
+
 ## [0.5.0] - 2025-07-27
 
 ### Added
