@@ -4,7 +4,6 @@ Find all BaselineRepository usage and dependencies.
 This helps us safely remove dead code without breaking anything.
 """
 
-import os
 import re
 from collections import defaultdict
 from pathlib import Path
