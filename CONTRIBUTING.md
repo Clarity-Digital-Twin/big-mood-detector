@@ -76,33 +76,46 @@ git push --no-verify
 **Note:** Use bypass only when necessary. CI will still run full checks.
 * Follow the existing code style (Clean Architecture patterns)
 
-## 🎯 Current Priorities (v0.3.0)
+## 🎯 Current Status (v0.5.0)
 
-### CRITICAL: Enable True Ensemble Predictions
-**Context:** v0.2.0 only has XGBoost predictions. PAT provides embeddings but can't make mood predictions without classification heads.
+### ✅ COMPLETED: True Ensemble Predictions Now Live!
+**What's New:** Both XGBoost AND PAT models now make clinical predictions together.
 
-**The Big Task: Train PAT Classification Heads**
-1. Process NHANES data (already in `data/nhanes/2013-2014/`)
-2. Train depression detection head on PAT embeddings
-3. Wire PAT predictions into ensemble orchestrator
-4. Deliver true dual-model predictions
+**What We Built:**
+- ✅ PAT depression detection head trained on NHANES 2013-2014
+- ✅ Temporal ensemble that combines XGBoost (future risk) + PAT (current state)
+- ✅ Production-ready API with both models integrated
+- ✅ Docker support for easy deployment
 
-**Quick Start for Contributors:**
+**Current Architecture:**
 ```python
-# Current (v0.2.0) - PAT only gives embeddings
-pat_embeddings = pat.extract_features(activity)  # 96-dim vector
-
-# Goal (v0.3.0) - PAT makes predictions  
-pat_prediction = pat.predict_mood(activity)  # 0.82 depression risk
+# v0.5.0 - Full ensemble predictions!
+xgboost_risk = xgboost.predict_tomorrow(circadian_features)  # 0.75 risk
+pat_current = pat.predict_depression(activity_sequence)       # 0.82 risk
+ensemble = temporal_ensemble.combine(xgboost_risk, pat_current)  # 0.79 final
 ```
 
-See [`docs/PAT_FINE_TUNING_ROADMAP.md`](docs/PAT_FINE_TUNING_ROADMAP.md) for detailed implementation guide.
+### Current Priorities for Contributors
 
-### Other High-Priority Areas
-1. **Clinical Validation** - Test on diverse populations
-2. **Performance** - Optimize for very large Apple Health exports
-3. **Wearables** - Add Fitbit, Garmin, Oura support
-4. **Documentation** - Keep it accurate and honest
+1. **Improve Depression Detection** (ML/Research)
+   - Current PAT head achieves 0.593 AUC on NHANES
+   - Goal: Match or exceed published benchmarks (0.70+ AUC)
+   - Ideas: Better data augmentation, ensemble methods, feature engineering
+
+2. **Multi-device Support** (Engineering)
+   - Extend beyond Apple Health to Fitbit, Garmin, Oura
+   - Standardize activity data formats across devices
+   - See issue #[TBD] for device API specifications
+
+3. **Performance Optimization** (Systems)
+   - Current: 33MB/s XML parsing, <100MB RAM for 500MB files
+   - Goal: Handle 2GB+ exports without memory issues
+   - Profile and optimize the streaming parser
+
+4. **Clinical Validation** (Research/Medical)
+   - Test on diverse populations beyond NHANES
+   - Partner with clinical researchers for real-world validation
+   - Document performance across demographics
 
 ## Development Setup
 
@@ -132,6 +145,9 @@ pip install 'numpy<2.0'
 
 # Install with all dependencies
 pip install -e ".[dev,ml,monitoring]"
+
+# Download model weights (see Model Weights Setup section)
+python scripts/verify_setup.py --check-models
 
 # Run fast tests (2 minutes)
 export TESTING=1
@@ -176,19 +192,32 @@ docker run --rm \
 You MUST have model weights in place before running:
 
 ```bash
-# Ensure these files exist:
+# Required files:
 model_weights/
 ├── xgboost/converted/
-│   ├── XGBoost_DE.json      # Depression model
-│   ├── XGBoost_HME.json     # Hypomania model
-│   └── XGBoost_ME.json      # Mania model
-├── pat/pretrained/
-│   └── PAT-*.h5             # PAT pretrained weights
-└── production/
-    └── pat_conv_l_v0.5929.pth  # Trained depression head
+│   ├── XGBoost_DE.json      # ✅ Already in repo
+│   ├── XGBoost_HME.json     # ✅ Already in repo
+│   └── XGBoost_ME.json      # ✅ Already in repo
+├── pat/
+│   ├── pretrained/
+│   │   └── PAT-L_29k_weights.h5  # ⬇️ Download from Dartmouth
+│   └── production/
+│       └── pat_conv_l_v0.5929.pth  # 🔒 Private - request access
 ```
 
-If missing, copy from `data-dump/model_weights/` or see MODEL_WEIGHTS_GUIDE.md
+**Getting Model Weights:**
+
+1. **Quick Setup (Recommended)**: Request the complete model bundle
+   - Email maintainer with your use case
+   - Get access to pre-packaged Google Drive bundle (~140MB)
+   - Extract to project root - all files go to correct locations
+
+2. **Manual Setup**: Download individually
+   - PAT weights: [Dartmouth PAT Repo](https://github.com/njacobsonlab/Pretrained-Actigraphy-Transformer/)
+   - Depression head: Private distribution (clinical model)
+   - See [`DATA_AND_MODEL_WEIGHTS.md`](DATA_AND_MODEL_WEIGHTS.md) for detailed instructions
+
+**Note on Clinical Models**: The depression detection head outputs clinical predictions and is distributed privately to ensure research-only use. By requesting access, you agree not to use it for clinical diagnosis without proper regulatory approval.
 
 ## Testing
 
