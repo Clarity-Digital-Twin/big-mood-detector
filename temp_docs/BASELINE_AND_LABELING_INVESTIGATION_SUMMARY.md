@@ -1,5 +1,7 @@
 # Baseline and Labeling Investigation Summary
 
+⚠️ **PARTIAL CORRECTION:** This investigation correctly identified baseline bugs but incorrectly concluded that labeling is required. See `/XGBOOST_MODELS_CORRECTED_UNDERSTANDING.md` for updated model understanding.
+
 **Date:** July 27, 2025  
 **Investigation by:** Claude (Acting as Technical Co-founder)
 

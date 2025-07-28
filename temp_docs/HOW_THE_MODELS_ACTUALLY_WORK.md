@@ -4,9 +4,11 @@
 **Version:** v0.5.0  
 **Critical Documentation**
 
-## The Fundamental Misunderstanding
+⚠️ **UPDATE:** After careful re-reading of the paper, we've corrected our understanding. The models DO work "out of the box" without labeling. See `/XGBOOST_MODELS_CORRECTED_UNDERSTANDING.md` for details.
 
-We've been presenting Big Mood Detector as if it can predict mood episodes "out of the box" from your Apple Health data. **This is incorrect.**
+## The Fundamental Understanding (CORRECTED)
+
+Big Mood Detector CAN predict mood episodes "out of the box" from your Apple Health data. The XGBoost models are population-based, pre-trained on 168 Korean patients.
 
 ## How Each Model Really Works
 

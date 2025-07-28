@@ -1,5 +1,7 @@
 # CRITICAL DISCOVERY: Model Requirements for Big Mood Detector
 
+⚠️ **OUTDATED - SEE CORRECTION:** This document contains our initial incorrect understanding. For the corrected interpretation, see `/XGBOOST_MODELS_CORRECTED_UNDERSTANDING.md`
+
 **Date:** July 27, 2025  
 **Version:** v0.5.0  
 **Discovery by:** Claude (Acting as Technical Co-founder)
