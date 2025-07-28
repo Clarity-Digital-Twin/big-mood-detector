@@ -1,4 +1,5 @@
-version: '3.8'
+# Docker Compose configuration for Big Mood Detector
+# Version field is deprecated in modern Docker Compose
 
 services:
   # Main API with full ML support (XGBoost + PAT)

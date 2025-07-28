@@ -2,11 +2,16 @@
 set -euo pipefail
 
 # Ensure data directory structure exists with proper permissions
-# This handles the case where /data is mounted as a volume
-if [ -w "${DATA_DIR:-/data}" ]; then
-    mkdir -p "${DATA_DIR:-/data}/output" "${DATA_DIR:-/data}/uploads" "${DATA_DIR:-/data}/temp" || true
+# Use BIGMOOD_DATA_DIR if set, otherwise DATA_DIR, otherwise /app/data
+DATA_PATH="${BIGMOOD_DATA_DIR:-${DATA_DIR:-/app/data}}"
+
+# Create required directories if the data path is writable
+if [ -w "$DATA_PATH" ]; then
+    mkdir -p "$DATA_PATH/output" "$DATA_PATH/uploads" "$DATA_PATH/temp" || true
     # Try to set permissions if we can (might fail in some environments)
-    chmod -R 755 "${DATA_DIR:-/data}" 2>/dev/null || true
+    chmod -R 755 "$DATA_PATH" 2>/dev/null || true
+else
+    echo "Warning: Data directory $DATA_PATH is not writable" >&2
 fi
 
 # If no arguments provided, run the API server

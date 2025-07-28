@@ -85,7 +85,10 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     # Default to production settings
     ENVIRONMENT=production \
-    LOG_LEVEL=INFO
+    LOG_LEVEL=INFO \
+    # Set data directory to match volume mount
+    BIGMOOD_DATA_DIR=/app/data \
+    DATA_DIR=/app/data
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
