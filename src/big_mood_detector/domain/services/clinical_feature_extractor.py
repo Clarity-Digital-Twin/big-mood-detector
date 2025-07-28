@@ -254,7 +254,6 @@ class ClinicalFeatureExtractor:
 
     def __init__(
         self,
-        # baseline_repository: Any = None,  # REMOVED: Using rolling window baselines
         user_id: str | None = None,
     ) -> None:
         """Initialize with all required domain services.
@@ -262,7 +261,6 @@ class ClinicalFeatureExtractor:
         Args:
             user_id: Optional user ID for personal calibration
         """
-        # self.baseline_repository = baseline_repository  # REMOVED: Using rolling window baselines
         self.user_id = user_id
 
         self.sleep_window_analyzer = SleepWindowAnalyzer()
@@ -271,7 +269,6 @@ class ClinicalFeatureExtractor:
 
         # Pass calibration params to advanced feature engineer
         self.advanced_feature_engineer = AdvancedFeatureEngineer(
-            # baseline_repository=baseline_repository,  # REMOVED: Using rolling window baselines
             user_id=user_id,
         )
 
@@ -584,8 +581,6 @@ class ClinicalFeatureExtractor:
         min_record = min(date_records, key=lambda r: r.value)
         return min_record.timestamp.hour + min_record.timestamp.minute / 60.0
 
-    # REMOVED: Persist baselines - now using rolling window baselines
     def persist_baselines(self) -> None:
-        """Persist current baselines to repository if configured."""
-        # REMOVED: BaselineRepository - using rolling window baselines in AggregationPipeline
+        """No longer needed - baselines calculated via rolling windows."""
         pass
