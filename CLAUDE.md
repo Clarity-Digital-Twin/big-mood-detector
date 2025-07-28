@@ -61,7 +61,7 @@ CLI/API → Use Cases → Domain ← Infrastructure
 ### 🔧 Key Features
 - Process Apple Health export.xml
 - Clinical-grade mood predictions
-- Personal baseline calibration
+- Rolling window normalization (30-60 days)
 - FastAPI with /predictions/depression endpoint
 - Docker deployment ready
 
@@ -152,14 +152,14 @@ config = AggregationConfig(
 pipeline = OptimizedAggregationPipeline(config=config)
 ```
 
-### Enable Personal Baselines
+### Enable Personal Normalization
 ```python
-from big_mood_detector.infrastructure.repositories.file_baseline_repository import FileBaselineRepository
-
-baseline_repo = FileBaselineRepository(Path("data/baselines"))
+# Personal baselines are now calculated using rolling windows in AggregationPipeline
+# The pipeline automatically maintains 30-60 day rolling windows for Z-score normalization
 pipeline = MoodPredictionPipeline(
-    baseline_repository=baseline_repo,
-    user_id="unique_user_123"
+    config=PipelineConfig(
+        use_seoul_features=True  # Uses AggregationPipeline with rolling windows
+    )
 )
 ```
 

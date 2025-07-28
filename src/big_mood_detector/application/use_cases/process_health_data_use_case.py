@@ -110,8 +110,7 @@ class MoodPredictionPipeline:
         sparse_handler: SparseDataHandler | None = None,
         data_parsing_service: DataParsingService | None = None,
         aggregation_pipeline: AggregationPipeline | None = None,
-        baseline_repository: Any | None = None,  # NEW: Accept baseline repository
-        di_container: Any | None = None,  # NEW: Accept DI container
+        di_container: Any | None = None,
     ):
         """
         Initialize with domain services.
@@ -128,33 +127,6 @@ class MoodPredictionPipeline:
         # Initialize clinical_extractor - will be set below
         self.clinical_extractor: Any  # Union of ClinicalFeatureExtractor and OrchestratorAdapter
 
-        # Create ClinicalFeatureExtractor with personal calibration support
-        # Use injected baseline repository or get from DI container or create default
-        if self.config.enable_personal_calibration and self.config.user_id:
-            if baseline_repository:
-                # Use explicitly provided repository
-                self.baseline_repository = baseline_repository
-            elif di_container:
-                # Get from DI container
-                from big_mood_detector.domain.repositories.baseline_repository_interface import (
-                    BaselineRepositoryInterface,
-                )
-
-                self.baseline_repository = di_container.resolve(
-                    BaselineRepositoryInterface
-                )
-            else:
-                # Fallback to creating FileBaselineRepository for backward compatibility
-                from big_mood_detector.infrastructure.repositories.file_baseline_repository import (
-                    FileBaselineRepository,
-                )
-
-                baselines_dir = Path("data/baselines")
-                baselines_dir.mkdir(parents=True, exist_ok=True)
-                self.baseline_repository = FileBaselineRepository(baselines_dir)
-        else:
-            self.baseline_repository = None
-
         # Initialize clinical feature extractor with orchestrator adapter if available
         if di_container:
             try:
@@ -169,7 +141,6 @@ class MoodPredictionPipeline:
                 orchestrator = di_container.resolve(FeatureEngineeringOrchestrator)
                 self.clinical_extractor = OrchestratorAdapter(
                     orchestrator=orchestrator,
-                    baseline_repository=self.baseline_repository,
                     user_id=(
                         self.config.user_id
                         if self.config.enable_personal_calibration
@@ -185,7 +156,6 @@ class MoodPredictionPipeline:
                 )
                 # Fall back to standard clinical extractor
                 self.clinical_extractor = ClinicalFeatureExtractor(
-                    baseline_repository=self.baseline_repository,
                     user_id=(
                         self.config.user_id
                         if self.config.enable_personal_calibration
@@ -195,7 +165,6 @@ class MoodPredictionPipeline:
         else:
             # No DI container, use standard extractor
             self.clinical_extractor = ClinicalFeatureExtractor(
-                baseline_repository=self.baseline_repository,
                 user_id=(
                     self.config.user_id
                     if self.config.enable_personal_calibration
@@ -606,9 +575,7 @@ class MoodPredictionPipeline:
 
             current_date += timedelta(days=1)
 
-        # Persist baselines ONCE after processing all dates
-        if self.config.enable_personal_calibration and self.config.user_id and features:
-            self.clinical_extractor.persist_baselines()
+        # Note: Baselines are now calculated using rolling windows in AggregationPipeline
 
         return features
 
