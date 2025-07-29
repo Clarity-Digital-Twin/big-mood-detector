@@ -209,22 +209,13 @@ class TestTemporalEnsembleOrchestrator:
             pat_encoder=mock_pat_encoder
         )
 
-        # Execute
-        result = orchestrator.predict(
-            statistical_features=np.random.rand(36),
-            pat_sequence=np.random.rand(7, 1440),
-            user_id="test_user"
-        )
-
-        # Should not raise exception
-        assert isinstance(result, TemporalMoodAssessment)
-
-        # Current state should have default values on failure
-        assert result.current_state.depression_probability == 0.5
-        assert result.current_state.confidence == 0.0
-
-        # Future risk should still work
-        assert result.future_risk.depression_risk == 0.3
+        # Execute - should raise exception now instead of returning fake data
+        with pytest.raises(RuntimeError, match="PAT assessment failed"):
+            result = orchestrator.predict(
+                statistical_features=np.random.rand(36),
+                pat_sequence=np.random.rand(7, 1440),
+                user_id="test_user"
+            )
 
     def test_orchestrator_handles_xgboost_failure(self, mock_pat_predictor, mock_xgboost_predictor, mock_pat_encoder):
         """Test orchestrator handles XGBoost prediction failure gracefully."""
@@ -241,24 +232,13 @@ class TestTemporalEnsembleOrchestrator:
             pat_encoder=mock_pat_encoder
         )
 
-        # Execute
-        result = orchestrator.predict(
-            statistical_features=np.random.rand(36),
-            pat_sequence=np.random.rand(7, 1440),
-            user_id="test_user"
-        )
-
-        # Should not raise exception
-        assert isinstance(result, TemporalMoodAssessment)
-
-        # Current state should still work
-        assert result.current_state.depression_probability == 0.7
-
-        # Future risk should have default values on failure
-        assert result.future_risk.depression_risk == 0.33
-        assert result.future_risk.hypomanic_risk == 0.33
-        assert result.future_risk.manic_risk == 0.34
-        assert result.future_risk.confidence == 0.0
+        # Execute - should raise exception now instead of returning fake data
+        with pytest.raises(RuntimeError, match="XGBoost prediction failed"):
+            result = orchestrator.predict(
+                statistical_features=np.random.rand(36),
+                pat_sequence=np.random.rand(7, 1440),
+                user_id="test_user"
+            )
 
     def test_temporal_consistency_tracking(self, mock_pat_predictor, mock_xgboost_predictor, mock_pat_encoder):
         """Test orchestrator tracks temporal consistency between assessments."""

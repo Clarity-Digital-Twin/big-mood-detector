@@ -64,8 +64,8 @@ class TestClinicalFeatureExtractor:
         assert 0.85 <= features.sleep_efficiency <= 1.0
 
         # DLMO feature
-        assert features.dlmo_hour is not None
-        assert 20.0 <= features.dlmo_hour <= 22.0  # Expected DLMO 8-10 PM
+        assert features.estimated_dlmo_hour is not None
+        assert 20.0 <= features.estimated_dlmo_hour <= 22.0  # Expected DLMO 8-10 PM
 
         # Circadian features
         assert 0 <= features.interdaily_stability <= 1

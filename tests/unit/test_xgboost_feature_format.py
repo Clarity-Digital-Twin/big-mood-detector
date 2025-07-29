@@ -95,7 +95,7 @@ class TestXGBoostFeatureFormat:
             m10_value=8000.0,
             l5_onset_hour=2.0,
             m10_onset_hour=10.0,
-            dlmo_hour=21.0,
+            estimated_dlmo_hour=21.0,
             # Activity features
             total_steps=8000,
             activity_variance=1000.0,
@@ -111,7 +111,7 @@ class TestXGBoostFeatureFormat:
             # Phase features
             circadian_phase_advance=0.0,
             circadian_phase_delay=0.0,
-            dlmo_confidence=0.0,
+            estimated_dlmo_confidence=0.0,
             pat_hour=14.0,
             # Z-scores
             sleep_duration_zscore=0.0,

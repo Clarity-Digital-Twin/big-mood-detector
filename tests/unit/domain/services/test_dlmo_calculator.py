@@ -369,7 +369,7 @@ class TestDLMOCalculator:
         # Assert - different schedules should produce different DLMO times
         assert early_result is not None
         assert late_result is not None
-        assert early_result.dlmo_hour != late_result.dlmo_hour
+        assert early_result.estimated_dlmo_hour != late_result.estimated_dlmo_hour
 
         # Late sleeper should have later CBT minimum
         # This is a relative test - we care about the relationship
@@ -399,7 +399,7 @@ class TestDLMOCalculator:
         # Verify the offset relationship holds
         expected_dlmo = (result.cbt_min_hour - calculator.CBT_TO_DLMO_OFFSET) % 24
         assert (
-            abs(result.dlmo_hour - expected_dlmo) < 0.01
+            abs(result.estimated_dlmo_hour - expected_dlmo) < 0.01
         )  # Allow tiny floating point errors
 
     def test_offset_configuration_warning(self):
