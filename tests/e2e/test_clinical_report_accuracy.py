@@ -200,7 +200,7 @@ class TestClinicalReportAccuracy:
         """Predictions should vary day-to-day based on changing patterns."""
         config = PipelineConfig(
             include_pat_sequences=True,
-            min_days_required=3,  # Lower requirement to get more predictions
+            min_days_required=7,  # PAT requires 7 days of activity data
         )
         pipeline = MoodPredictionPipeline(config=config)
         
@@ -222,8 +222,8 @@ class TestClinicalReportAccuracy:
         print(f"Depression risks found: {len(depression_risks)}")
         print(f"Prediction keys: {list(result.daily_predictions.keys())}")
         
-        # Should have multiple days of predictions (at least 5 with 3-day min requirement)
-        assert len(depression_risks) >= 5, f"Should have at least 5 days of predictions, got {len(depression_risks)}"
+        # Should have multiple days of predictions (PAT requires 7-day windows)
+        assert len(depression_risks) >= 7, f"Should have at least 7 days of predictions, got {len(depression_risks)}"
         
         # Should not all be the same (indicates fake data)
         unique_risks = set(depression_risks)
@@ -236,10 +236,6 @@ class TestClinicalReportAccuracy:
             assert variance > 0.0001, \
                 f"Predictions have too little variance: {variance}, may be fake"
     
-    @pytest.mark.skipif(
-        os.getenv("TESTING") == "1",
-        reason="Skip ensemble CLI test in fast mode - requires model files"
-    )
     def test_cli_ensemble_command_produces_report(self, comprehensive_test_data, tmp_path):
         """Test full CLI command with --ensemble flag."""
         # Create test XML file
@@ -314,17 +310,23 @@ class TestClinicalReportAccuracy:
         xml += '<HealthData>\n'
         xml += f'  <ExportDate value="{datetime.now()}"/>\n'
         
-        # Add sleep records
-        for sleep in test_data["sleep"][:5]:  # Just a few for testing
+        # Add sleep records - include ALL to ensure we have proper 7-day windows
+        for sleep in test_data["sleep"]:
             xml += f'  <Record type="SleepAnalysis" sourceName="{sleep.source_name}" '
             xml += f'startDate="{sleep.start_date}" endDate="{sleep.end_date}" '
             xml += f'value="HKCategoryValueSleepAnalysis{sleep.state.value}"/>\n'
         
-        # Add activity records
-        for activity in test_data["activity"][:5]:
+        # Add activity records - include ALL for proper PAT sequence
+        for activity in test_data["activity"]:
             xml += f'  <Record type="StepCount" sourceName="{activity.source_name}" '
             xml += f'startDate="{activity.start_date}" endDate="{activity.end_date}" '
             xml += f'value="{activity.value}" unit="{activity.unit}"/>\n'
+        
+        # Add heart rate records - include some for better predictions
+        for hr in test_data["heart_rate"][:50]:  # Include a good sample
+            xml += f'  <Record type="HeartRate" sourceName="{hr.source_name}" '
+            xml += f'startDate="{hr.timestamp}" endDate="{hr.timestamp}" '
+            xml += f'value="{hr.value}" unit="{hr.unit}"/>\n'
         
         xml += '</HealthData>'
         return xml

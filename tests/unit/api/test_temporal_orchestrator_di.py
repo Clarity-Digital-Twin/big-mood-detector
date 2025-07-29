@@ -4,7 +4,7 @@ Test Temporal Ensemble Orchestrator Dependency Injection
 TDD test to ensure TemporalEnsembleOrchestrator is properly wired in DI.
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, MagicMock, patch
 
 from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
     TemporalEnsembleOrchestrator,
@@ -104,19 +104,22 @@ class TestTemporalOrchestratorDI:
                 # Configure mock returns with proper numpy array
                 mock_pat_encoder.encode.return_value = np.random.rand(96).astype(np.float32)  # PAT embeddings
                 
-                # PAT predictions
-                pat_pred = Mock()
-                pat_pred.depression_probability = 0.7
-                pat_pred.benzodiazepine_probability = 0.3
-                pat_pred.confidence = 0.9
+                # PAT predictions - use a simple namespace to ensure values are actual floats
+                from types import SimpleNamespace
+                pat_pred = SimpleNamespace(
+                    depression_probability=0.7,
+                    benzodiazepine_probability=0.3,
+                    confidence=0.9
+                )
                 mock_pat_predictor.predict_from_embeddings.return_value = pat_pred
                 
-                # XGBoost predictions
-                xgb_pred = Mock()
-                xgb_pred.depression_risk = 0.4
-                xgb_pred.hypomanic_risk = 0.2
-                xgb_pred.manic_risk = 0.1
-                xgb_pred.confidence = 0.85
+                # XGBoost predictions - use SimpleNamespace for actual values
+                xgb_pred = SimpleNamespace(
+                    depression_risk=0.4,
+                    hypomanic_risk=0.2,
+                    manic_risk=0.1,
+                    confidence=0.85
+                )
                 mock_xgboost.predict.return_value = xgb_pred
 
                 def resolve_side_effect(interface):
