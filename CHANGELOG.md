@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.5.4] - 2025-01-29 - 🚨 EMERGENCY FIX
+## [0.5.4] - 2025-07-29 - 🚨 EMERGENCY FIX
 
 ### Critical Bug Fixes
 - **Fixed Date Assignment Mismatch** - 99% of sleep data was unfindable (#73, #74)
@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimum 70% data coverage required for reliable predictions
 - Default features removed - system returns None/empty for missing data
 
-## [0.5.3] - 2025-01-29
+## [0.5.3] - 2025-07-29
 
 ### Added
 - **Window Selection Strategies** - Smart data window finding for sparse health records (#67)

@@ -2,11 +2,9 @@
 
 **Objective mood-episode risk from your Apple Watch — clinically informed, privacy-first, open-source.**
 
-> **🚨 CRITICAL UPDATE v0.5.4**: Fixed catastrophic bug causing identical predictions for all users. [Update immediately](https://github.com/Clarity-Digital-Twin/big-mood-detector/releases/tag/v0.5.4) if using v0.5.3 or earlier.
-
 > **The clinical problem:** No objective tool exists for predicting mood episodes or distinguishing unipolar from bipolar depression or borderline personality disorder. Clinicians rely on subjective recall; patients often seek help after crises begin.
 
-[![Version](https://img.shields.io/badge/version-0.5.4-red)](CHANGELOG.md) [![Tests](https://img.shields.io/badge/tests-1050%2B%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.5.4-blue)](CHANGELOG.md) [![Tests](https://img.shields.io/badge/tests-1050%2B%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
 Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. Two complementary models: 
 - PAT transformer screens for current depression. 
