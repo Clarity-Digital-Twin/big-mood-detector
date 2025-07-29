@@ -101,8 +101,8 @@ class TestTemporalOrchestratorDI:
                 mock_pat_predictor = Mock()
                 mock_pat_encoder = Mock()
                 
-                # Configure mock returns
-                mock_pat_encoder.encode.return_value = np.random.rand(96)  # PAT embeddings
+                # Configure mock returns with proper numpy array
+                mock_pat_encoder.encode.return_value = np.random.rand(96).astype(np.float32)  # PAT embeddings
                 
                 # PAT predictions
                 pat_pred = Mock()
@@ -134,9 +134,9 @@ class TestTemporalOrchestratorDI:
 
                 # Test prediction returns TemporalMoodAssessment
                 if orchestrator and hasattr(orchestrator, 'predict'):
-                    # Mock inputs
-                    statistical_features = np.random.rand(36)
-                    pat_sequence = np.random.rand(7, 1440)
+                    # Mock inputs with proper types
+                    statistical_features = np.random.rand(36).astype(np.float32)
+                    pat_sequence = np.random.rand(7, 1440).astype(np.float32)
 
                     # Get prediction
                     result = orchestrator.predict(

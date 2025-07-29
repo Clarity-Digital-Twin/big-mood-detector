@@ -216,8 +216,13 @@ class TestClinicalReportAccuracy:
             if "depression_risk" in prediction:
                 depression_risks.append(prediction["depression_risk"])
         
+        # Debug output
+        print(f"Number of predictions: {len(result.daily_predictions)}")
+        print(f"Depression risks found: {len(depression_risks)}")
+        print(f"Prediction keys: {list(result.daily_predictions.keys())}")
+        
         # Should have multiple days of predictions
-        assert len(depression_risks) >= 7, "Should have at least 7 days of predictions"
+        assert len(depression_risks) >= 7, f"Should have at least 7 days of predictions, got {len(depression_risks)}"
         
         # Should not all be the same (indicates fake data)
         unique_risks = set(depression_risks)
@@ -248,8 +253,11 @@ class TestClinicalReportAccuracy:
             "--output", str(tmp_path),
         ])
         
-        # This will FAIL if PAT not properly integrated
-        assert result.exit_code == 0, f"CLI failed: {result.output}"
+        # Print output for debugging if failed
+        if result.exit_code != 0:
+            print(f"CLI output: {result.output}")
+            print(f"CLI exception: {result.exception}")
+        assert result.exit_code == 0, f"CLI failed with exit code {result.exit_code}"
         
         # Check report file created
         report_file = tmp_path / "clinical_report.txt"

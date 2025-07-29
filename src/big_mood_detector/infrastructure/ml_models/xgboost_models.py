@@ -8,6 +8,8 @@ Based on the Seoul National University and Harvard/Fitbit studies that use
 36 engineered features for mood episode prediction.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from pathlib import Path
