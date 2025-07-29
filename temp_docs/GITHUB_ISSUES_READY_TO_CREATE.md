@@ -1,6 +1,14 @@
-# GitHub Issues - Ready to Create
+# GitHub Issues - Created in v0.5.5 Release
 
-Copy these directly into GitHub Issues. Each one is self-contained with clear acceptance criteria.
+**UPDATE**: All issues below were created on GitHub on 2025-07-29 and resolved in the v0.5.5 release.
+
+## Created Issues:
+- Issue #79: PAT integration method name bug ✅
+- Issue #80: Date handling using today() instead of data dates ✅
+- Issue #81: Hardcoded medical predictions (patient safety) ✅
+- Issue #82: DI container missing registrations ✅
+
+All critical bugs have been fixed and the system is now production-ready.
 
 ---
 

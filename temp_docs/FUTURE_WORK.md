@@ -2,6 +2,14 @@
 
 Last Updated: 2025-07-29
 
+## Recently Completed (v0.5.5)
+- ✅ Fixed all hardcoded values (dlmo_confidence, data_completeness)
+- ✅ Renamed dlmo_hour → estimated_dlmo_hour throughout codebase
+- ✅ Fixed PAT integration method name bug
+- ✅ Implemented proper error handling (fail fast, no fake data)
+- ✅ Added comprehensive integration tests
+- ✅ Fixed date handling to use actual data dates
+
 ## High Priority Improvements
 
 ### 1. Implement Principal Activity Time (PAT hour)
