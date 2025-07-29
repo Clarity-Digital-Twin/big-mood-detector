@@ -268,7 +268,9 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     
     # Import temporal formatter
-    from big_mood_detector.application.services.report_formatters import TemporalAssessmentSection
+    from big_mood_detector.application.services.report_formatters import (
+        TemporalAssessmentSection,
+    )
 
     with open(output_path, "w") as f:
         f.write("CLINICAL DECISION SUPPORT (CDS) REPORT\n")

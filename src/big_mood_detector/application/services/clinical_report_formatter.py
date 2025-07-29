@@ -11,8 +11,12 @@ from big_mood_detector.application.services.report_formatters import (
     ReportSection,
     TemporalAssessmentSection,
 )
-from big_mood_detector.application.use_cases.process_health_data_use_case import PipelineResult
-from big_mood_detector.domain.services.report_formatter_interface import ReportFormatterInterface
+from big_mood_detector.application.use_cases.process_health_data_use_case import (
+    PipelineResult,
+)
+from big_mood_detector.domain.services.report_formatter_interface import (
+    ReportFormatterInterface,
+)
 from big_mood_detector.interfaces.cli.commands import format_risk_level
 
 
@@ -165,7 +169,9 @@ class ClinicalReportFormatter(ReportFormatterInterface):
         """Initialize with customizable sections."""
         if sections is None:
             # Default sections in order
-            from big_mood_detector.application.services.report_formatters import DailyPredictionsSection
+            from big_mood_detector.application.services.report_formatters import (
+                DailyPredictionsSection,
+            )
             
             self.sections = [
                 HeaderSection(),

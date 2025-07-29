@@ -4,8 +4,12 @@ Report formatter factory following SOLID principles.
 This allows for easy extension with new formatter types.
 """
 
-from big_mood_detector.application.services.clinical_report_formatter import ClinicalReportFormatter
-from big_mood_detector.domain.services.report_formatter_interface import ReportFormatterInterface
+from big_mood_detector.application.services.clinical_report_formatter import (
+    ClinicalReportFormatter,
+)
+from big_mood_detector.domain.services.report_formatter_interface import (
+    ReportFormatterInterface,
+)
 
 
 class ReportFormatterFactory:

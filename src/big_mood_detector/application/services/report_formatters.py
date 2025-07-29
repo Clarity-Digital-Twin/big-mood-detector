@@ -9,7 +9,9 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
-from big_mood_detector.application.use_cases.process_health_data_use_case import PipelineResult
+from big_mood_detector.application.use_cases.process_health_data_use_case import (
+    PipelineResult,
+)
 
 
 class ReportSection(ABC):

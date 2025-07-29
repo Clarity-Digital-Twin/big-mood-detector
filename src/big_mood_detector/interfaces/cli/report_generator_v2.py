@@ -6,7 +6,9 @@ This module demonstrates proper SOLID principles and clean code.
 
 from pathlib import Path
 
-from big_mood_detector.application.use_cases.process_health_data_use_case import PipelineResult
+from big_mood_detector.application.use_cases.process_health_data_use_case import (
+    PipelineResult,
+)
 from big_mood_detector.interfaces.cli.report_factory import ReportFormatterFactory
 
 

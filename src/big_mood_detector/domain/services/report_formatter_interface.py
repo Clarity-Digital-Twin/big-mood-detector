@@ -7,7 +7,9 @@ This defines the contract for all report formatters.
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from big_mood_detector.application.use_cases.process_health_data_use_case import PipelineResult
+from big_mood_detector.application.use_cases.process_health_data_use_case import (
+    PipelineResult,
+)
 
 
 class ReportFormatterInterface(ABC):

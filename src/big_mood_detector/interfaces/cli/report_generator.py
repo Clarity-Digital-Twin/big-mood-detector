@@ -7,10 +7,12 @@ This module provides clean separation of concerns for report generation.
 from pathlib import Path
 
 from big_mood_detector.application.services.report_formatters import (
-    TemporalAssessmentSection,
     DailyPredictionsSection,
+    TemporalAssessmentSection,
 )
-from big_mood_detector.application.use_cases.process_health_data_use_case import PipelineResult
+from big_mood_detector.application.use_cases.process_health_data_use_case import (
+    PipelineResult,
+)
 
 
 def generate_clinical_report_with_temporal(result: PipelineResult, output_path: Path) -> None:

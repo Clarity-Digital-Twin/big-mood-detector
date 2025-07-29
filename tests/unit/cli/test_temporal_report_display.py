@@ -4,11 +4,14 @@ Test temporal report display functionality.
 Following TDD principles - these tests define the behavior we want.
 """
 
-import pytest
 from datetime import date, datetime
 from pathlib import Path
 
-from big_mood_detector.application.use_cases.process_health_data_use_case import PipelineResult
+import pytest
+
+from big_mood_detector.application.use_cases.process_health_data_use_case import (
+    PipelineResult,
+)
 from big_mood_detector.interfaces.cli.commands import generate_clinical_report
 
 
