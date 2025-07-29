@@ -84,7 +84,7 @@ class SeoulXGBoostFeatures:
     m10_value: float  # Most active 10 hours
     l5_onset_hour: float  # When L5 starts
     m10_onset_hour: float  # When M10 starts
-    dlmo_hour: float  # Dim Light Melatonin Onset
+    estimated_dlmo_hour: float  # Estimated Dim Light Melatonin Onset (model-based)
 
     # Activity Features (19-24)
     total_steps: int
@@ -103,7 +103,7 @@ class SeoulXGBoostFeatures:
     # Phase Features (29-32)
     circadian_phase_advance: float  # Hours ahead
     circadian_phase_delay: float  # Hours behind
-    dlmo_confidence: float  # DLMO calculation confidence
+    estimated_dlmo_confidence: float  # Confidence in DLMO estimation (0-1)
     pat_hour: float  # Principal activity time
 
     # Z-Score Features (33-36)
@@ -158,7 +158,7 @@ class SeoulXGBoostFeatures:
             self.m10_value,
             self.l5_onset_hour,
             self.m10_onset_hour,
-            self.dlmo_hour,
+            self.estimated_dlmo_hour,
             # Activity (19-24)
             float(self.total_steps),
             self.activity_variance,
@@ -174,7 +174,7 @@ class SeoulXGBoostFeatures:
             # Phase (29-32)
             self.circadian_phase_advance,
             self.circadian_phase_delay,
-            self.dlmo_confidence,
+            self.estimated_dlmo_confidence,
             self.pat_hour,
             # Z-scores (33-36)
             self.sleep_duration_zscore,
@@ -384,7 +384,7 @@ class ClinicalFeatureExtractor:
                 if advanced_features.m10_onset
                 else 14.0
             ),
-            dlmo_hour=dlmo_result.dlmo_hour if dlmo_result else 21.0,
+            estimated_dlmo_hour=dlmo_result.estimated_dlmo_hour if dlmo_result else 21.0,
             # Activity
             total_steps=advanced_features.total_steps,
             activity_variance=self._calculate_activity_variance(activity_records),
@@ -401,7 +401,7 @@ class ClinicalFeatureExtractor:
             # Phase
             circadian_phase_advance=advanced_features.circadian_phase_advance,
             circadian_phase_delay=advanced_features.circadian_phase_delay,
-            dlmo_confidence=dlmo_result.confidence if dlmo_result else 0.0,
+            estimated_dlmo_confidence=dlmo_result.confidence if dlmo_result else 0.0,
             pat_hour=pat_analysis.pat_hour if pat_analysis else 14.0,
             # Z-scores
             sleep_duration_zscore=advanced_features.sleep_duration_zscore,

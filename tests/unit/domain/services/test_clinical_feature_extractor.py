@@ -106,9 +106,9 @@ class TestClinicalFeatureExtractor:
 
         # Assert
         assert features is not None
-        assert features.dlmo_hour == 21.0  # Default value
+        assert features.estimated_dlmo_hour == 21.0  # Default value
         # With only 1 day, DLMO might still have some confidence from default model
-        assert 0.0 <= features.dlmo_confidence <= 1.0
+        assert 0.0 <= features.estimated_dlmo_confidence <= 1.0
 
     def test_pat_sequence_extraction(self):
         """Extract PAT sequence for transformer input."""

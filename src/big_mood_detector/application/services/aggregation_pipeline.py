@@ -544,7 +544,7 @@ class AggregationPipeline:
         if circadian_metrics and dlmo_result:
             metrics["circadian"] = {
                 "amplitude": circadian_metrics.relative_amplitude,
-                "phase": dlmo_result.dlmo_hour,
+                "phase": dlmo_result.estimated_dlmo_hour,
                 "dlmo_confidence": dlmo_result.confidence,  # Add DLMO confidence
             }
 
@@ -1030,7 +1030,7 @@ class AggregationPipeline:
             m10_value=0.0,  # Default for now
             l5_onset_hour=2,  # Default for now
             m10_onset_hour=14,  # Default for now
-            dlmo_hour=daily_metrics.get("circadian", {}).get("phase", 21.0),
+            estimated_dlmo_hour=daily_metrics.get("circadian", {}).get("phase", 21.0),
             # Activity metrics
             total_steps=int(activity_metrics.get("daily_steps", 0)),
             activity_variance=activity_metrics.get("activity_variance", 0.0),
@@ -1048,7 +1048,7 @@ class AggregationPipeline:
             # Phase metrics
             circadian_phase_advance=0.0,
             circadian_phase_delay=0.0,
-            dlmo_confidence=daily_metrics.get("circadian", {}).get("dlmo_confidence", 0.0),
+            estimated_dlmo_confidence=daily_metrics.get("circadian", {}).get("dlmo_confidence", 0.0),
             pat_hour=0.0,  # PAT (Principal Activity Time) requires complex analysis - not implemented yet
             # Z-scores (these are the aggregated z-scores)
             sleep_duration_zscore=sleep_features["sleep_percentage_zscore"],
@@ -1104,14 +1104,29 @@ class AggregationPipeline:
         if daily_metrics.get("sleep"):
             completeness += 0.4
 
-        # Check activity data (40%) - just check if we have activity metrics
+        # Check activity data (40%) - check if we have real activity data
+        # When no activity data exists, _calculate_activity_metrics returns specific defaults
         if activity_metrics is not None:
-            completeness += 0.4
+            # Check if these are NOT default values (indicating actual activity data)
+            is_default_activity = (
+                activity_metrics.get("daily_steps", -1) == 0.0 and
+                activity_metrics.get("activity_variance", -1) == 0.0 and
+                activity_metrics.get("sedentary_hours", -1) == 24.0 and
+                activity_metrics.get("activity_fragmentation", -1) == 0.0 and
+                activity_metrics.get("sedentary_bout_mean", -1) == 24.0 and
+                activity_metrics.get("activity_intensity_ratio", -1) == 0.0
+            )
+            if not is_default_activity:
+                completeness += 0.4
 
-        # Check heart rate data (20%) - check if we have non-None HR values
+        # Check heart rate data (20%)
         if heart_metrics is not None:
-            # Only count if we have actual HR data (not just the dict with None values)
-            if any(v is not None for v in heart_metrics.values()):
+            # Check if we have real HR data (not None values)
+            has_real_hr = (
+                heart_metrics.get("avg_resting_hr") is not None or
+                heart_metrics.get("hrv_sdnn") is not None
+            )
+            if has_real_hr:
                 completeness += 0.2
 
         return completeness

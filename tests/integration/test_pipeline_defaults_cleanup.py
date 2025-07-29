@@ -30,7 +30,7 @@ class TestPipelineDefaultsCleanup:
     
     def create_test_data(self, days: int = 7):
         """Create test data for specified number of days."""
-        base_date = date.today() - timedelta(days=days)
+        base_date = date.today() - timedelta(days=days-1)  # Include today
         sleep_records = []
         activity_records = []
         heart_records = []
@@ -95,8 +95,8 @@ class TestPipelineDefaultsCleanup:
         assert len(clinical_features) > 0
         for feature_set in clinical_features:
             if feature_set and feature_set.seoul_features:
-                assert feature_set.seoul_features.data_completeness == 1.0, \
-                    "Should have full completeness with all data types"
+                assert abs(feature_set.seoul_features.data_completeness - 1.0) < 0.001, \
+                    f"Should have full completeness with all data types, got {feature_set.seoul_features.data_completeness}"
         
         # Test with no heart rate data
         clinical_features_no_hr = pipeline.aggregate_daily_features(
@@ -110,7 +110,7 @@ class TestPipelineDefaultsCleanup:
         # Should have 0.8 completeness (missing 20% for heart rate)
         for feature_set in clinical_features_no_hr:
             if feature_set and feature_set.seoul_features:
-                assert feature_set.seoul_features.data_completeness == 0.8, \
+                assert abs(feature_set.seoul_features.data_completeness - 0.8) < 0.001, \
                     f"Should have 0.8 completeness without heart data, got {feature_set.seoul_features.data_completeness}"
         
         # Test with no activity data
@@ -125,7 +125,7 @@ class TestPipelineDefaultsCleanup:
         # Should have 0.6 completeness (40% sleep + 20% heart)
         for feature_set in clinical_features_no_activity:
             if feature_set and feature_set.seoul_features:
-                assert feature_set.seoul_features.data_completeness == 0.6, \
+                assert abs(feature_set.seoul_features.data_completeness - 0.6) < 0.001, \
                     f"Should have 0.6 completeness without activity data, got {feature_set.seoul_features.data_completeness}"
     
     def test_dlmo_confidence_from_actual_calculation(self):
@@ -146,7 +146,7 @@ class TestPipelineDefaultsCleanup:
         # Without DLMO calculation, confidence should be 0.0
         for feature_set in clinical_features:
             if feature_set and feature_set.seoul_features:
-                assert feature_set.seoul_features.dlmo_confidence == 0.0, \
+                assert feature_set.seoul_features.estimated_dlmo_confidence == 0.0, \
                     "DLMO confidence should be 0.0 when DLMO not calculated"
     
     def test_pat_hour_documented_as_not_implemented(self):
@@ -191,7 +191,7 @@ class TestPipelineDefaultsCleanup:
         
         for feature_set in clinical_features:
             if feature_set and feature_set.seoul_features:
-                assert feature_set.seoul_features.dlmo_confidence not in forbidden_values, \
-                    f"Found hardcoded dlmo_confidence: {feature_set.seoul_features.dlmo_confidence}"
+                assert feature_set.seoul_features.estimated_dlmo_confidence not in forbidden_values, \
+                    f"Found hardcoded dlmo_confidence: {feature_set.seoul_features.estimated_dlmo_confidence}"
                 assert feature_set.seoul_features.pat_hour not in forbidden_values, \
                     f"Found hardcoded pat_hour: {feature_set.seoul_features.pat_hour}"
