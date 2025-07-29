@@ -40,6 +40,7 @@ from big_mood_detector.domain.services.pat_sequence_builder import (
     PATSequenceBuilder,
 )
 from big_mood_detector.domain.services.sleep_window_analyzer import SleepWindowAnalyzer
+from big_mood_detector.domain.services.date_assignment import UniversalDateAssignment
 
 
 @dataclass(frozen=True)
@@ -519,26 +520,40 @@ class ClinicalFeatureExtractor:
         self, sleep_records: list[SleepRecord], target_date: date
     ) -> float:
         """Extract sleep onset hour for target date."""
-        for record in sleep_records:
-            if record.start_date.date() == target_date:
-                return record.start_date.hour + record.start_date.minute / 60.0
-        return 23.0  # Default
+        # Find sleep records assigned to this date
+        matching_records = UniversalDateAssignment.find_sleep_for_date(
+            sleep_records, target_date
+        )
+        
+        if matching_records:
+            # Use the first sleep record's start time
+            record = matching_records[0]
+            return record.start_date.hour + record.start_date.minute / 60.0
+        return None  # No data available
 
     def _extract_wake_time_hour(
         self, sleep_records: list[SleepRecord], target_date: date
     ) -> float:
         """Extract wake time hour for target date."""
-        for record in sleep_records:
-            if record.end_date.date() == target_date + timedelta(days=1):
-                return record.end_date.hour + record.end_date.minute / 60.0
-        return 7.0  # Default
+        # Find sleep records assigned to this date
+        matching_records = UniversalDateAssignment.find_sleep_for_date(
+            sleep_records, target_date
+        )
+        
+        if matching_records:
+            # Use the last sleep record's end time (in case of multiple)
+            record = matching_records[-1]
+            return record.end_date.hour + record.end_date.minute / 60.0
+        return None  # No data available
 
     def _calculate_sleep_fragmentation(
         self, sleep_records: list[SleepRecord], target_date: date
     ) -> float:
         """Calculate sleep fragmentation index."""
-        # Count number of sleep episodes on target date
-        episodes = [r for r in sleep_records if r.start_date.date() == target_date]
+        # Count number of sleep episodes assigned to target date
+        episodes = UniversalDateAssignment.find_sleep_for_date(
+            sleep_records, target_date
+        )
         if not episodes:
             return 0.0
 
