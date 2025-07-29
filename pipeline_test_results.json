@@ -1,0 +1,13 @@
+{
+  "test_date": "2025-07-29T09:05:36.302063",
+  "data_coverage": {
+    "sleep": "71.43%",
+    "activity": "78.57%",
+    "heart": "78.57%"
+  },
+  "features_generated": 8,
+  "days_processed": 14,
+  "days_with_features": 8,
+  "pat_integration": "working",
+  "status": "all_systems_operational"
+}

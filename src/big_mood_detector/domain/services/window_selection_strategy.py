@@ -20,7 +20,7 @@ from typing import Any
 class DateWindow:
     """
     Immutable value object representing a valid data window.
-    
+
     Attributes:
         start_date: First date of the window
         end_date: Last date of the window (inclusive)
@@ -50,7 +50,7 @@ class DateWindow:
 class WindowSelectionStrategy(ABC):
     """
     Abstract strategy for finding valid data windows.
-    
+
     Different strategies can prioritize:
     - Recency (most recent valid window)
     - Quality (best data consistency)
@@ -65,11 +65,11 @@ class WindowSelectionStrategy(ABC):
     ) -> list[DateWindow]:
         """
         Find valid consecutive data windows.
-        
+
         Args:
             records: List of health records with start_date attribute
             min_days: Minimum consecutive days required for a valid window
-            
+
         Returns:
             List of valid windows, ordered by strategy-specific criteria
         """
@@ -79,7 +79,7 @@ class WindowSelectionStrategy(ABC):
 class MostRecentValidWindowStrategy(WindowSelectionStrategy):
     """
     Finds the most recent window with sufficient consecutive data.
-    
+
     Optimized for clinical relevance - recent data is usually
     more representative of current health state.
     """
@@ -156,7 +156,7 @@ class MostRecentValidWindowStrategy(WindowSelectionStrategy):
 class BestQualityWindowStrategy(WindowSelectionStrategy):
     """
     Finds the window with highest data quality and consistency.
-    
+
     Quality factors:
     - Sleep duration consistency
     - Data completeness
@@ -236,7 +236,7 @@ class BestQualityWindowStrategy(WindowSelectionStrategy):
     ) -> float:
         """
         Calculate quality score based on data consistency.
-        
+
         Factors:
         - Sleep duration variance (lower is better)
         - Completeness (no missing data)
@@ -277,7 +277,7 @@ class BestQualityWindowStrategy(WindowSelectionStrategy):
 class AllValidWindowsStrategy(WindowSelectionStrategy):
     """
     Finds all valid windows in the dataset.
-    
+
     Useful for:
     - Comprehensive analysis
     - Finding best prediction opportunities
