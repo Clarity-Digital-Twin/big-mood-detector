@@ -100,6 +100,24 @@ class TestTemporalOrchestratorDI:
                 mock_container = Mock()
                 mock_pat_predictor = Mock()
                 mock_pat_encoder = Mock()
+                
+                # Configure mock returns
+                mock_pat_encoder.encode.return_value = np.random.rand(96)  # PAT embeddings
+                
+                # PAT predictions
+                pat_pred = Mock()
+                pat_pred.depression_probability = 0.7
+                pat_pred.benzodiazepine_probability = 0.3
+                pat_pred.confidence = 0.9
+                mock_pat_predictor.predict_from_embeddings.return_value = pat_pred
+                
+                # XGBoost predictions
+                xgb_pred = Mock()
+                xgb_pred.depression_risk = 0.4
+                xgb_pred.hypomanic_risk = 0.2
+                xgb_pred.manic_risk = 0.1
+                xgb_pred.confidence = 0.85
+                mock_xgboost.predict.return_value = xgb_pred
 
                 def resolve_side_effect(interface):
                     if 'PATPredictorInterface' in str(interface):

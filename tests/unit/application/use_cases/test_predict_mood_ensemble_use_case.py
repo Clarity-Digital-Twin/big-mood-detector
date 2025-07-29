@@ -192,13 +192,10 @@ class TestEnsembleOrchestrator:
         )
 
         features = np.random.randn(36)
-        result = orchestrator.predict(features)
-
-        # Should return neutral prediction
-        assert result.ensemble_prediction.depression_risk == 0.5
-        assert result.ensemble_prediction.hypomanic_risk == 0.5
-        assert result.ensemble_prediction.manic_risk == 0.5
-        assert result.ensemble_prediction.confidence == 0.0
+        
+        # Should raise ValueError when both models fail
+        with pytest.raises(ValueError, match="No valid predictions available from any model"):
+            result = orchestrator.predict(features)
 
     def test_confidence_calculation(self, mock_xgboost_predictor, mock_pat_model):
         """Test confidence score calculation."""
