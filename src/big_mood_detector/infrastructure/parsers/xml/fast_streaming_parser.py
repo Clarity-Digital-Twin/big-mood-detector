@@ -158,7 +158,7 @@ class FastStreamingXMLParser:
                 record_type = elem.get("type")
 
                 # Filter by record types if specified
-                if record_types and record_type not in record_types:
+                if record_types is not None and record_type not in record_types:
                     return None
 
                 # Extract all attributes

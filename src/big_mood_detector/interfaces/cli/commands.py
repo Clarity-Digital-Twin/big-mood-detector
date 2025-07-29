@@ -625,7 +625,9 @@ def predict_command(
         click.echo(f"Processing health data from: {input_path}")
 
         # Set up window selection strategy
-        from big_mood_detector.domain.services.window_selection_strategy import WindowSelectionStrategy
+        from big_mood_detector.domain.services.window_selection_strategy import (
+            WindowSelectionStrategy,
+        )
         strategy: WindowSelectionStrategy | None = None
         if auto_find_window or window_strategy:
             from big_mood_detector.domain.services.window_selection_strategy import (
