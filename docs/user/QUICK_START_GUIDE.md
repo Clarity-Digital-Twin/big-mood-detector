@@ -56,11 +56,17 @@ big-mood predict data/health_auto_export/ \
 big-mood predict data/health_auto_export/ \
     --ensemble \
     -o predictions.json
+
+# Use ensemble with temporal analysis and report
+big-mood predict data/health_auto_export/ \
+    --ensemble \
+    --report \
+    -o temporal_analysis.txt
 ```
 
 ## 📈 Example Output
 
-### Prediction Report Example
+### Basic Prediction Report
 ```
 Big Mood Detector - Clinical Report
 Generated: 2025-07-18 10:30:00
@@ -87,6 +93,34 @@ RECOMMENDATIONS:
 - Monitor sleep patterns closely
 - Consider sleep hygiene interventions
 - Follow up if symptoms worsen
+```
+
+### Temporal Analysis Report (with --ensemble)
+```
+TEMPORAL MOOD ASSESSMENT (NOW vs TOMORROW)
+-------------------------------------------
+NOW (Current State - PAT):      65% [MODERATE]
+TOMORROW (Future Risk - XGBoost):   42% [MODERATE]
+Temporal Concordance:           75.0%
+
+Pattern: Improving (current risk decreasing)
+
+CLINICAL INSIGHTS:
+- Current depression screening: MODERATE (PAT transformer)
+- Tomorrow's predicted risk: MODERATE but decreasing
+- High concordance (75%) indicates stable pattern
+- Consider preventive interventions while risk is decreasing
+
+DAILY PREDICTIONS WITH TEMPORAL CONTEXT:
+2024-03-31:
+  NOW:      65% [MODERATE]
+  TOMORROW: 42% [MODERATE]
+  Confidence: 89%
+  
+2024-03-30:
+  NOW:      72% [HIGH]
+  TOMORROW: 65% [MODERATE]
+  Confidence: 91%
 ```
 
 ## 🏷️ Label Your Episodes (Optional)

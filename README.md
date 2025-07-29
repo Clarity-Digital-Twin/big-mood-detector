@@ -7,8 +7,10 @@
 [![Version](https://img.shields.io/badge/version-0.5.4-blue)](CHANGELOG.md) [![Tests](https://img.shields.io/badge/tests-1050%2B%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
 Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. Two complementary models: 
-- PAT transformer screens for current depression. 
-- XGBoost predicts tomorrow's depression/mania/hypomania risk.
+- PAT transformer screens for current depression (NOW). 
+- XGBoost predicts tomorrow's depression/mania/hypomania risk (TOMORROW).
+
+When used together (--ensemble), see how your mood state evolves from today to tomorrow.
 
 Built by a clinical psychiatrist, implementing published research — runs 100% on-device, no cloud, no signup.
 
@@ -68,7 +70,10 @@ pip install big-mood-detector
 # 3. Analyze your data (research purposes)
 big-mood predict data/input/apple_export/export.xml --report
 
-# 4. For sparse data, auto-find valid windows
+# 4. With temporal analysis (NOW vs TOMORROW)
+big-mood predict data/input/apple_export/export.xml --ensemble --report
+
+# 5. For sparse data, auto-find valid windows
 big-mood predict data/input/apple_export/export.xml --auto-find-window --report
 ```
 
