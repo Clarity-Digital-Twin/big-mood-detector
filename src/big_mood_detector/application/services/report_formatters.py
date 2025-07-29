@@ -100,7 +100,7 @@ class TemporalAssessmentSection(ReportSection):
         else:
             return f"{percentage} [CRITICAL]"
     
-    def _interpret_pattern(self, current: float, future: float, concordance: float) -> str:
+    def _interpret_pattern(self, current: float | None, future: float | None, concordance: float | None) -> str:
         """Interpret temporal pattern."""
         # High current, lower future = improving (65% -> 42% is improving)
         if current > 0.5 and future < current - 0.1:
