@@ -5,8 +5,9 @@ These tests verify that all required services are properly registered
 and can be resolved.
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 from big_mood_detector.domain.services.pat_encoder import PATEncoderInterface
 from big_mood_detector.domain.services.pat_predictor import PATPredictorInterface

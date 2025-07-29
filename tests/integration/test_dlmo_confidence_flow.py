@@ -8,14 +8,17 @@ from unittest.mock import Mock, patch
 import pytest
 
 from big_mood_detector.application.services.aggregation_pipeline import (
-    AggregationPipeline,
     AggregationConfig,
+    AggregationPipeline,
 )
 from big_mood_detector.domain.entities.activity_record import (
     ActivityRecord,
     ActivityType,
 )
-from big_mood_detector.domain.entities.heart_rate_record import HeartRateRecord, HeartMetricType
+from big_mood_detector.domain.entities.heart_rate_record import (
+    HeartMetricType,
+    HeartRateRecord,
+)
 from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 from big_mood_detector.domain.services.dlmo_calculator import CircadianPhaseResult
 
