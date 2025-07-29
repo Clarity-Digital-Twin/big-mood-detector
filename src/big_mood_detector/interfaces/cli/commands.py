@@ -653,8 +653,20 @@ def predict_command(
             window_selection_strategy=strategy,
         )
 
+        # Get DI container if ensemble is enabled
+        di_container = None
+        if ensemble:
+            try:
+                from big_mood_detector.infrastructure.di import get_container
+                di_container = get_container()
+                if verbose:
+                    click.echo("Using DI container for PAT integration")
+            except Exception as e:
+                if verbose:
+                    click.echo(f"Warning: Could not initialize DI container: {e}")
+
         # Initialize pipeline
-        pipeline = MoodPredictionPipeline(config=config)
+        pipeline = MoodPredictionPipeline(config=config, di_container=di_container)
 
         # Convert datetime to date at the edge for clean internal APIs
         start_date_param: date | None = start_date.date() if start_date else None
