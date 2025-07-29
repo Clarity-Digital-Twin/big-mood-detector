@@ -449,15 +449,25 @@ def _initialize_container(container: Container) -> None:
     # Register PAT production loader as singleton
     import os
 
+    from big_mood_detector.domain.services.pat_encoder import PATEncoderInterface
     from big_mood_detector.domain.services.pat_predictor import PATPredictorInterface
     from big_mood_detector.infrastructure.ml_models.pat_production_loader import (
         ProductionPATLoader,
     )
     skip_loading = os.getenv("TESTING", "0") == "1"
-    container.register_singleton(
-        PATPredictorInterface,
-        lambda: ProductionPATLoader(skip_loading=skip_loading)
+    
+    # Create a single shared instance for both interfaces
+    pat_loader_instance = ProductionPATLoader(skip_loading=skip_loading)
+    
+    # Register both interfaces pointing to the same instance
+    container.register_singleton(PATPredictorInterface, pat_loader_instance)
+    container.register_singleton(PATEncoderInterface, pat_loader_instance)
+    
+    # Register XGBoost predictor
+    from big_mood_detector.infrastructure.ml_models.xgboost_models import (
+        XGBoostMoodPredictor,
     )
+    container.register_singleton(XGBoostMoodPredictor)
 
 
 @lru_cache

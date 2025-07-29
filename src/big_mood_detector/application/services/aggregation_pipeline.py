@@ -544,7 +544,8 @@ class AggregationPipeline:
         if circadian_metrics and dlmo_result:
             metrics["circadian"] = {
                 "amplitude": circadian_metrics.relative_amplitude,
-                "phase": dlmo_result.dlmo_hour,
+                "phase": dlmo_result.estimated_dlmo_hour,
+                "dlmo_confidence": dlmo_result.confidence,  # Add DLMO confidence
             }
 
         return metrics
@@ -1029,7 +1030,7 @@ class AggregationPipeline:
             m10_value=0.0,  # Default for now
             l5_onset_hour=2,  # Default for now
             m10_onset_hour=14,  # Default for now
-            dlmo_hour=daily_metrics.get("circadian", {}).get("phase", 21.0),
+            estimated_dlmo_hour=daily_metrics.get("circadian", {}).get("phase", 21.0),
             # Activity metrics
             total_steps=int(activity_metrics.get("daily_steps", 0)),
             activity_variance=activity_metrics.get("activity_variance", 0.0),
@@ -1047,15 +1048,17 @@ class AggregationPipeline:
             # Phase metrics
             circadian_phase_advance=0.0,
             circadian_phase_delay=0.0,
-            dlmo_confidence=0.8,
-            pat_hour=14.0,
+            estimated_dlmo_confidence=daily_metrics.get("circadian", {}).get("dlmo_confidence", 0.0),
+            pat_hour=0.0,  # PAT (Principal Activity Time) requires complex analysis - not implemented yet
             # Z-scores (these are the aggregated z-scores)
             sleep_duration_zscore=sleep_features["sleep_percentage_zscore"],
             activity_zscore=0.0,  # Default for now
             hr_zscore=0.0,  # Default for now
             hrv_zscore=0.0,  # Default for now
-            # Data quality
-            data_completeness=0.8,  # Default for now
+            # Data quality - calculate based on available vs expected data
+            data_completeness=self._calculate_data_completeness(
+                daily_metrics, activity_metrics, heart_metrics
+            ),
             is_hypersomnia_pattern=False,
             is_insomnia_pattern=False,
             is_phase_advanced=False,
@@ -1077,6 +1080,56 @@ class AggregationPipeline:
                 "activity_intensity_ratio", 0.0
             ),
         )
+
+    def _calculate_data_completeness(
+        self,
+        daily_metrics: dict[str, Any],
+        activity_metrics: dict[str, float],
+        heart_metrics: dict[str, float | None],
+    ) -> float:
+        """
+        Calculate data completeness score (0-1).
+
+        Based on presence of key data types:
+        - Sleep data: 40% weight
+        - Activity data: 40% weight
+        - Heart rate data: 20% weight
+
+        Returns:
+            Completeness score between 0 and 1
+        """
+        completeness = 0.0
+
+        # Check sleep data (40%) - just check if we have any sleep data
+        if daily_metrics.get("sleep"):
+            completeness += 0.4
+
+        # Check activity data (40%) - check if we have real activity data
+        # When no activity data exists, _calculate_activity_metrics returns specific defaults
+        if activity_metrics is not None:
+            # Check if these are NOT default values (indicating actual activity data)
+            is_default_activity = (
+                activity_metrics.get("daily_steps", -1) == 0.0 and
+                activity_metrics.get("activity_variance", -1) == 0.0 and
+                activity_metrics.get("sedentary_hours", -1) == 24.0 and
+                activity_metrics.get("activity_fragmentation", -1) == 0.0 and
+                activity_metrics.get("sedentary_bout_mean", -1) == 24.0 and
+                activity_metrics.get("activity_intensity_ratio", -1) == 0.0
+            )
+            if not is_default_activity:
+                completeness += 0.4
+
+        # Check heart rate data (20%)
+        if heart_metrics is not None:
+            # Check if we have real HR data (not None values)
+            has_real_hr = (
+                heart_metrics.get("avg_resting_hr") is not None or
+                heart_metrics.get("hrv_sdnn") is not None
+            )
+            if has_real_hr:
+                completeness += 0.2
+
+        return completeness
 
     def _get_actual_sleep_duration(
         self,

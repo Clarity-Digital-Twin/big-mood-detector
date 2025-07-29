@@ -215,9 +215,9 @@ class EnsembleOrchestrator:
 
         # For now, ensemble is just XGBoost (PAT can't predict yet)
         xgboost_pred = predictions.get("xgboost")
-        ensemble_pred = xgboost_pred if xgboost_pred else MoodPrediction(
-            depression_risk=0.5, hypomanic_risk=0.5, manic_risk=0.5, confidence=0.0
-        )
+        if not xgboost_pred:
+            raise ValueError("No valid predictions available from any model")
+        ensemble_pred = xgboost_pred
 
         # Calculate confidence scores
         confidence_scores = self._calculate_confidence(predictions)
@@ -334,10 +334,8 @@ class EnsembleOrchestrator:
         """Calculate weighted ensemble prediction."""
         # Handle missing predictions
         if xgboost_pred is None and pat_pred is None:
-            # Return neutral prediction if both failed
-            return MoodPrediction(
-                depression_risk=0.5, hypomanic_risk=0.5, manic_risk=0.5, confidence=0.0
-            )
+            # Raise error instead of returning fake data
+            raise ValueError("All models failed to generate predictions")
 
         if xgboost_pred is None:
             if pat_pred is None:

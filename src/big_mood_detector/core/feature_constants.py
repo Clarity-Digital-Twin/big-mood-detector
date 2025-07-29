@@ -26,7 +26,7 @@ XGBOOST_FEATURE_NAMES = [
     "m10_value",
     "l5_onset_hour",
     "m10_onset_hour",
-    "dlmo_hour",
+    "estimated_dlmo_hour",
     # Activity Features (18-23)
     "total_steps",
     "activity_variance",
@@ -42,7 +42,7 @@ XGBOOST_FEATURE_NAMES = [
     # Phase Features (28-31)
     "circadian_phase_advance",
     "circadian_phase_delay",
-    "dlmo_confidence",
+    "estimated_dlmo_confidence",
     "pat_hour",
     # Z-Score Features (32-35)
     "sleep_duration_zscore",

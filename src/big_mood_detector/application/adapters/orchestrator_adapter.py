@@ -236,7 +236,7 @@ class OrchestratorAdapter:
             m10_value=unified.circadian_features.m10_value,
             l5_onset_hour=2.0,  # Would calculate from data
             m10_onset_hour=14.0,  # Would calculate from data
-            dlmo_hour=21.0,  # Would calculate from data
+            estimated_dlmo_hour=21.0,  # Would calculate from data
             # Activity Features (19-24)
             total_steps=int(unified.activity_features.total_steps),
             activity_variance=100.0,  # Would calculate from data
@@ -252,7 +252,7 @@ class OrchestratorAdapter:
             # Phase Features (29-32)
             circadian_phase_advance=unified.circadian_features.circadian_phase_advance,
             circadian_phase_delay=unified.circadian_features.circadian_phase_delay,
-            dlmo_confidence=0.5,  # Would calculate from data
+            estimated_dlmo_confidence=0.5,  # Would calculate from data
             pat_hour=14.0,  # Would calculate from data
             # Z-Score Features (33-36)
             sleep_duration_zscore=0.0,  # Would calculate from baselines
@@ -345,7 +345,7 @@ class OrchestratorAdapter:
             m10_value=0.0,
             l5_onset_hour=2.0,
             m10_onset_hour=14.0,
-            dlmo_hour=21.0,
+            estimated_dlmo_hour=21.0,
             # Activity Features (19-24)
             total_steps=0,
             activity_variance=0.0,
@@ -361,7 +361,7 @@ class OrchestratorAdapter:
             # Phase Features (29-32)
             circadian_phase_advance=0.0,
             circadian_phase_delay=0.0,
-            dlmo_confidence=0.0,
+            estimated_dlmo_confidence=0.0,
             pat_hour=14.0,
             # Z-Score Features (33-36)
             sleep_duration_zscore=0.0,

@@ -68,7 +68,7 @@ class CircadianPhaseResult:
     """
 
     date: date
-    dlmo_hour: float  # DLMO time in hours (0-23.99)
+    estimated_dlmo_hour: float  # Estimated DLMO time in hours (0-23.99)
     cbt_min_hour: float  # CBT minimum time
     cbt_amplitude: float  # Circadian amplitude (strength)
     phase_angle: float  # Phase angle between DLMO and sleep
@@ -76,9 +76,9 @@ class CircadianPhaseResult:
 
     @property
     def dlmo_time(self) -> str:
-        """DLMO as HH:MM format."""
-        hours = int(self.dlmo_hour)
-        minutes = int((self.dlmo_hour - hours) * 60)
+        """Estimated DLMO as HH:MM format."""
+        hours = int(self.estimated_dlmo_hour)
+        minutes = int((self.estimated_dlmo_hour - hours) * 60)
         return f"{hours:02d}:{minutes:02d}"
 
 
@@ -498,7 +498,7 @@ class DLMOCalculator:
 
         return CircadianPhaseResult(
             date=target_date,
-            dlmo_hour=dlmo_hour,
+            estimated_dlmo_hour=dlmo_hour,
             cbt_min_hour=cbt_min_hour,
             cbt_amplitude=cbt_amplitude,
             phase_angle=phase_angle,
