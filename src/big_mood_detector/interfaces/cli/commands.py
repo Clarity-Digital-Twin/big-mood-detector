@@ -151,8 +151,10 @@ def validate_user_id(user_id: str | None) -> None:
             click.echo("   User IDs will be hashed for privacy protection")
 
 
-def format_risk_level(risk_score: float) -> str:
+def format_risk_level(risk_score: float | None) -> str:
     """Format risk score with clinical level."""
+    if risk_score is None:
+        return "N/A"
     if risk_score >= 0.7:
         return f"{risk_score:.1%} [HIGH]"
     elif risk_score >= 0.4:

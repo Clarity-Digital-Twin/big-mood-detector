@@ -102,6 +102,10 @@ class TemporalAssessmentSection(ReportSection):
     
     def _interpret_pattern(self, current: float | None, future: float | None, concordance: float | None) -> str:
         """Interpret temporal pattern."""
+        # Handle None values
+        if current is None or future is None:
+            return "Insufficient data for pattern analysis"
+            
         # High current, lower future = improving (65% -> 42% is improving)
         if current > 0.5 and future < current - 0.1:
             return "Improving - Crisis resolving"
@@ -112,13 +116,13 @@ class TemporalAssessmentSection(ReportSection):
         elif current > 0.5 and future > 0.5:
             return "Persistent elevation - Ongoing episode"
         # Both low with high concordance = stable
-        elif concordance > 0.8:
+        elif concordance is not None and concordance > 0.8:
             return "Stable trajectory"
         # Low concordance = transitioning
         else:
             return "Transitioning state - Monitor closely"
     
-    def _get_clinical_guidance(self, current: float, future: float, pattern: str) -> str:
+    def _get_clinical_guidance(self, current: float | None, future: float | None, pattern: str) -> str:
         """Generate clinical guidance based on temporal pattern."""
         if "Improving" in pattern:
             return "Continue current interventions, monitor for sustained improvement"
