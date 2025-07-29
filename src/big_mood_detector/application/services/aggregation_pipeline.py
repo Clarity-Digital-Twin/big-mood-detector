@@ -1092,7 +1092,7 @@ class AggregationPipeline:
 
         Based on presence of key data types:
         - Sleep data: 40% weight
-        - Activity data: 40% weight  
+        - Activity data: 40% weight
         - Heart rate data: 20% weight
 
         Returns:
