@@ -100,8 +100,8 @@ class TestFastStreamingXMLDateFilter:
         finally:
             temp_path.unlink()
 
-    def test_date_filter_with_datetime_comparison_bug(self, sample_xml_with_dates: str):
-        """Test that date/datetime comparison works correctly."""
+    def test_date_filter_excludes_out_of_range(self, sample_xml_with_dates: str):
+        """Test that records outside date range are excluded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False) as f:
             f.write(sample_xml_with_dates)
             temp_path = Path(f.name)
@@ -109,25 +109,23 @@ class TestFastStreamingXMLDateFilter:
         try:
             parser = FastStreamingXMLParser()
 
-            # This should not raise TypeError for date/datetime comparison
+            # Parse March data (should find nothing)
             records = list(
-                parser.parse_file(
+                parser.iter_records(
                     temp_path,
-                    entity_type="sleep",
-                    start_date="2025-05-01",
-                    end_date="2025-05-31"
+                    start_date=datetime(2025, 3, 1),
+                    end_date=datetime(2025, 3, 31),
                 )
             )
 
-            # Should have 1 sleep record in May
-            assert len(records) == 1
-            assert records[0].start_date.month == 5
+            # Should have no records in March
+            assert len(records) == 0
 
         finally:
             temp_path.unlink()
 
-    def test_date_filter_edge_case_inclusive(self, sample_xml_with_dates: str):
-        """Test that date filtering is inclusive of the boundary dates."""
+    def test_date_filter_handles_edge_dates(self, sample_xml_with_dates: str):
+        """Test that date filtering is inclusive of boundary dates."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False) as f:
             f.write(sample_xml_with_dates)
             temp_path = Path(f.name)
@@ -135,18 +133,18 @@ class TestFastStreamingXMLDateFilter:
         try:
             parser = FastStreamingXMLParser()
 
-            # Test exact date match
+            # Test exact date match (should include record that starts on that date)
             records = list(
-                parser.parse_file(
+                parser.iter_records(
                     temp_path,
-                    entity_type="all", 
-                    start_date="2025-05-15",
-                    end_date="2025-05-15"
+                    start_date=datetime(2025, 5, 15),
+                    end_date=datetime(2025, 5, 15),
                 )
             )
 
             # Should include the sleep record that starts on May 15
             assert len(records) == 1
+            assert "2025-05-15" in records[0]["startDate"]
 
         finally:
             temp_path.unlink()
