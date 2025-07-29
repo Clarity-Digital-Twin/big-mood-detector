@@ -460,8 +460,8 @@ def _initialize_container(container: Container) -> None:
     pat_loader_instance = ProductionPATLoader(skip_loading=skip_loading)
     
     # Register both interfaces pointing to the same instance
-    container.register_singleton(PATPredictorInterface, pat_loader_instance)
-    container.register_singleton(PATEncoderInterface, pat_loader_instance)
+    container.register_singleton(PATPredictorInterface, pat_loader_instance)  # type: ignore[type-abstract]
+    container.register_singleton(PATEncoderInterface, pat_loader_instance)  # type: ignore[type-abstract]
     
     # Register XGBoost predictor
     from big_mood_detector.infrastructure.ml_models.xgboost_models import (

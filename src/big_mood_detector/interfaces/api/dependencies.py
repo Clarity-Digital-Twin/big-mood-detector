@@ -107,7 +107,7 @@ def get_ensemble_orchestrator() -> EnsembleOrchestrator | TemporalEnsembleOrches
         orchestrator = TemporalEnsembleOrchestrator(
             pat_predictor=pat_predictor,
             xgboost_predictor=xgboost_predictor,
-            pat_encoder=pat_encoder,  # type: ignore[arg-type]
+            pat_encoder=pat_encoder,
         )
         return orchestrator
     else:
