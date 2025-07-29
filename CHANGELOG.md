@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Temporal Report Display** - NOW vs TOMORROW visualization for ensemble predictions
+  - Shows current state (PAT) vs future risk (XGBoost) when using --ensemble
+  - Temporal concordance percentage shows agreement between models
+  - Pattern interpretation (Stable/Improving/Worsening/Critical)
+  - Daily predictions enhanced with temporal context
+- Clean architecture report formatter following SOLID principles
+  - `ReportFormatterInterface` for extensibility
+  - `TemporalAssessmentSection` composable report section
+  - Factory pattern for report generation
+- Integration tests for temporal CLI functionality
+- Documentation updates with temporal analysis examples
+
 ## [0.5.4] - 2025-07-29 - 🚨 EMERGENCY FIX
 
 ### Critical Bug Fixes
