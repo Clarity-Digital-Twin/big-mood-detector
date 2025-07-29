@@ -40,7 +40,7 @@ class TestClinicalReportAccuracy:
     
     @pytest.fixture
     def comprehensive_test_data(self):
-        """Create comprehensive test data for 14 days."""
+        """Create comprehensive test data for 14 days with dense activity for PAT."""
         base_date = date.today() - timedelta(days=21)
         sleep_records = []
         activity_records = []
@@ -62,42 +62,34 @@ class TestClinicalReportAccuracy:
                 )
             )
             
-            # Activity: Variable throughout day
-            # Morning
-            activity_records.append(
-                ActivityRecord(
-                    source_name="Apple Watch",
-                    start_date=datetime.combine(current_date, datetime.min.time()) + timedelta(hours=7),
-                    end_date=datetime.combine(current_date, datetime.min.time()) + timedelta(hours=8),
-                    activity_type=ActivityType.STEP_COUNT,
-                    value=1000 + day * 50,  # Increasing morning activity
-                    unit="count",
-                )
-            )
-            
-            # Afternoon
-            activity_records.append(
-                ActivityRecord(
-                    source_name="Apple Watch",
-                    start_date=datetime.combine(current_date, datetime.min.time()) + timedelta(hours=14),
-                    end_date=datetime.combine(current_date, datetime.min.time()) + timedelta(hours=15),
-                    activity_type=ActivityType.STEP_COUNT,
-                    value=2000 + np.sin(day * 0.3) * 500,
-                    unit="count",
-                )
-            )
-            
-            # Evening
-            activity_records.append(
-                ActivityRecord(
-                    source_name="Apple Watch",
-                    start_date=datetime.combine(current_date, datetime.min.time()) + timedelta(hours=18),
-                    end_date=datetime.combine(current_date, datetime.min.time()) + timedelta(hours=19),
-                    activity_type=ActivityType.STEP_COUNT,
-                    value=1500 - day * 30,  # Decreasing evening activity
-                    unit="count",
-                )
-            )
+            # Activity: Dense minute-by-minute data for PAT
+            # Create activity records for every 15 minutes throughout the day
+            for hour in range(24):
+                for minute_offset in [0, 15, 30, 45]:
+                    timestamp = datetime.combine(current_date, datetime.min.time()) + timedelta(hours=hour, minutes=minute_offset)
+                    
+                    # Base activity pattern
+                    if 6 <= hour <= 22:  # Awake hours
+                        base_steps = 50 + (10 * np.sin(hour * 0.5))  # Vary by hour
+                        if 8 <= hour <= 9:  # Morning peak
+                            base_steps += 100
+                        elif 12 <= hour <= 13:  # Lunch activity
+                            base_steps += 80
+                        elif 17 <= hour <= 18:  # Evening activity
+                            base_steps += 60
+                    else:  # Sleep hours
+                        base_steps = 0
+                    
+                    activity_records.append(
+                        ActivityRecord(
+                            source_name="Apple Watch",
+                            start_date=timestamp,
+                            end_date=timestamp + timedelta(minutes=14, seconds=59),
+                            activity_type=ActivityType.STEP_COUNT,
+                            value=max(0, int(base_steps + np.random.normal(0, 5))),  # Add small variation
+                            unit="count",
+                        )
+                    )
             
             # Heart rate: Several measurements throughout day
             for hour in [7, 12, 15, 20]:
@@ -238,6 +230,14 @@ class TestClinicalReportAccuracy:
     
     def test_cli_ensemble_command_produces_report(self, comprehensive_test_data, tmp_path):
         """Test full CLI command with --ensemble flag."""
+        # Check if model files exist
+        from pathlib import Path
+        xgb_models = list(Path("model_weights/xgboost/converted").glob("*.json")) if Path("model_weights/xgboost/converted").exists() else []
+        pat_models = list(Path("model_weights/pat").glob("*.pth")) + list(Path("model_weights/pat").glob("*.pt")) if Path("model_weights/pat").exists() else []
+        
+        if not xgb_models or not pat_models:
+            pytest.skip("Model files not available in CI environment")
+        
         # Create test XML file
         xml_content = self._create_test_xml(comprehensive_test_data)
         xml_file = tmp_path / "test_export.xml"

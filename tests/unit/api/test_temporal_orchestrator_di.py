@@ -4,7 +4,9 @@ Test Temporal Ensemble Orchestrator Dependency Injection
 TDD test to ensure TemporalEnsembleOrchestrator is properly wired in DI.
 """
 
+from types import SimpleNamespace
 from unittest.mock import Mock, MagicMock, patch
+import numpy as np
 
 from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
     TemporalEnsembleOrchestrator,
@@ -66,7 +68,7 @@ class TestTemporalOrchestratorDI:
                 def resolve_side_effect(interface):
                     if 'PATPredictorInterface' in str(interface):
                         return mock_pat_predictor
-                    elif 'PATModelInterface' in str(interface):
+                    elif 'PATEncoderInterface' in str(interface):
                         return mock_pat_encoder
                     return None
 
@@ -84,52 +86,45 @@ class TestTemporalOrchestratorDI:
 
     def test_temporal_orchestrator_returns_temporal_assessment(self):
         """Test that orchestrator returns TemporalMoodAssessment, not EnsemblePrediction."""
-        import numpy as np
-
         from big_mood_detector.interfaces.api.dependencies import (
             get_ensemble_orchestrator,
         )
 
         with patch('big_mood_detector.interfaces.api.dependencies.XGBoostMoodPredictor') as mock_xgboost_class:
             with patch('big_mood_detector.infrastructure.di.get_container') as mock_get_container:
-                # Setup comprehensive mocks
-                mock_xgboost = Mock()
-                mock_xgboost.load_models.return_value = True
+                # Create simple mock objects that return real values
+                mock_xgboost = SimpleNamespace(
+                    load_models=lambda x: True,
+                    predict=lambda features: SimpleNamespace(
+                        depression_risk=0.4,
+                        hypomanic_risk=0.2,
+                        manic_risk=0.1,
+                        confidence=0.85
+                    )
+                )
                 mock_xgboost_class.return_value = mock_xgboost
 
-                mock_container = Mock()
-                mock_pat_predictor = Mock()
-                mock_pat_encoder = Mock()
-                
-                # Configure mock returns with proper numpy array
-                mock_pat_encoder.encode.return_value = np.random.rand(96).astype(np.float32)  # PAT embeddings
-                
-                # PAT predictions - use a simple namespace to ensure values are actual floats
-                from types import SimpleNamespace
-                pat_pred = SimpleNamespace(
-                    depression_probability=0.7,
-                    benzodiazepine_probability=0.3,
-                    confidence=0.9
+                # Create PAT mocks with real values
+                mock_pat_predictor = SimpleNamespace(
+                    predict_from_embeddings=lambda emb: SimpleNamespace(
+                        depression_probability=0.7,
+                        benzodiazepine_probability=0.3,
+                        confidence=0.9
+                    )
                 )
-                mock_pat_predictor.predict_from_embeddings.return_value = pat_pred
                 
-                # XGBoost predictions - use SimpleNamespace for actual values
-                xgb_pred = SimpleNamespace(
-                    depression_risk=0.4,
-                    hypomanic_risk=0.2,
-                    manic_risk=0.1,
-                    confidence=0.85
+                mock_pat_encoder = SimpleNamespace(
+                    encode=lambda seq: np.random.rand(96).astype(np.float32)
                 )
-                mock_xgboost.predict.return_value = xgb_pred
 
-                def resolve_side_effect(interface):
-                    if 'PATPredictorInterface' in str(interface):
-                        return mock_pat_predictor
-                    elif 'PATModelInterface' in str(interface):
-                        return mock_pat_encoder
-                    return None
-
-                mock_container.resolve.side_effect = resolve_side_effect
+                # Simple container mock
+                mock_container = SimpleNamespace(
+                    resolve=lambda interface: (
+                        mock_pat_predictor if 'PATPredictorInterface' in str(interface)
+                        else mock_pat_encoder if 'PATEncoderInterface' in str(interface)
+                        else None
+                    )
+                )
                 mock_get_container.return_value = mock_container
 
                 # Get orchestrator
@@ -137,7 +132,7 @@ class TestTemporalOrchestratorDI:
 
                 # Test prediction returns TemporalMoodAssessment
                 if orchestrator and hasattr(orchestrator, 'predict'):
-                    # Mock inputs with proper types
+                    # Real inputs
                     statistical_features = np.random.rand(36).astype(np.float32)
                     pat_sequence = np.random.rand(7, 1440).astype(np.float32)
 
@@ -148,8 +143,8 @@ class TestTemporalOrchestratorDI:
                         user_id="test_user"
                     )
 
-                    # Assert it's TemporalMoodAssessment, not EnsemblePrediction
+                    # Assert it's TemporalMoodAssessment
                     assert isinstance(result, TemporalMoodAssessment)
-                    assert hasattr(result, 'current_state')  # PAT assessment
-                    assert hasattr(result, 'future_risk')     # XGBoost prediction
+                    assert hasattr(result, 'current_state')
+                    assert hasattr(result, 'future_risk')
                     assert hasattr(result, 'temporal_concordance')
