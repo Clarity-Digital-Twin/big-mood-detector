@@ -674,7 +674,7 @@ def setup_dependencies(settings: Any) -> Container:
 
     # Repository data directory from settings
     data_dir = getattr(settings, "data_dir", Path("data"))
-    baselines_dir = data_dir / "baselines"
+    data_dir / "baselines"
 
     # Register concrete implementations
     container.register_singleton(
