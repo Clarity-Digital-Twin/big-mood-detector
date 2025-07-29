@@ -306,6 +306,7 @@ markers = [
     "large: marks tests that require large files (deselect with '-m \"not large\"')",
     "heavy: tests that load real model weights or large data (deselect with '-m \"not heavy\"')",
     "integration: marks tests as integration tests",
+    "real_integration: marks tests that require real models and no mocks (deselect with '-m \"not real_integration\"')",
     "unit: marks tests as unit tests",
     "ml: marks tests that require ML models",
     "clinical: marks tests for clinical validation",

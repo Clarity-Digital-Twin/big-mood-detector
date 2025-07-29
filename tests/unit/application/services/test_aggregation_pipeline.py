@@ -114,7 +114,7 @@ class TestAggregationPipeline:
 
         # Mock DLMO result
         dlmo_result = Mock()
-        dlmo_result.dlmo_hour = 21.5
+        dlmo_result.estimated_dlmo_hour = 21.5
 
         metrics = aggregation_pipeline.calculate_daily_metrics(
             sleep_windows=sample_sleep_windows,

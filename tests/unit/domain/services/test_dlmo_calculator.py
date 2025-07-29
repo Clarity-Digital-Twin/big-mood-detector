@@ -124,7 +124,7 @@ class TestDLMOCalculator:
 
         # DLMO should precede sleep by 2-3 hours
         # For 11 PM sleep, DLMO could be 8-11 PM (20-23) or earlier
-        assert 0 <= result.dlmo_hour < 24  # Valid hour
+        assert 0 <= result.estimated_dlmo_hour < 24  # Valid hour
 
         # CBT minimum should occur during sleep period
         # With 11 PM - 7 AM sleep, CBT min could be 2-6 AM
@@ -157,8 +157,8 @@ class TestDLMOCalculator:
         # Assert - DLMO should be in evening hours (20-22h) for normal sleepers
         assert result is not None
         assert (
-            20.0 <= result.dlmo_hour <= 22.0
-        ), f"DLMO {result.dlmo_hour}h outside expected 20-22h range"
+            20.0 <= result.estimated_dlmo_hour <= 22.0
+        ), f"DLMO {result.estimated_dlmo_hour}h outside expected 20-22h range"
         assert result.cbt_amplitude > 0
 
     def test_phase_delay_pattern(self, calculator):
@@ -186,7 +186,7 @@ class TestDLMOCalculator:
         assert result is not None
         # For 3 AM sleep, DLMO should be delayed
         # Just verify it's different from regular schedule
-        assert 0 <= result.dlmo_hour < 24
+        assert 0 <= result.estimated_dlmo_hour < 24
 
     def test_phase_advance_pattern(self, calculator):
         """Test DLMO for advanced sleep phase (early sleeper)."""
@@ -213,7 +213,7 @@ class TestDLMOCalculator:
         assert result is not None
         # For 8 PM sleep, DLMO should be advanced
         # Just verify we get a valid result
-        assert 0 <= result.dlmo_hour < 24
+        assert 0 <= result.estimated_dlmo_hour < 24
 
     def test_insufficient_data_handling(self, calculator):
         """Test handling of insufficient sleep data."""
@@ -235,7 +235,7 @@ class TestDLMOCalculator:
         # With only 2 days, model might still run but be less accurate
         # Update: Actually the model can run with 2 days
         if result is not None:
-            assert 0 <= result.dlmo_hour < 24
+            assert 0 <= result.estimated_dlmo_hour < 24
         # If we want to enforce minimum days, should check in the calculator
 
     def test_alpha_function_saturation(self, calculator):
@@ -326,7 +326,7 @@ class TestDLMOCalculator:
         # Assert
         assert result is not None
         # Mixed schedule should produce a valid DLMO
-        assert 0 <= result.dlmo_hour < 24
+        assert 0 <= result.estimated_dlmo_hour < 24
         # The actual timing depends on model convergence
         # What matters is that we handle mixed schedules
 
