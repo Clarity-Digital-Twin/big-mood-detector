@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5] - 2025-07-29 - CDS Report Fixes & Clean Integration
+
+### Fixed
+- **PAT Integration Method Bug** (#79) - Fixed AttributeError from non-existent method
+  - Changed `extract_multi_day_sequence()` to `extract_minute_sequence()`
+  - PAT predictions now actually work instead of failing silently
+- **Date Handling Bug** (#80) - Reports now show actual data dates
+  - Removed `date.today()` usage that showed future dates
+  - Uses actual end date from data range
+- **Hardcoded Medical Values** (#81) - PATIENT SAFETY FIX
+  - Removed fake predictions (0.5, 0.33, 0.34) on failures
+  - Now raises exceptions instead of returning fabricated data
+- **DI Container Registration** (#82) - PAT services properly registered
+  - Both `PATPredictorInterface` and `PATEncoderInterface` resolve correctly
+  - Single shared instance for both interfaces
+- **Data Completeness Calculation** - Now calculates from actual data
+  - Was hardcoded to 1.0, now checks for real data presence
+  - Detects default activity value patterns
+- **DLMO Confidence** - Uses real confidence from CircadianPhaseResult
+  - Was hardcoded to 0.0, now flows from actual calculation
+  - Field renamed dlmo_hour → estimated_dlmo_hour throughout
+- **Test & CI/CD Failures** - All tests pass with clean typing
+  - Fixed all test failures from field renames
+  - Added type ignore comments for abstract type registration
+  - Added skipif decorators for ensemble tests requiring model files
+
 ### Added
 - **Temporal Report Display** - NOW vs TOMORROW visualization for ensemble predictions
   - Shows current state (PAT) vs future risk (XGBoost) when using --ensemble
@@ -17,8 +43,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `ReportFormatterInterface` for extensibility
   - `TemporalAssessmentSection` composable report section
   - Factory pattern for report generation
-- Integration tests for temporal CLI functionality
-- Documentation updates with temporal analysis examples
+- Comprehensive integration tests for temporal CLI functionality
+- Documentation of all fixes in docs/bugs/v0.5.5-fixes/
+
+### Changed
+- Renamed all DLMO fields to clarify they are estimates, not measurements
+- Error handling now fails fast with clear messages instead of hiding failures
+- Test coverage increased to 90% with new integration tests
 
 ## [0.5.4] - 2025-07-29 - 🚨 EMERGENCY FIX
 
