@@ -13,8 +13,11 @@ Design Patterns:
 from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Any
+import logging
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 from big_mood_detector.domain.entities.activity_record import ActivityRecord
 from big_mood_detector.domain.entities.heart_rate_record import HeartRateRecord
@@ -401,16 +404,29 @@ class AggregationPipeline:
         window_size = min_window_size or self.config.min_window_size
 
         while current_date <= end_date:
-            # 1. Sleep Window Analysis
-            day_sleep = [
-                s
-                for s in sleep_records
-                if s.start_date.date() <= current_date <= s.end_date.date()
-            ]
+            # 1. Sleep Window Analysis - Use UniversalDateAssignment
+            from big_mood_detector.domain.services.date_assignment import UniversalDateAssignment
+            
+            # Find sleep records assigned to this date
+            day_sleep = UniversalDateAssignment.find_sleep_for_date(
+                sleep_records, current_date
+            )
+            
+            # CRITICAL: Skip this day if no real sleep data
+            if not day_sleep:
+                logger.warning(f"No sleep data for {current_date}, skipping")
+                current_date += timedelta(days=1)
+                continue  # DON'T create fake features!
 
             sleep_windows = self.sleep_analyzer.analyze_sleep_episodes(
                 day_sleep, current_date
             )
+            
+            # If no sleep windows even with sleep records, skip
+            if not sleep_windows:
+                logger.warning(f"No sleep windows analyzed for {current_date}, skipping")
+                current_date += timedelta(days=1)
+                continue
 
             # 2. Activity Sequence Extraction
             day_activity = [
@@ -1120,16 +1136,29 @@ class AggregationPipeline:
 
         current_date = start_date
         while current_date <= end_date:
-            # 1. Sleep Window Analysis
-            day_sleep = [
-                s
-                for s in sleep_records
-                if s.start_date.date() <= current_date <= s.end_date.date()
-            ]
+            # 1. Sleep Window Analysis - Use UniversalDateAssignment
+            from big_mood_detector.domain.services.date_assignment import UniversalDateAssignment
+            
+            # Find sleep records assigned to this date
+            day_sleep = UniversalDateAssignment.find_sleep_for_date(
+                sleep_records, current_date
+            )
+            
+            # CRITICAL: Skip this day if no real sleep data
+            if not day_sleep:
+                logger.warning(f"No sleep data for {current_date}, skipping")
+                current_date += timedelta(days=1)
+                continue  # DON'T create fake features!
 
             sleep_windows = self.sleep_analyzer.analyze_sleep_episodes(
                 day_sleep, current_date
             )
+            
+            # If no sleep windows even with sleep records, skip
+            if not sleep_windows:
+                logger.warning(f"No sleep windows analyzed for {current_date}, skipping")
+                current_date += timedelta(days=1)
+                continue
 
             # 2. Activity Sequence Extraction
             day_activity = [

@@ -529,7 +529,8 @@ class ClinicalFeatureExtractor:
             # Use the first sleep record's start time
             record = matching_records[0]
             return record.start_date.hour + record.start_date.minute / 60.0
-        return None  # No data available
+        # TODO: Remove this default - should handle missing data at higher level
+        return 23.0  # Default
 
     def _extract_wake_time_hour(
         self, sleep_records: list[SleepRecord], target_date: date
@@ -544,7 +545,8 @@ class ClinicalFeatureExtractor:
             # Use the last sleep record's end time (in case of multiple)
             record = matching_records[-1]
             return record.end_date.hour + record.end_date.minute / 60.0
-        return None  # No data available
+        # TODO: Remove this default - should handle missing data at higher level
+        return 7.0  # Default
 
     def _calculate_sleep_fragmentation(
         self, sleep_records: list[SleepRecord], target_date: date
