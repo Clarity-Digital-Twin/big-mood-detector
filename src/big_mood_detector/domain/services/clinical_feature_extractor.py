@@ -20,7 +20,7 @@ Design Principles:
 """
 
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date
 from typing import Any
 
 import numpy as np
@@ -34,13 +34,13 @@ from big_mood_detector.domain.services.activity_sequence_extractor import (
 from big_mood_detector.domain.services.advanced_feature_engineering import (
     AdvancedFeatureEngineer,
 )
+from big_mood_detector.domain.services.date_assignment import UniversalDateAssignment
 from big_mood_detector.domain.services.dlmo_calculator import DLMOCalculator
 from big_mood_detector.domain.services.pat_sequence_builder import (
     PATSequence,
     PATSequenceBuilder,
 )
 from big_mood_detector.domain.services.sleep_window_analyzer import SleepWindowAnalyzer
-from big_mood_detector.domain.services.date_assignment import UniversalDateAssignment
 
 
 @dataclass(frozen=True)
@@ -524,12 +524,12 @@ class ClinicalFeatureExtractor:
         matching_records = UniversalDateAssignment.find_sleep_for_date(
             sleep_records, target_date
         )
-        
+
         if matching_records:
             # Use the first sleep record's start time
             record = matching_records[0]
             return record.start_date.hour + record.start_date.minute / 60.0
-        # TODO: Remove this default - should handle missing data at higher level
+        # TODO(@team): Remove this default - should handle missing data at higher level
         return 23.0  # Default
 
     def _extract_wake_time_hour(
@@ -540,12 +540,12 @@ class ClinicalFeatureExtractor:
         matching_records = UniversalDateAssignment.find_sleep_for_date(
             sleep_records, target_date
         )
-        
+
         if matching_records:
             # Use the last sleep record's end time (in case of multiple)
             record = matching_records[-1]
             return record.end_date.hour + record.end_date.minute / 60.0
-        # TODO: Remove this default - should handle missing data at higher level
+        # TODO(@team): Remove this default - should handle missing data at higher level
         return 7.0  # Default
 
     def _calculate_sleep_fragmentation(

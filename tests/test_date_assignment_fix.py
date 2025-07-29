@@ -4,11 +4,14 @@ Test that the date assignment fix actually works!
 This test proves that midnight-crossing sleep can now be found correctly.
 """
 
+from datetime import date, datetime
+
 import pytest
-from datetime import datetime, date
 
 from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
-from big_mood_detector.domain.services.clinical_feature_extractor import ClinicalFeatureExtractor
+from big_mood_detector.domain.services.clinical_feature_extractor import (
+    ClinicalFeatureExtractor,
+)
 
 
 class TestDateAssignmentFix:

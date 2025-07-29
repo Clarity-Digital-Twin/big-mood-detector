@@ -1,9 +1,10 @@
 """Test FastStreamingXMLParser entity type handling."""
 
-import pytest
 import tempfile
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import pytest
 
 from big_mood_detector.infrastructure.parsers.xml.fast_streaming_parser import (
     FastStreamingXMLParser,

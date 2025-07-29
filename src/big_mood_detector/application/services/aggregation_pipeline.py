@@ -10,14 +10,12 @@ Design Patterns:
 - Template Method: Common aggregation structure with customizable steps
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Any
-import logging
 
 import numpy as np
-
-logger = logging.getLogger(__name__)
 
 from big_mood_detector.domain.entities.activity_record import ActivityRecord
 from big_mood_detector.domain.entities.heart_rate_record import HeartRateRecord
@@ -35,6 +33,8 @@ from big_mood_detector.domain.services.clinical_feature_extractor import (
 from big_mood_detector.domain.services.dlmo_calculator import DLMOCalculator
 from big_mood_detector.domain.services.sleep_aggregator import SleepAggregator
 from big_mood_detector.domain.services.sleep_window_analyzer import SleepWindowAnalyzer
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -405,13 +405,15 @@ class AggregationPipeline:
 
         while current_date <= end_date:
             # 1. Sleep Window Analysis - Use UniversalDateAssignment
-            from big_mood_detector.domain.services.date_assignment import UniversalDateAssignment
-            
+            from big_mood_detector.domain.services.date_assignment import (
+                UniversalDateAssignment,
+            )
+
             # Find sleep records assigned to this date
             day_sleep = UniversalDateAssignment.find_sleep_for_date(
                 sleep_records, current_date
             )
-            
+
             # CRITICAL: Skip this day if no real sleep data
             if not day_sleep:
                 logger.warning(f"No sleep data for {current_date}, skipping")
@@ -421,7 +423,7 @@ class AggregationPipeline:
             sleep_windows = self.sleep_analyzer.analyze_sleep_episodes(
                 day_sleep, current_date
             )
-            
+
             # If no sleep windows even with sleep records, skip
             if not sleep_windows:
                 logger.warning(f"No sleep windows analyzed for {current_date}, skipping")
@@ -1137,13 +1139,15 @@ class AggregationPipeline:
         current_date = start_date
         while current_date <= end_date:
             # 1. Sleep Window Analysis - Use UniversalDateAssignment
-            from big_mood_detector.domain.services.date_assignment import UniversalDateAssignment
-            
+            from big_mood_detector.domain.services.date_assignment import (
+                UniversalDateAssignment,
+            )
+
             # Find sleep records assigned to this date
             day_sleep = UniversalDateAssignment.find_sleep_for_date(
                 sleep_records, current_date
             )
-            
+
             # CRITICAL: Skip this day if no real sleep data
             if not day_sleep:
                 logger.warning(f"No sleep data for {current_date}, skipping")
@@ -1153,7 +1157,7 @@ class AggregationPipeline:
             sleep_windows = self.sleep_analyzer.analyze_sleep_episodes(
                 day_sleep, current_date
             )
-            
+
             # If no sleep windows even with sleep records, skip
             if not sleep_windows:
                 logger.warning(f"No sleep windows analyzed for {current_date}, skipping")

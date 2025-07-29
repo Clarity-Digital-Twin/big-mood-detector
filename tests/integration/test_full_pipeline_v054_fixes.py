@@ -8,28 +8,29 @@ These tests ensure that:
 4. The pipeline produces reasonable predictions
 """
 
-import pytest
-from datetime import datetime, date, timedelta
-import numpy as np
+from datetime import date, datetime, timedelta
 
-from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
+import numpy as np
+import pytest
+
+from big_mood_detector.application.pipelines.xgboost_pipeline import XGBoostPipeline
+from big_mood_detector.application.services.aggregation_pipeline import (
+    AggregationConfig,
+    AggregationPipeline,
+)
+from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
+    TemporalEnsembleOrchestrator,
+)
 from big_mood_detector.domain.entities.activity_record import (
     ActivityRecord,
     ActivityType,
 )
-from big_mood_detector.application.services.aggregation_pipeline import (
-    AggregationPipeline,
-    AggregationConfig,
-)
-from big_mood_detector.application.pipelines.xgboost_pipeline import XGBoostPipeline
-from big_mood_detector.infrastructure.ml_models.xgboost_models import (
-    XGBoostModelLoader,
-)
+from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 from big_mood_detector.infrastructure.ml_models.pat_production_loader import (
     ProductionPATLoader,
 )
-from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
-    TemporalEnsembleOrchestrator,
+from big_mood_detector.infrastructure.ml_models.xgboost_models import (
+    XGBoostModelLoader,
 )
 
 

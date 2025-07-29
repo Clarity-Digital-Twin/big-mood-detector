@@ -5,13 +5,13 @@ This verifies that ProductionPATLoader now implements the encode()
 method required by the temporal ensemble orchestrator.
 """
 
-import pytest
 import numpy as np
+import pytest
 
+from big_mood_detector.domain.services.pat_encoder import PATEncoderInterface
 from big_mood_detector.infrastructure.ml_models.pat_production_loader import (
     ProductionPATLoader,
 )
-from big_mood_detector.domain.services.pat_encoder import PATEncoderInterface
 
 
 class TestPATEncodeFix:

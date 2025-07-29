@@ -5,8 +5,9 @@ Ensures our single source of truth for date assignment works correctly.
 These tests prevent the v0.5.3 date mismatch bug from ever returning.
 """
 
+from datetime import date, datetime, timedelta
+
 import pytest
-from datetime import datetime, date, timedelta
 
 from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 from big_mood_detector.domain.services.date_assignment import UniversalDateAssignment

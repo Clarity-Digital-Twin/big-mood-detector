@@ -79,11 +79,11 @@ else:
         SimplePATConvLModel,
     )
 
+from big_mood_detector.domain.services.pat_encoder import PATEncoderInterface
 from big_mood_detector.domain.services.pat_predictor import (
     PATBinaryPredictions,
     PATPredictorInterface,
 )
-from big_mood_detector.domain.services.pat_encoder import PATEncoderInterface
 
 logger = logging.getLogger(__name__)
 
@@ -381,20 +381,20 @@ class ProductionPATLoader(PATPredictorInterface, PATEncoderInterface):
             embeddings_np: NDArray[np.float32] = embeddings.cpu().numpy().squeeze()  # Remove batch dim
 
         return embeddings_np
-    
+
     def encode(self, activity_sequence: NDArray[np.float32]) -> NDArray[np.float32]:
         """
         Encode activity sequence into PAT embeddings.
-        
+
         Implements PATEncoderInterface for temporal ensemble orchestrator.
-        
+
         Args:
             activity_sequence: 7-day activity data as (7, 1440) array
                               or flattened (10080,) array
-                              
+
         Returns:
             96-dimensional embedding vector
-            
+
         Raises:
             ValueError: If input shape is incorrect
         """
@@ -402,25 +402,25 @@ class ProductionPATLoader(PATPredictorInterface, PATEncoderInterface):
         if activity_sequence.ndim == 2 and activity_sequence.shape == (7, 1440):
             # Flatten to 1D
             activity_sequence = activity_sequence.flatten()
-        
+
         # Now should be (10080,)
         if activity_sequence.shape != (10080,):
             raise ValueError(
                 f"Expected (7, 1440) or (10080,) shape, got {activity_sequence.shape}"
             )
-        
+
         # Use existing method to extract embeddings
         return self.get_embeddings(activity_sequence)
-    
+
     def validate_sequence(self, activity_sequence: NDArray[np.float32]) -> bool:
         """
         Validate that activity sequence has correct format.
-        
+
         Implements PATEncoderInterface validation.
-        
+
         Args:
             activity_sequence: Activity data to validate
-            
+
         Returns:
             True if valid, False otherwise
         """

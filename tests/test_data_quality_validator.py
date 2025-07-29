@@ -5,18 +5,19 @@ Ensures the validator correctly identifies sparse data and provides
 appropriate warnings to users.
 """
 
-import pytest
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 
-from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
+import pytest
+
+from big_mood_detector.application.services.data_quality_validator import (
+    DataQualityReport,
+    DataQualityValidator,
+)
 from big_mood_detector.domain.entities.activity_record import (
     ActivityRecord,
     ActivityType,
 )
-from big_mood_detector.application.services.data_quality_validator import (
-    DataQualityValidator,
-    DataQualityReport,
-)
+from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 
 
 class TestDataQualityValidator:

@@ -4,14 +4,15 @@ Test that the system doesn't generate default features when data is missing.
 This test ensures that the v0.5.4 fix works - no more fake features!
 """
 
-import pytest
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 
-from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
+import pytest
+
 from big_mood_detector.application.services.aggregation_pipeline import (
-    AggregationPipeline,
     AggregationConfig,
+    AggregationPipeline,
 )
+from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 
 
 class TestNoDefaultFeatures:

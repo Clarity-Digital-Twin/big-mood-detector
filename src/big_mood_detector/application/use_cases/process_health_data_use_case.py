@@ -235,7 +235,7 @@ class MoodPredictionPipeline:
                     self.ensemble_orchestrator = TemporalEnsembleOrchestrator(
                         pat_predictor=pat_predictor,
                         xgboost_predictor=self.xgboost_predictor,
-                        pat_encoder=pat_model,  # type: ignore[arg-type]
+                        pat_encoder=pat_model,
                     )
                 else:
                     logger.warning("Cannot create temporal orchestrator without PAT models")
