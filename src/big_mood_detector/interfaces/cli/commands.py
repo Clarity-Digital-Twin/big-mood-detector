@@ -264,6 +264,9 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
     """Generate a detailed clinical report."""
     # Ensure parent directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Import temporal formatter
+    from big_mood_detector.application.services.report_formatters import TemporalAssessmentSection
 
     with open(output_path, "w") as f:
         f.write("CLINICAL DECISION SUPPORT (CDS) REPORT\n")
@@ -296,6 +299,12 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
                 pat_score = result.overall_summary['avg_pat_depression_probability']
                 f.write(f"\nPAT Depression Assessment: {format_risk_level(pat_score)}\n")
                 f.write("  (Based on PHQ-9 ≥ 10 threshold)\n")
+
+            # Add temporal assessment section if available
+            temporal_section = TemporalAssessmentSection()
+            if temporal_section.should_include(result):
+                f.write(temporal_section.format(result))
+                f.write("\n")
 
             f.write("\nCLINICAL RECOMMENDATIONS\n")
             f.write("-" * 30 + "\n")
@@ -337,13 +346,26 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
         # Show first week of daily predictions
         for date, pred in list(result.daily_predictions.items())[:7]:
             f.write(f"\n{date}:\n")
-            f.write(f"  Depression: {format_risk_level(pred['depression_risk'])}\n")
-            f.write(f"  Hypomania: {format_risk_level(pred['hypomanic_risk'])}\n")
-            f.write(f"  Mania: {format_risk_level(pred['manic_risk'])}\n")
+            
+            # Check if we have temporal data
+            if 'current_depression' in pred:
+                # Show temporal format
+                f.write(f"  NOW:      {format_risk_level(pred.get('current_depression', 0))}\n")
+                f.write(f"  TOMORROW: {format_risk_level(pred['depression_risk'])}\n")
+                # Show other tomorrow risks if elevated
+                if pred.get('hypomanic_risk', 0) > 0.3 or pred.get('manic_risk', 0) > 0.3:
+                    f.write(f"  Hypomania Tomorrow: {format_risk_level(pred['hypomanic_risk'])}\n")
+                    f.write(f"  Mania Tomorrow: {format_risk_level(pred['manic_risk'])}\n")
+            else:
+                # Traditional format
+                f.write(f"  Depression: {format_risk_level(pred['depression_risk'])}\n")
+                f.write(f"  Hypomania: {format_risk_level(pred['hypomanic_risk'])}\n")
+                f.write(f"  Mania: {format_risk_level(pred['manic_risk'])}\n")
+            
             f.write(f"  Confidence: {pred['confidence']:.1%}\n")
 
-            # Add PAT scores if available
-            if 'pat_depression_probability' in pred:
+            # Add PAT scores if available (but not if already shown as NOW)
+            if 'pat_depression_probability' in pred and 'current_depression' not in pred:
                 f.write(f"  PAT Depression: {format_risk_level(pred['pat_depression_probability'])}\n")
                 if 'pat_confidence' in pred:
                     f.write(f"  PAT Confidence: {pred['pat_confidence']:.1%}\n")
