@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2025-01-29
+
+### Added
+- **Window Selection Strategies** - Smart data window finding for sparse health records (#67)
+  - `WindowSelectionStrategy` interface with three implementations:
+    - `MostRecentValidWindowStrategy` - finds most recent window with sufficient data
+    - `BestQualityWindowStrategy` - finds window with highest data consistency  
+    - `AllValidWindowsStrategy` - finds all valid prediction windows
+  - New CLI flags:
+    - `--auto-find-window` - automatically find most recent valid data window
+    - `--window-strategy [recent|best|all]` - choose window selection approach
+  - `DateWindow` value object tracks window quality and metadata
+  - Backward compatible - existing behavior unchanged without flags
+- **PAT Integration in CLI** - DI container now properly wired for temporal predictions (#68)
+  - PAT model now accessible through CLI predictions
+  - Temporal ensemble orchestrator created when --ensemble flag used
+  - NOW vs TOMORROW separation working in CLI
+
+### Fixed
+- **Critical Date Window Bug** - System only checked last 7 days, causing 0 predictions (#67)
+  - Previously: hardcoded to analyze 7 days before target_date
+  - Now: intelligently finds valid windows in historical data
+  - Fixes the "738K records but 0 predictions" issue
+- **PAT Not Wired in CLI** - Model loaded but not connected through DI (#68)
+  - DI container now passed to MoodPredictionPipeline
+  - Temporal orchestrator properly initialized with PAT predictor
+  - Clinical reports show temporal assessment when ensemble enabled
+- **XML Date Filter Bug** - TypeError when comparing date/datetime objects (#38)
+  - FastStreamingXMLParser now properly converts datetime to date for comparison
+  - Entity type filtering handles "all" and None correctly
+  - Date filtering works efficiently for large XML files
+- **Misleading Density Warnings** - "1.5% density" shown for valid dense windows (#69)
+  - Density now calculated within analysis window, not entire data span
+  - Warnings only shown for actually sparse data within the window being analyzed
+  - DataParsingService also updated to use date range for density calculations
+
 ## [0.5.2] - 2025-07-28
 
 ### Added

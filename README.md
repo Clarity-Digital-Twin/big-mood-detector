@@ -4,7 +4,7 @@
 
 > **The clinical problem:** No objective tool exists for predicting mood episodes or distinguishing unipolar from bipolar depression or borderline personality disorder. Clinicians rely on subjective recall; patients often seek help after crises begin.
 
-[![Version](https://img.shields.io/badge/version-0.5.1-blue)](CHANGELOG.md) [![Tests](https://img.shields.io/badge/tests-1036%2B%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.5.3-blue)](CHANGELOG.md) [![Tests](https://img.shields.io/badge/tests-1036%2B%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
 Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. Two complementary models: 
 - PAT transformer screens for current depression. 
@@ -67,6 +67,9 @@ pip install big-mood-detector
 
 # 3. Analyze your data (research purposes)
 big-mood predict data/input/apple_export/export.xml --report
+
+# 4. For sparse data, auto-find valid windows
+big-mood predict data/input/apple_export/export.xml --auto-find-window --report
 ```
 
 See full output in `data/output/clinical_report.txt`

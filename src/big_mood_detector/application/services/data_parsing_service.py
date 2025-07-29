@@ -498,13 +498,18 @@ class DataParsingService:
         if not activity_records:
             warnings.append("No activity records found")
 
-        # Check data density
+        # Check data density within the actual date range
         if date_range and sleep_records:
             days_span = (date_range[1] - date_range[0]).days + 1
-            sleep_days = len({r.start_date.date() for r in sleep_records})
-            density = sleep_days / days_span
-            if density < 0.5:
-                warnings.append(f"Sparse sleep data: {density:.1%} coverage")
+            # Only count days within the date range
+            sleep_days_in_range = len({
+                r.start_date.date()
+                for r in sleep_records
+                if date_range[0] <= r.start_date.date() <= date_range[1]
+            })
+            density = sleep_days_in_range / days_span
+            if density < 0.5 and sleep_days_in_range > 0:
+                warnings.append(f"Sparse sleep data: {density:.1%} coverage ({sleep_days_in_range}/{days_span} days)")
 
         return DataValidationResult(
             is_valid=len(sleep_records) > 0 or len(activity_records) > 0,

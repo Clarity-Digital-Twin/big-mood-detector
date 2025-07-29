@@ -90,7 +90,8 @@ class FastStreamingXMLParser:
                     try:
                         record_date = date_parser.parse(date_str).date()
 
-                        if start_date and record_date < start_date:
+                        # Convert datetime to date for comparison
+                        if start_date and record_date < start_date.date():
                             elem.clear()
                             if HAS_LXML:
                                 # Also eliminate now-empty references from the tree
@@ -98,7 +99,7 @@ class FastStreamingXMLParser:
                                     del elem.getparent()[0]
                             continue
 
-                        if end_date and record_date > end_date:
+                        if end_date and record_date > end_date.date():
                             elem.clear()
                             if HAS_LXML:
                                 while elem.getprevious() is not None:
@@ -157,7 +158,7 @@ class FastStreamingXMLParser:
                 record_type = elem.get("type")
 
                 # Filter by record types if specified
-                if record_types and record_type not in record_types:
+                if record_types is not None and record_type not in record_types:
                     return None
 
                 # Extract all attributes
@@ -212,8 +213,11 @@ class FastStreamingXMLParser:
             types_to_parse = self.activity_types
         elif entity_type == "heart":
             types_to_parse = self.heart_types
-        else:  # 'all'
+        elif entity_type in ("all", None):
             types_to_parse = self.all_types
+        else:
+            # Unknown entity type - parse nothing
+            types_to_parse = set()
 
         # Get file size for progress estimation
         file_path_obj = Path(file_path)
