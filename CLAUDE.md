@@ -2,6 +2,19 @@
 
 Clinical-grade mood episode prediction (depression, mania, hypomania) using Apple Health data and ML models.
 
+## ⚠️ CRITICAL BUG IN v0.5.3 AND EARLIER
+
+**All predictions from v0.5.3 and earlier are incorrect due to a date assignment bug.**
+
+The system could not find sleep data that crosses midnight (99% of all sleep) due to 
+a mismatch between how sleep is assigned to dates vs how it's searched for.
+
+**Impact**: All users received identical 4.4% depression predictions regardless of actual data.
+
+**Fixed in**: v0.5.4 (emergency patch)
+
+If you used v0.5.3 or earlier, please re-run your analysis with v0.5.4+.
+
 ## Quick Start
 
 ```bash
