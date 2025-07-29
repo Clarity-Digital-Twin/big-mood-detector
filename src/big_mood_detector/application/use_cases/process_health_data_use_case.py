@@ -430,14 +430,24 @@ class MoodPredictionPipeline:
                     f"Insufficient data: {available_days} days available, {self.config.min_days_required} required"
                 )
 
-            # Check for sparse data
-            if available_days > 0:
-                date_range = (
-                    target_date - min(r.start_date.date() for r in sleep_records)
-                ).days + 1
-                density = available_days / date_range
-                if density < 0.5:
-                    warnings.append(f"Sparse data detected: {density:.1%} density")
+        # Check for sparse data within the analysis window (for all cases)
+        if sleep_records and start_date and end_date:
+            # Count days with data in the analysis window
+            days_in_window = {
+                r.start_date.date()
+                for r in sleep_records
+                if start_date <= r.start_date.date() <= end_date
+            }
+
+            # Calculate window size
+            window_size = (end_date - start_date).days + 1
+
+            # Calculate density within the window
+            window_density = len(days_in_window) / window_size if window_size > 0 else 0
+
+            # Only warn if data is sparse within the analysis window
+            if window_density < 0.5 and len(days_in_window) > 0:
+                warnings.append(f"Sparse data in analysis window: {window_density:.1%} coverage ({len(days_in_window)}/{window_size} days)")
 
         # Extract features for date range
         features = self.extract_features_batch(
