@@ -426,7 +426,7 @@ class ProductionPATLoader(PATPredictorInterface, PATEncoderInterface):
         """
         # Accept either (7, 1440) or (10080,) shapes
         if activity_sequence.ndim == 2:
-            return activity_sequence.shape == (7, 1440)
+            return bool(activity_sequence.shape == (7, 1440))
         elif activity_sequence.ndim == 1:
-            return activity_sequence.shape == (10080,)
+            return bool(activity_sequence.shape == (10080,))
         return False
