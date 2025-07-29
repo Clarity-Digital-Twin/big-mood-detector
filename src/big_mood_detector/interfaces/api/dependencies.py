@@ -93,7 +93,8 @@ def get_ensemble_orchestrator() -> EnsembleOrchestrator | TemporalEnsembleOrches
 
         container = get_container()
         pat_predictor = container.resolve(PATPredictorInterface)  # type: ignore[type-abstract]
-        pat_encoder = container.resolve(PATModelInterface)  # type: ignore[type-abstract]
+        from big_mood_detector.domain.services.pat_encoder import PATEncoderInterface
+        pat_encoder = container.resolve(PATEncoderInterface)  # type: ignore[type-abstract]
         logger.info("PAT production model (0.5929 AUC) loaded successfully for API")
     except Exception as e:
         logger.warning(f"Could not initialize PAT production model: {e}")

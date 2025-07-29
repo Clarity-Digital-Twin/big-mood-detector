@@ -92,12 +92,9 @@ class TemporalEnsembleOrchestrator:
                 f"benzo={pat_predictions.benzodiazepine_probability:.3f}"
             )
         except Exception as e:
-            logger.warning(f"PAT assessment failed: {e}. Using neutral state.")
-            current_state = CurrentMoodState(
-                depression_probability=0.5,
-                on_benzodiazepine_probability=0.5,
-                confidence=0.0,
-            )
+            logger.error(f"PAT assessment failed: {e}")
+            # Re-raise with context instead of returning fake data
+            raise RuntimeError(f"PAT assessment failed: {e}") from e
 
         # Step 2: Predict future risk with XGBoost
         try:
@@ -115,13 +112,9 @@ class TemporalEnsembleOrchestrator:
                 f"mania={xgb_predictions.manic_risk:.3f}"
             )
         except Exception as e:
-            logger.warning(f"XGBoost prediction failed: {e}. Using neutral risk.")
-            future_risk = FutureMoodRisk(
-                depression_risk=0.33,
-                hypomanic_risk=0.33,
-                manic_risk=0.34,
-                confidence=0.0,
-            )
+            logger.error(f"XGBoost prediction failed: {e}")
+            # Re-raise with context instead of returning fake data
+            raise RuntimeError(f"XGBoost prediction failed: {e}") from e
 
         # Step 3: Create temporal assessment (NO AVERAGING!)
         assessment = TemporalMoodAssessment(

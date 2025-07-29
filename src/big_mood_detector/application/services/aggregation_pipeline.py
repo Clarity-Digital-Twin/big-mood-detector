@@ -545,6 +545,7 @@ class AggregationPipeline:
             metrics["circadian"] = {
                 "amplitude": circadian_metrics.relative_amplitude,
                 "phase": dlmo_result.dlmo_hour,
+                "dlmo_confidence": dlmo_result.confidence,  # Add DLMO confidence
             }
 
         return metrics
@@ -1047,15 +1048,17 @@ class AggregationPipeline:
             # Phase metrics
             circadian_phase_advance=0.0,
             circadian_phase_delay=0.0,
-            dlmo_confidence=0.8,
-            pat_hour=14.0,
+            dlmo_confidence=daily_metrics.get("circadian", {}).get("dlmo_confidence", 0.0),
+            pat_hour=0.0,  # PAT (Principal Activity Time) requires complex analysis - not implemented yet
             # Z-scores (these are the aggregated z-scores)
             sleep_duration_zscore=sleep_features["sleep_percentage_zscore"],
             activity_zscore=0.0,  # Default for now
             hr_zscore=0.0,  # Default for now
             hrv_zscore=0.0,  # Default for now
-            # Data quality
-            data_completeness=0.8,  # Default for now
+            # Data quality - calculate based on available vs expected data
+            data_completeness=self._calculate_data_completeness(
+                daily_metrics, activity_metrics, heart_metrics
+            ),
             is_hypersomnia_pattern=False,
             is_insomnia_pattern=False,
             is_phase_advanced=False,
@@ -1077,6 +1080,41 @@ class AggregationPipeline:
                 "activity_intensity_ratio", 0.0
             ),
         )
+
+    def _calculate_data_completeness(
+        self,
+        daily_metrics: dict[str, Any],
+        activity_metrics: dict[str, float],
+        heart_metrics: dict[str, float | None],
+    ) -> float:
+        """
+        Calculate data completeness score (0-1).
+
+        Based on presence of key data types:
+        - Sleep data: 40% weight
+        - Activity data: 40% weight  
+        - Heart rate data: 20% weight
+
+        Returns:
+            Completeness score between 0 and 1
+        """
+        completeness = 0.0
+
+        # Check sleep data (40%) - just check if we have any sleep data
+        if daily_metrics.get("sleep"):
+            completeness += 0.4
+
+        # Check activity data (40%) - just check if we have activity metrics
+        if activity_metrics is not None:
+            completeness += 0.4
+
+        # Check heart rate data (20%) - check if we have non-None HR values
+        if heart_metrics is not None:
+            # Only count if we have actual HR data (not just the dict with None values)
+            if any(v is not None for v in heart_metrics.values()):
+                completeness += 0.2
+
+        return completeness
 
     def _get_actual_sleep_duration(
         self,

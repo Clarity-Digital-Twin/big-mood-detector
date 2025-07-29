@@ -22,7 +22,7 @@ from big_mood_detector.application.use_cases.process_health_data_use_case import
 from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 from big_mood_detector.domain.services.pat_encoder import PATEncoderInterface
 from big_mood_detector.domain.services.pat_predictor import PATPredictorInterface
-from big_mood_detector.domain.value_objects.mood_prediction import MoodPrediction
+from big_mood_detector.domain.services.mood_predictor import MoodPrediction
 
 
 class TestNoFakeMedicalData:

@@ -334,12 +334,31 @@ class MoodPredictionPipeline:
         heart_records = parsed_data.get("heart_rate_records", [])
         errors = parsed_data.get("errors", [])
 
+        # Determine actual date range from data if end_date not specified
+        actual_end_date = end_date
+        if actual_end_date is None:
+            data_dates = []
+            if sleep_records:
+                data_dates.extend([r.start_date.date() for r in sleep_records])
+            if activity_records:
+                data_dates.extend([r.start_date.date() for r in activity_records])
+            if heart_records:
+                data_dates.extend([r.timestamp.date() for r in heart_records])
+            
+            if data_dates:
+                actual_end_date = max(data_dates)
+                logger.info(f"Using latest data date as target: {actual_end_date}")
+            else:
+                # Only use today if there's literally no data
+                actual_end_date = date.today()
+                logger.warning("No data found, using today's date as target")
+        
         # Process health data
         result = self.process_health_data(
             sleep_records=sleep_records,
             activity_records=activity_records,
             heart_records=heart_records,
-            target_date=end_date or date.today(),
+            target_date=actual_end_date,
         )
 
         # Add any parsing errors to result
@@ -371,6 +390,10 @@ class MoodPredictionPipeline:
         start_time = time.time()
         warnings = []
         errors = []
+        
+        # Validate target_date
+        if target_date is None:
+            raise ValueError("target_date cannot be None. Use process_apple_health_file() which determines dates automatically.")
 
         # Check if models are loaded
         if not self.mood_predictor.is_loaded:
@@ -608,6 +631,20 @@ class MoodPredictionPipeline:
             metadata["personal_calibration_used"] = True
             metadata["user_id"] = self.personal_calibrator.user_id
             metadata["baseline_available"] = bool(self.personal_calibrator.baseline)
+        
+        # Add data date range metadata
+        if sleep_records or activity_records or heart_records:
+            all_dates = []
+            if sleep_records:
+                all_dates.extend([r.start_date.date() for r in sleep_records])
+            if activity_records:
+                all_dates.extend([r.start_date.date() for r in activity_records])
+            if heart_records:
+                all_dates.extend([r.timestamp.date() for r in heart_records])
+            
+            if all_dates:
+                metadata["data_start_date"] = min(all_dates)
+                metadata["data_end_date"] = max(all_dates)
 
         return PipelineResult(
             daily_predictions=daily_predictions,

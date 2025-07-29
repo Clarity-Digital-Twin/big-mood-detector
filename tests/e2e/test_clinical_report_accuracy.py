@@ -261,12 +261,12 @@ class TestClinicalReportAccuracy:
         pipeline = MoodPredictionPipeline(config=config)
         formatter = ClinicalReportFormatter()
         
-        # Process without specifying target_date
+        # Process with the actual end date from test data
         result = pipeline.process_health_data(
             sleep_records=comprehensive_test_data["sleep"],
             activity_records=comprehensive_test_data["activity"],
             heart_records=comprehensive_test_data["heart_rate"],
-            target_date=None,  # Should use data's max date
+            target_date=comprehensive_test_data["end_date"],
         )
         
         report = formatter.format(result)
