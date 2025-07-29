@@ -193,7 +193,12 @@ def print_summary(result: PipelineResult, verbose: bool = False) -> None:
         if verbose and result.metadata:
             click.echo("\nMetadata:")
             for key, value in result.metadata.items():
-                click.echo(f"  {key}: {value}")
+                if key == "window_used":
+                    # Format window information nicely
+                    window = value
+                    click.echo(f"  Window used: {window.start_date} to {window.end_date} ({window.days_count} days, quality: {window.data_quality:.2f})")
+                else:
+                    click.echo(f"  {key}: {value}")
 
     if result.warnings and verbose:
         click.echo("\n⚠️  Warnings:")
@@ -552,6 +557,18 @@ def process_command(
     default=False,
     help="Generate clinical report",
 )
+@click.option(
+    "--window-strategy",
+    type=click.Choice(["recent", "best", "all"], case_sensitive=False),
+    default=None,
+    help="Strategy for finding data windows: recent (most recent valid window), best (highest quality), all (show all valid windows)",
+)
+@click.option(
+    "--auto-find-window",
+    is_flag=True,
+    default=False,
+    help="Automatically find the most recent valid data window",
+)
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 def predict_command(
     input_path: str,
@@ -565,6 +582,8 @@ def predict_command(
     user_id: str | None,
     model_dir: str | None,
     report: bool,
+    window_strategy: str | None,
+    auto_find_window: bool,
     verbose: bool,
 ) -> None:
     """Generate mood predictions from health data."""
@@ -605,12 +624,33 @@ def predict_command(
 
         click.echo(f"Processing health data from: {input_path}")
 
+        # Set up window selection strategy
+        from big_mood_detector.domain.services.window_selection_strategy import WindowSelectionStrategy
+        strategy: WindowSelectionStrategy | None = None
+        if auto_find_window or window_strategy:
+            from big_mood_detector.domain.services.window_selection_strategy import (
+                AllValidWindowsStrategy,
+                BestQualityWindowStrategy,
+                MostRecentValidWindowStrategy,
+            )
+
+            if window_strategy == "all":
+                strategy = AllValidWindowsStrategy()
+            elif window_strategy == "best":
+                strategy = BestQualityWindowStrategy()
+            else:  # "recent" or auto_find_window
+                strategy = MostRecentValidWindowStrategy()
+
+            if verbose:
+                click.echo(f"Using window selection strategy: {strategy.__class__.__name__}")
+
         # Configure pipeline
         config = PipelineConfig(
             include_pat_sequences=ensemble,
             model_dir=model_dir_obj,
             enable_personal_calibration=bool(user_id),
             user_id=user_id,
+            window_selection_strategy=strategy,
         )
 
         # Initialize pipeline
@@ -626,6 +666,35 @@ def predict_command(
             start_date=start_date_param,
             end_date=end_date_param,
         )
+
+        # Special handling for "all" strategy - show all windows found
+        if window_strategy == "all" and isinstance(strategy, AllValidWindowsStrategy):
+            # Parse the file to get sleep records
+            from big_mood_detector.application.services.data_parsing_service import (
+                DataParsingService,
+            )
+            parser = DataParsingService()
+            parsed_data = parser.parse_health_data(
+                Path(input_path),
+                start_date=start_date_param,
+                end_date=end_date_param,
+            )
+            sleep_records = parsed_data["sleep_records"]
+
+            # Find all windows
+            all_windows = strategy.find_windows(sleep_records)
+
+            if all_windows:
+                click.echo(f"\n📊 Found {len(all_windows)} valid prediction windows:")
+                for i, window in enumerate(all_windows[:10], 1):  # Show max 10
+                    click.echo(
+                        f"  {i}. {window.start_date} to {window.end_date} "
+                        f"({window.days_count} days, quality: {window.data_quality:.2f})"
+                    )
+                if len(all_windows) > 10:
+                    click.echo(f"  ... and {len(all_windows) - 10} more windows")
+                click.echo("\nUse --date-range to analyze a specific window.")
+                return  # Exit early for "all" strategy
 
         # Handle output based on format
         if format == "summary":

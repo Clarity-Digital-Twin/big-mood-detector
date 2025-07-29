@@ -67,6 +67,9 @@ pip install big-mood-detector
 
 # 3. Analyze your data (research purposes)
 big-mood predict data/input/apple_export/export.xml --report
+
+# 4. For sparse data, auto-find valid windows
+big-mood predict data/input/apple_export/export.xml --auto-find-window --report
 ```
 
 See full output in `data/output/clinical_report.txt`

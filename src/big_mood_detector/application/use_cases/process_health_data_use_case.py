@@ -74,6 +74,7 @@ class PipelineConfig:
     personal_calibrator: Any | None = None  # PersonalCalibrator instance
     user_id: str | None = None
     use_seoul_features: bool = True  # Use aggregation pipeline for XGBoost
+    window_selection_strategy: Any | None = None  # WindowSelectionStrategy instance
 
 
 @dataclass
@@ -383,30 +384,68 @@ class MoodPredictionPipeline:
                 errors=errors,
             )
 
-        # Check data sufficiency
-        available_days = len({r.start_date.date() for r in sleep_records})
-        if available_days < self.config.min_days_required:
-            warnings.append(
-                f"Insufficient data: {available_days} days available, {self.config.min_days_required} required"
+        # Determine date window to analyze
+        window = None  # Track selected window for metadata
+
+        if self.config.window_selection_strategy:
+            # Use strategy to find valid windows
+            windows = self.config.window_selection_strategy.find_windows(
+                sleep_records,
+                min_days=self.config.min_days_required
             )
 
-        # Check for sparse data
-        if available_days > 0:
-            date_range = (
-                target_date - min(r.start_date.date() for r in sleep_records)
-            ).days + 1
-            density = available_days / date_range
-            if density < 0.5:
-                warnings.append(f"Sparse data detected: {density:.1%} density")
+            if not windows:
+                # No valid windows found
+                available_days = len({r.start_date.date() for r in sleep_records})
+                return PipelineResult(
+                    daily_predictions={},
+                    overall_summary={},
+                    confidence_score=0.0,
+                    processing_time_seconds=time.time() - start_time,
+                    has_warnings=True,
+                    warnings=[
+                        f"No valid {self.config.min_days_required}-day windows found. "
+                        f"Found {available_days} days of data across "
+                        f"{(max(r.start_date.date() for r in sleep_records) - min(r.start_date.date() for r in sleep_records)).days} days"
+                    ],
+                    metadata={"windows_checked": len(sleep_records)},
+                )
+
+            # Use the first (best) window from strategy
+            window = windows[0]
+            start_date = window.start_date
+            end_date = window.end_date
+
+            logger.info(f"Using window from {start_date} to {end_date} (quality: {window.data_quality:.2f})")
+
+        else:
+            # Legacy behavior: look back from target_date
+            start_date = target_date - timedelta(days=self.config.min_days_required - 1)
+            end_date = target_date
+
+            # Check data sufficiency
+            available_days = len({r.start_date.date() for r in sleep_records})
+            if available_days < self.config.min_days_required:
+                warnings.append(
+                    f"Insufficient data: {available_days} days available, {self.config.min_days_required} required"
+                )
+
+            # Check for sparse data
+            if available_days > 0:
+                date_range = (
+                    target_date - min(r.start_date.date() for r in sleep_records)
+                ).days + 1
+                density = available_days / date_range
+                if density < 0.5:
+                    warnings.append(f"Sparse data detected: {density:.1%} density")
 
         # Extract features for date range
-        start_date = target_date - timedelta(days=self.config.min_days_required - 1)
         features = self.extract_features_batch(
             sleep_records=sleep_records,
             activity_records=activity_records,
             heart_records=heart_records,
             start_date=start_date,
-            end_date=target_date,
+            end_date=end_date,
         )
 
         # Generate predictions
@@ -553,6 +592,8 @@ class MoodPredictionPipeline:
 
         # Build metadata
         metadata = {}
+        if window:
+            metadata["window_used"] = window
         if self.personal_calibrator:
             metadata["personal_calibration_used"] = True
             metadata["user_id"] = self.personal_calibrator.user_id

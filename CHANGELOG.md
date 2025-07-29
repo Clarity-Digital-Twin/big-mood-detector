@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Window Selection Strategies** - Smart data window finding for sparse health records (#67)
+  - `WindowSelectionStrategy` interface with three implementations:
+    - `MostRecentValidWindowStrategy` - finds most recent window with sufficient data
+    - `BestQualityWindowStrategy` - finds window with highest data consistency  
+    - `AllValidWindowsStrategy` - finds all valid prediction windows
+  - New CLI flags:
+    - `--auto-find-window` - automatically find most recent valid data window
+    - `--window-strategy [recent|best|all]` - choose window selection approach
+  - `DateWindow` value object tracks window quality and metadata
+  - Backward compatible - existing behavior unchanged without flags
+
+### Fixed
+- **Critical Date Window Bug** - System only checked last 7 days, causing 0 predictions (#67)
+  - Previously: hardcoded to analyze 7 days before target_date
+  - Now: intelligently finds valid windows in historical data
+  - Fixes the "738K records but 0 predictions" issue
+
 ## [0.5.2] - 2025-07-28
 
 ### Added
