@@ -121,6 +121,10 @@ class TestClinicalReportAccuracy:
             "end_date": base_date + timedelta(days=13),
         }
     
+    @pytest.mark.skipif(
+        os.getenv("TESTING") == "1",
+        reason="Skip ensemble tests in fast mode - requires model files"
+    )
     def test_ensemble_report_shows_both_models(self, comprehensive_test_data):
         """When --ensemble used, report should show both PAT and XGBoost."""
         # Arrange
@@ -152,6 +156,10 @@ class TestClinicalReportAccuracy:
         assert "NOW" in report and "TOMORROW" in report, \
             "Should show current state and future risk"
     
+    @pytest.mark.skipif(
+        os.getenv("TESTING") == "1",
+        reason="Skip ensemble tests in fast mode - requires model files"
+    )
     def test_temporal_predictions_different(self, comprehensive_test_data):
         """NOW and TOMORROW predictions should have different values."""
         # Arrange
