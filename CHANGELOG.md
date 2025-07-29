@@ -7,7 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.5.3] - 2025-01-29
+## [0.5.4] - 2025-07-29 - 🚨 EMERGENCY FIX
+
+### Critical Bug Fixes
+- **Fixed Date Assignment Mismatch** - 99% of sleep data was unfindable (#73, #74)
+  - Created `UniversalDateAssignment` as single source of truth
+  - Sleep assigned to wake date now findable by feature extractors
+  - Fixes midnight-crossing sleep (99% of all sleep patterns)
+- **Removed Fake Feature Generation** - No more identical 4.4% predictions (#72, #75)
+  - Pipeline now skips days without real sleep data
+  - Removed all hardcoded defaults (21:00 sleep, 7:00 wake)
+  - System fails explicitly rather than generating fake features
+- **Fixed PAT Integration** - Added missing encode() method (#76)
+  - `ProductionPATLoader` now implements `PATEncoderInterface`
+  - Temporal ensemble orchestrator works correctly
+  - Supports both (7, 1440) and (10080,) input shapes
+- **Added Data Quality Validation** - Clear warnings for sparse data (#77)
+  - `DataQualityValidator` provides honest coverage metrics
+  - Refuses predictions with <70% data coverage
+  - User-friendly messages explain data requirements
+
+### Added
+- `domain/services/date_assignment.py` - Universal date assignment logic
+- `application/services/data_quality_validator.py` - Data quality validation
+- Comprehensive test suite for all critical bugs
+- Demo scripts showing all fixes in action
+
+### Changed
+- `AggregationPipeline` now uses `UniversalDateAssignment` for date lookups
+- `ClinicalFeatureExtractor` methods updated to find sleep correctly
+- All components now skip days without data instead of using defaults
+- Confidence scores now reflect actual data availability
+
+### Breaking Changes
+- Days without sleep data are now skipped (no fake predictions)
+- Minimum 70% data coverage required for reliable predictions
+- Default features removed - system returns None/empty for missing data
+
+## [0.5.3] - 2025-07-29
 
 ### Added
 - **Window Selection Strategies** - Smart data window finding for sparse health records (#67)
