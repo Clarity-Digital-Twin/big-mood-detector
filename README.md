@@ -4,7 +4,7 @@
 
 > **The clinical problem:** No objective tool exists for predicting mood episodes or distinguishing unipolar from bipolar depression or borderline personality disorder. Clinicians rely on subjective recall; patients often seek help after crises begin.
 
-[![Version](https://img.shields.io/badge/version-0.5.5-blue)](CHANGELOG.md) [![Tests](https://img.shields.io/badge/tests-1050%2B%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.5.6-blue)](CHANGELOG.md) [![Tests](https://img.shields.io/badge/tests-1050%2B%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
 Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. Two complementary models: 
 - PAT transformer screens for current depression. 
@@ -73,8 +73,12 @@ big-mood predict data/input/apple_export/export.xml --report
 # 4. With temporal analysis (NOW vs TOMORROW)
 big-mood predict data/input/apple_export/export.xml --ensemble --report
 
-# 5. For sparse data, auto-find valid windows
-big-mood predict data/input/apple_export/export.xml --auto-find-window --report
+# 5. Auto-window selection (enabled by default in v0.5.6+)
+# Automatically finds optimal data windows for both models
+big-mood predict data/input/apple_export/export.xml --report
+
+# 6. To disable auto-window and specify dates manually
+big-mood predict data/input/apple_export/export.xml --no-auto-window --date-range 2024-01-01:2024-03-31
 ```
 
 See full output in `data/output/clinical_report.txt`
@@ -143,7 +147,12 @@ PAT = transformer AI, XGBoost = gradient boosting, ensemble = enhanced reliabili
 
 3. **Privacy breakthrough**: No cloud dependency, no data collection — your mental health data stays private
 
-4. **Open research**: Complete transparency enables validation, improvement, and trust
+4. **Intelligent data handling**: Auto-window selection (v0.5.6+) automatically finds optimal analysis periods:
+   - Handles sparse Apple Watch data (gaps are OK for XGBoost)
+   - Prioritizes overlapping windows where both models can run
+   - Clear feedback on data availability and model selection
+
+5. **Open research**: Complete transparency enables validation, improvement, and trust
 
 ## ⚠️ Research Limitations
 

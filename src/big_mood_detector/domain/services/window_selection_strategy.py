@@ -61,7 +61,8 @@ class WindowSelectionStrategy(ABC):
     def find_windows(
         self,
         records: list[Any],  # List of health records (sleep, activity, etc)
-        min_days: int = 7
+        min_days: int = 7,
+        min_coverage: float | None = None  # Optional coverage requirement for sparse strategies
     ) -> list[DateWindow]:
         """
         Find valid consecutive data windows.
@@ -87,7 +88,8 @@ class MostRecentValidWindowStrategy(WindowSelectionStrategy):
     def find_windows(
         self,
         records: list[Any],
-        min_days: int = 7
+        min_days: int = 7,
+        min_coverage: float | None = None  # Ignored in consecutive strategies
     ) -> list[DateWindow]:
         """Find the most recent valid window."""
         if not records:
@@ -166,7 +168,8 @@ class BestQualityWindowStrategy(WindowSelectionStrategy):
     def find_windows(
         self,
         records: list[Any],
-        min_days: int = 7
+        min_days: int = 7,
+        min_coverage: float | None = None  # Ignored in consecutive strategies
     ) -> list[DateWindow]:
         """Find the highest quality window."""
         if not records:
@@ -287,7 +290,8 @@ class AllValidWindowsStrategy(WindowSelectionStrategy):
     def find_windows(
         self,
         records: list[Any],
-        min_days: int = 7
+        min_days: int = 7,
+        min_coverage: float | None = None  # Ignored in consecutive strategies
     ) -> list[DateWindow]:
         """Find all valid windows, ordered by recency."""
         if not records:

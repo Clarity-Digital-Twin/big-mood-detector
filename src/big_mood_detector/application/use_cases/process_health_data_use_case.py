@@ -409,8 +409,35 @@ class MoodPredictionPipeline:
 
         # Determine date window to analyze
         window = None  # Track selected window for metadata
+        window_analysis = None  # Track dual model analysis
 
-        if self.config.window_selection_strategy:
+        # Check if we should use dual model analysis
+        if self.config.window_selection_strategy and hasattr(self.config.window_selection_strategy, '__class__') and 'Dual' in self.config.window_selection_strategy.__class__.__name__:
+            # Use dual model window analysis
+            from big_mood_detector.domain.services.dual_model_window_strategy import DualModelWindowStrategy
+            dual_strategy = DualModelWindowStrategy()
+            window_analysis = dual_strategy.analyze_windows(sleep_records)
+            
+            if window_analysis.optimal_window:
+                window = window_analysis.optimal_window
+                start_date = window.start_date
+                end_date = window.end_date
+                logger.info(f"Using dual-selected window from {start_date} to {end_date}")
+                
+                # Add window analysis to metadata
+                warnings.append(window_analysis.selection_reason)
+            else:
+                # No valid windows found
+                return PipelineResult(
+                    daily_predictions={},
+                    overall_summary={},
+                    confidence_score=0.0,
+                    processing_time_seconds=time.time() - start_time,
+                    has_warnings=True,
+                    warnings=[window_analysis.selection_reason],
+                    metadata={"window_analysis": window_analysis},
+                )
+        elif self.config.window_selection_strategy:
             # Use strategy to find valid windows
             windows = self.config.window_selection_strategy.find_windows(
                 sleep_records,
@@ -627,6 +654,8 @@ class MoodPredictionPipeline:
         metadata = {}
         if window:
             metadata["window_used"] = window
+        if window_analysis:
+            metadata["window_analysis"] = window_analysis
         if self.personal_calibrator:
             metadata["personal_calibration_used"] = True
             metadata["user_id"] = self.personal_calibrator.user_id

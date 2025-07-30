@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6] - 2025-07-30 - Intelligent Auto-Window Selection
+
+### Added
+- **Auto-Window Selection** (#83) - Automatically finds optimal data windows for both models
+  - `--auto-window` flag (enabled by default) analyzes available data
+  - Finds windows for PAT (7 consecutive days) and XGBoost (30+ days, sparse OK)
+  - Prioritizes overlapping windows where both models can run
+  - Clear feedback showing all found windows and selection reasoning
+- **Sparse Window Strategy** - New window selection for non-consecutive data
+  - `SparseWindowStrategy` finds windows with configurable coverage (default 50%)
+  - `SparseDataWindow` value object tracks coverage statistics
+  - Supports XGBoost's ability to work with gaps in data
+- **Dual Model Window Analysis** - Coordinates window selection between models
+  - `DualModelWindowStrategy` analyzes data for both model requirements
+  - `WindowAnalysisResult` provides comprehensive window availability
+  - Graceful degradation to single model when only one has valid data
+- **Enhanced CDS Report** - Window selection information in clinical reports
+  - Shows selected window dates and strategy
+  - Indicates which models are available for analysis
+  - Improves clinical decision support with data availability context
+
+### Changed
+- **WindowSelectionStrategy Interface** - Extended for sparse data support
+  - Added optional `min_coverage` parameter (backward compatible)
+  - All existing strategies updated to accept new parameter
+  - Maintains Liskov Substitution Principle with clean inheritance
+
+### Fixed
+- **PAT Inference Smoke Test** - Fixed YAML indentation in GitHub workflow
+  - Python script block properly indented for YAML compliance
+  - CI/CD pipeline now runs without syntax errors
+
+### Technical Debt
+- Extended `WindowSelectionStrategy.find_windows()` to accept optional `min_coverage` parameter
+  - All existing implementations ignore this parameter (backward compatible)
+  - Future refactor could convert to Protocol with generics
+
 ## [0.5.5] - 2025-07-29 - CDS Report Fixes & Clean Integration
 
 ### Fixed
