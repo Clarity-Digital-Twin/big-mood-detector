@@ -718,6 +718,7 @@ def predict_command(
 
         # Set up window selection strategy
         from typing import Any
+
         from big_mood_detector.domain.services.window_selection_strategy import (
             WindowSelectionStrategy,
         )

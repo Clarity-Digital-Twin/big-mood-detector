@@ -1,6 +1,7 @@
 """Tests for dynamic timeout calculation based on file size."""
 
 import pytest
+
 from big_mood_detector.interfaces.cli.commands import calculate_timeout
 
 

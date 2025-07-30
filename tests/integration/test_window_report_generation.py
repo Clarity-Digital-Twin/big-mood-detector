@@ -1,15 +1,19 @@
 """Integration test for window-based report generation."""
 
-import pytest
+import tempfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
-import tempfile
-from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
+
+import pytest
+
 from big_mood_detector.application.use_cases.process_health_data_use_case import (
     MoodPredictionPipeline,
     PipelineConfig,
 )
-from big_mood_detector.domain.services.dual_model_window_strategy import DualModelWindowStrategy
+from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
+from big_mood_detector.domain.services.dual_model_window_strategy import (
+    DualModelWindowStrategy,
+)
 from big_mood_detector.interfaces.cli.commands import generate_clinical_report
 
 

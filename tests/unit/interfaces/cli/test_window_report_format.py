@@ -1,10 +1,16 @@
 """Tests for window-level prediction report formatting."""
 
-import pytest
 from datetime import date
-from big_mood_detector.application.use_cases.process_health_data_use_case import PipelineResult
+
+import pytest
+
+from big_mood_detector.application.use_cases.process_health_data_use_case import (
+    PipelineResult,
+)
+from big_mood_detector.domain.services.dual_model_window_strategy import (
+    WindowAnalysisResult,
+)
 from big_mood_detector.domain.services.window_selection_strategy import DateWindow
-from big_mood_detector.domain.services.dual_model_window_strategy import WindowAnalysisResult
 
 
 class TestWindowReportFormat:

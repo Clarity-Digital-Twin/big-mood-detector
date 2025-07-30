@@ -1,11 +1,15 @@
 """Tests for timezone consistency throughout the application."""
 
-import pytest
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-import tempfile
-from big_mood_detector.infrastructure.parsers.xml.streaming_adapter import StreamingXMLParser
+
+import pytest
+
 from big_mood_detector.domain.contracts.timezone_contract import TimezoneContract
+from big_mood_detector.infrastructure.parsers.xml.streaming_adapter import (
+    StreamingXMLParser,
+)
 
 
 class TestTimezoneContract:

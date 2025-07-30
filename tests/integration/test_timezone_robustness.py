@@ -1,12 +1,14 @@
 """Integration tests for timezone handling throughout the pipeline."""
 
+from datetime import date, datetime, timezone
+
 import pytest
-from datetime import datetime, timezone, date
-from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
+
 from big_mood_detector.application.use_cases.process_health_data_use_case import (
     MoodPredictionPipeline,
     PipelineConfig,
 )
+from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 
 
 class TestTimezoneRobustness:

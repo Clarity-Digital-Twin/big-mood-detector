@@ -10,12 +10,12 @@ from datetime import datetime
 from typing import Any
 from xml.etree.ElementTree import ParseError
 
+from big_mood_detector.domain.contracts.timezone_contract import TimezoneContract
 from big_mood_detector.domain.entities.heart_rate_record import (
     HeartMetricType,
     HeartRateRecord,
     MotionContext,
 )
-from big_mood_detector.domain.contracts.timezone_contract import TimezoneContract
 
 
 class HeartRateParser:

@@ -10,11 +10,11 @@ from datetime import datetime
 from typing import Any
 from xml.etree.ElementTree import ParseError
 
+from big_mood_detector.domain.contracts.timezone_contract import TimezoneContract
 from big_mood_detector.domain.entities.activity_record import (
     ActivityRecord,
     ActivityType,
 )
-from big_mood_detector.domain.contracts.timezone_contract import TimezoneContract
 
 
 class ActivityParser:

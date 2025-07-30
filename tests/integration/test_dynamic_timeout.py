@@ -1,10 +1,12 @@
 """Integration test for dynamic timeout functionality."""
 
-import pytest
-from pathlib import Path
 import tempfile
-from unittest.mock import patch, MagicMock
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 from click.testing import CliRunner
+
 from big_mood_detector.interfaces.cli.commands import predict_command
 
 

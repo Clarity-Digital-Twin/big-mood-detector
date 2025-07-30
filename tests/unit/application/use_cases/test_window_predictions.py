@@ -1,8 +1,10 @@
 """Tests for window-level prediction logic."""
 
-import pytest
 from datetime import date
 from unittest.mock import Mock, patch
+
+import pytest
+
 from big_mood_detector.application.use_cases.process_health_data_use_case import (
     MoodPredictionPipeline,
     PipelineConfig,

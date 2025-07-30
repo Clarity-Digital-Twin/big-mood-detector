@@ -1,14 +1,20 @@
 """Integration test for window-level predictions."""
 
-import pytest
 from datetime import date, datetime, timedelta
-from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
+
+import pytest
+
 from big_mood_detector.application.use_cases.process_health_data_use_case import (
     MoodPredictionPipeline,
     PipelineConfig,
 )
-from big_mood_detector.domain.services.sparse_window_strategy import SparseWindowStrategy
-from big_mood_detector.domain.services.dual_model_window_strategy import DualModelWindowStrategy
+from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
+from big_mood_detector.domain.services.dual_model_window_strategy import (
+    DualModelWindowStrategy,
+)
+from big_mood_detector.domain.services.sparse_window_strategy import (
+    SparseWindowStrategy,
+)
 
 
 class TestWindowLevelPredictions:
@@ -80,7 +86,9 @@ class TestWindowLevelPredictions:
         """Test the desired structure for window-level predictions."""
         # This is what we WANT the result to look like
         
-        from big_mood_detector.domain.services.window_selection_strategy import DateWindow
+        from big_mood_detector.domain.services.window_selection_strategy import (
+            DateWindow,
+        )
         
         window = DateWindow(
             start_date=date(2025, 1, 1),
