@@ -35,20 +35,25 @@ class TestWindowReportFormat:
                 "manic_risk": 0.000
             },
             metadata={
-                "window_analysis": {
-                    "optimal_window": DateWindow(
+                "window_analysis": WindowAnalysisResult(
+                    pat_windows=[],
+                    xgboost_windows=[],
+                    optimal_window=DateWindow(
                         start_date=date(2025, 1, 1),
                         end_date=date(2025, 1, 31),
                         days_count=31,
                         data_quality=0.65
                     ),
-                    "can_run_pat": False,
-                    "can_run_xgboost": True,
-                    "max_consecutive_days": 3,
-                    "coverage_percentage": 65.0,
-                    "selection_reason": "PAT requires 7 consecutive days (found 3 max). Running XGBoost only."
-                }
+                    selection_reason="PAT requires 7 consecutive days (found 3 max). Running XGBoost only.",
+                    can_run_pat=False,
+                    can_run_xgboost=True,
+                    can_run_ensemble=False
+                )
             },
+            confidence_score=0.5,
+            processing_time_seconds=10.5,
+            records_processed=1000,
+            warnings=[],
             has_errors=False,
             errors=[]
         )
@@ -71,8 +76,7 @@ class TestWindowReportFormat:
             
             if wa.can_run_xgboost and not wa.can_run_pat:
                 report_lines.append("Models Available: XGBoost only")
-                if wa.pat_reason:
-                    report_lines.append(f"PAT unavailable: {wa.pat_reason}")
+            report_lines.append(f"Strategy: {wa.selection_reason}")
         
         # Window predictions section
         if result.window_predictions:

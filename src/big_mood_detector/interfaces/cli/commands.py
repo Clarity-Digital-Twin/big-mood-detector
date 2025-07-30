@@ -883,7 +883,7 @@ def predict_command(
             click.echo("=" * 50 + "\n")
 
         # Special handling for "all" strategy - show all windows found
-        if window_strategy == "all" and isinstance(strategy, AllValidWindowsStrategy):
+        if window_strategy == "all" and strategy is not None and strategy.__class__.__name__ == "AllValidWindowsStrategy":
             # Parse the file to get sleep records
             from big_mood_detector.application.services.data_parsing_service import (
                 DataParsingService,
