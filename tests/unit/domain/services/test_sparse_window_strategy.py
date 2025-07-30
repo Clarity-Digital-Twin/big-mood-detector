@@ -39,24 +39,31 @@ class TestSparseWindowStrategy:
         )
 
         strategy = SparseWindowStrategy()
-        windows = strategy.find_windows(records, min_days=30, min_coverage=0.5)
+        # Use find_sparse_windows to get full SparseDataWindow objects for testing
+        sparse_windows = strategy.find_sparse_windows(records, min_days=30, min_coverage=0.5)
 
         # Debug output
-        if not windows:
+        if not sparse_windows:
             # Check what dates we have
             dates = sorted({r.start_date.date() for r in records})
             print(f"Dates with data: {len(dates)} days")
             print(f"First: {dates[0]}, Last: {dates[-1]}")
             print(f"Span: {(dates[-1] - dates[0]).days + 1} days")
 
-        assert len(windows) >= 1
+        assert len(sparse_windows) >= 1
         # Check the first window
-        window = windows[0]
+        window = sparse_windows[0]
         assert window.start_date == date(2025, 1, 1)
         assert window.end_date == date(2025, 1, 31)
         assert window.days_with_data == 16  # Days 1,3,5...31
         assert window.total_days == 31
         assert abs(window.coverage_ratio - 16/31) < 0.01  # ~0.516
+        
+        # Also test the main interface returns DateWindow
+        date_windows = strategy.find_windows(records, min_days=30, min_coverage=0.5)
+        assert len(date_windows) >= 1
+        assert date_windows[0].start_date == date(2025, 1, 1)
+        assert date_windows[0].data_quality > 0.5  # coverage ratio as quality
 
     def test_rejects_window_below_minimum_coverage(self):
         """Should reject window with 40% coverage when 50% required."""
@@ -71,7 +78,7 @@ class TestSparseWindowStrategy:
         )
 
         strategy = SparseWindowStrategy()
-        windows = strategy.find_windows(records, min_days=30, min_coverage=0.5)
+        windows = strategy.find_sparse_windows(records, min_days=30, min_coverage=0.5)
 
         assert len(windows) == 0
 
@@ -102,7 +109,7 @@ class TestSparseWindowStrategy:
         )
 
         strategy = SparseWindowStrategy()
-        windows = strategy.find_windows(records, min_days=30, min_coverage=0.5)
+        windows = strategy.find_sparse_windows(records, min_days=30, min_coverage=0.5)
 
         assert len(windows) >= 2
         # Windows should be sorted by end date (recency)
@@ -124,7 +131,7 @@ class TestSparseWindowStrategy:
         )
 
         strategy = SparseWindowStrategy()
-        windows = strategy.find_windows(records, min_days=30, min_coverage=0.5)
+        windows = strategy.find_sparse_windows(records, min_days=30, min_coverage=0.5)
 
         assert len(windows) >= 1
         assert windows[0].coverage_ratio == 1.0
@@ -145,11 +152,11 @@ class TestSparseWindowStrategy:
         strategy = SparseWindowStrategy()
         
         # Should not find window when min_days=30
-        windows = strategy.find_windows(records, min_days=30, min_coverage=0.5)
+        windows = strategy.find_sparse_windows(records, min_days=30, min_coverage=0.5)
         assert len(windows) == 0
 
         # Should find window when min_days=25
-        windows = strategy.find_windows(records, min_days=25, min_coverage=0.5)
+        windows = strategy.find_sparse_windows(records, min_days=25, min_coverage=0.5)
         
         # Debug output if no windows found
         if not windows:
@@ -182,7 +189,7 @@ class TestSparseWindowStrategy:
         )
 
         strategy = SparseWindowStrategy()
-        windows = strategy.find_windows(records, min_days=30, min_coverage=0.6)
+        windows = strategy.find_sparse_windows(records, min_days=30, min_coverage=0.6)
 
         # Should find the Feb-Mar window with good coverage
         assert len(windows) >= 1
@@ -217,7 +224,7 @@ class TestSparseWindowStrategy:
         )
 
         strategy = SparseWindowStrategy()
-        windows = strategy.find_windows(records, min_days=60, min_coverage=0.5)
+        windows = strategy.find_sparse_windows(records, min_days=60, min_coverage=0.5)
 
         # Should find at least one 60-day window
         assert len(windows) >= 1

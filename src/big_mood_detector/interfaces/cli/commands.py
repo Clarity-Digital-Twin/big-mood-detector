@@ -280,11 +280,11 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
         f.write(f"Analysis Period: {len(result.daily_predictions)} days\n")
         f.write(f"Total Records Processed: {result.records_processed}\n")
         f.write(f"Data Quality Score: {result.confidence_score:.1%}\n")
-        
+
         # Add window analysis information if available
         if result.metadata and "window_analysis" in result.metadata:
             window_analysis = result.metadata["window_analysis"]
-            f.write(f"\nData Window Selection:\n")
+            f.write("\nData Window Selection:\n")
             if window_analysis.optimal_window:
                 opt = window_analysis.optimal_window
                 f.write(f"  Window: {opt.start_date} to {opt.end_date} ({opt.days_count} days)\n")
@@ -611,7 +611,7 @@ def process_command(
     help="Automatically find the most recent valid data window",
 )
 @click.option(
-    "--auto-window/--no-auto-window", 
+    "--auto-window/--no-auto-window",
     default=True,
     help="Automatically analyze and select optimal windows for both models (default: on)",
 )
@@ -676,7 +676,7 @@ def predict_command(
             WindowSelectionStrategy,
         )
         strategy: WindowSelectionStrategy | None = None
-        
+
         # Use dual model analysis if auto_window is enabled (default)
         if auto_window and not (start_date or end_date or days_back or date_range):
             from big_mood_detector.domain.services.dual_model_window_strategy import (
@@ -736,13 +736,13 @@ def predict_command(
             start_date=start_date_param,
             end_date=end_date_param,
         )
-        
+
         # Display window analysis if dual model strategy was used
         if auto_window and result.metadata and "window_analysis" in result.metadata:
             window_analysis = result.metadata["window_analysis"]
             click.echo("\n📊 Data Window Analysis:")
             click.echo("=" * 50)
-            
+
             # PAT windows
             if window_analysis.pat_windows:
                 click.echo(f"\n✅ PAT Model: {len(window_analysis.pat_windows)} valid window(s)")
@@ -755,7 +755,7 @@ def predict_command(
                     click.echo(f"   ... and {len(window_analysis.pat_windows) - 3} more")
             else:
                 click.echo("\n❌ PAT Model: No valid windows (requires 7 consecutive days)")
-            
+
             # XGBoost windows
             if window_analysis.xgboost_windows:
                 click.echo(f"\n✅ XGBoost Model: {len(window_analysis.xgboost_windows)} valid window(s)")
@@ -769,7 +769,7 @@ def predict_command(
                     click.echo(f"   ... and {len(window_analysis.xgboost_windows) - 3} more")
             else:
                 click.echo("\n❌ XGBoost Model: No valid windows (requires 30+ days with ≥50% coverage)")
-            
+
             # Selected window
             click.echo(f"\n🎯 Selected Strategy: {window_analysis.selection_reason}")
             if window_analysis.optimal_window:
@@ -778,7 +778,7 @@ def predict_command(
                     f"   Using: {opt.start_date} to {opt.end_date} "
                     f"({opt.days_count} days)"
                 )
-            
+
             # Model availability
             click.echo("\n📈 Model Availability:")
             if window_analysis.can_run_ensemble:
@@ -792,7 +792,7 @@ def predict_command(
                     click.echo("   ✅ XGBoost model available")
                 else:
                     click.echo("   ❌ XGBoost model unavailable")
-            
+
             click.echo("=" * 50 + "\n")
 
         # Special handling for "all" strategy - show all windows found

@@ -53,17 +53,17 @@ jobs:
       run: |
         # Run a simple test to ensure PAT models work
         python -c "
-import sys
-sys.path.insert(0, '.')
-from big_mood_detector.infrastructure.ml_models.pat_production_loader import ProductionPATLoader
-import numpy as np
+        import sys
+        sys.path.insert(0, '.')
+        from big_mood_detector.infrastructure.ml_models.pat_production_loader import ProductionPATLoader
+        import numpy as np
 
-# Test loading
-loader = ProductionPATLoader()
-loader.load_model()
-
-# Test prediction with synthetic data
-activity = np.random.rand(10080).astype(np.float32)
-result = loader.predict_depression(activity)
-print(f'PAT inference test passed: depression risk = {result.depression_risk:.2%}')
-"
+        # Test loading
+        loader = ProductionPATLoader()
+        loader.load_model()
+        
+        # Test prediction with synthetic data
+        activity = np.random.rand(10080).astype(np.float32)
+        result = loader.predict_depression(activity)
+        print(f'PAT inference test passed: depression risk = {result.depression_risk:.2%}')
+        "
