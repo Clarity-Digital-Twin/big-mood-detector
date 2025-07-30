@@ -189,6 +189,13 @@ class TestClinicalReportAccuracy:
 
     def test_predictions_vary_across_days(self, comprehensive_test_data):
         """Predictions should vary day-to-day based on changing patterns."""
+        # Skip if model weights are not available (CI environment)
+        xgb_models = list(Path("model_weights/xgboost/converted").glob("*.json")) if Path("model_weights/xgboost/converted").exists() else []
+        pat_models = list(Path("model_weights/pat").glob("*.pth")) + list(Path("model_weights/pat").glob("*.pt")) if Path("model_weights/pat").exists() else []
+        
+        if not xgb_models or not pat_models:
+            pytest.skip("Model weights not available in CI environment")
+        
         config = PipelineConfig(
             include_pat_sequences=True,
             min_days_required=7,  # PAT requires 7 days of activity data
