@@ -455,14 +455,14 @@ def _initialize_container(container: Container) -> None:
         ProductionPATLoader,
     )
     skip_loading = os.getenv("TESTING", "0") == "1"
-    
+
     # Create a single shared instance for both interfaces
     pat_loader_instance = ProductionPATLoader(skip_loading=skip_loading)
-    
+
     # Register both interfaces pointing to the same instance
     container.register_singleton(PATPredictorInterface, pat_loader_instance)  # type: ignore[type-abstract]
     container.register_singleton(PATEncoderInterface, pat_loader_instance)  # type: ignore[type-abstract]
-    
+
     # Register XGBoost predictor
     from big_mood_detector.infrastructure.ml_models.xgboost_models import (
         XGBoostMoodPredictor,
@@ -480,6 +480,15 @@ def get_container() -> Container:
                 _container = Container()
                 _initialize_container(_container)
     return _container
+
+
+def reset_container() -> None:
+    """Reset the global container. Used for testing."""
+    global _container
+    with _lock:
+        _container = None
+        # Also clear the lru_cache
+        get_container.cache_clear()
 
 
 def inject(func: Callable[..., Any]) -> Callable[..., Any]:
