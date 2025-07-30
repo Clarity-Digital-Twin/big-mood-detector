@@ -35,18 +35,19 @@ class TestWindowReportFormat:
                 "manic_risk": 0.000
             },
             metadata={
-                "window_analysis": WindowAnalysisResult(
-                    optimal_window=DateWindow(
+                "window_analysis": {
+                    "optimal_window": DateWindow(
                         start_date=date(2025, 1, 1),
                         end_date=date(2025, 1, 31),
                         days_count=31,
                         data_quality=0.65
                     ),
-                    can_run_pat=False,
-                    can_run_xgboost=True,
-                    pat_reason="Insufficient consecutive days",
-                    xgboost_reason=None
-                )
+                    "can_run_pat": False,
+                    "can_run_xgboost": True,
+                    "max_consecutive_days": 3,
+                    "coverage_percentage": 65.0,
+                    "selection_reason": "PAT requires 7 consecutive days (found 3 max). Running XGBoost only."
+                }
             },
             has_errors=False,
             errors=[]
