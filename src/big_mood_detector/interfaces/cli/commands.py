@@ -672,10 +672,11 @@ def predict_command(
         click.echo(f"Processing health data from: {input_path}")
 
         # Set up window selection strategy
+        from typing import Any
         from big_mood_detector.domain.services.window_selection_strategy import (
             WindowSelectionStrategy,
         )
-        strategy: WindowSelectionStrategy | None = None
+        strategy: WindowSelectionStrategy | Any = None
 
         # Use dual model analysis if auto_window is enabled (default)
         if auto_window and not (start_date or end_date or days_back or date_range):

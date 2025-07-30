@@ -465,6 +465,8 @@ class MoodPredictionPipeline:
 
             # Use the first (best) window from strategy
             window = windows[0]
+            # Help mypy understand window is not None after assignment
+            assert window is not None
             start_date = window.start_date
             end_date = window.end_date
 
@@ -653,7 +655,7 @@ class MoodPredictionPipeline:
             )  # Reduce confidence for data issues
 
         # Build metadata
-        metadata = {}
+        metadata: dict[str, Any] = {}
         if window:
             metadata["window_used"] = window
         if window_analysis:
