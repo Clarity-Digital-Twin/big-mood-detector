@@ -414,16 +414,18 @@ class MoodPredictionPipeline:
         # Check if we should use dual model analysis
         if self.config.window_selection_strategy and hasattr(self.config.window_selection_strategy, '__class__') and 'Dual' in self.config.window_selection_strategy.__class__.__name__:
             # Use dual model window analysis
-            from big_mood_detector.domain.services.dual_model_window_strategy import DualModelWindowStrategy
+            from big_mood_detector.domain.services.dual_model_window_strategy import (
+                DualModelWindowStrategy,
+            )
             dual_strategy = DualModelWindowStrategy()
             window_analysis = dual_strategy.analyze_windows(sleep_records)
-            
+
             if window_analysis.optimal_window:
                 window = window_analysis.optimal_window
                 start_date = window.start_date
                 end_date = window.end_date
                 logger.info(f"Using dual-selected window from {start_date} to {end_date}")
-                
+
                 # Add window analysis to metadata
                 warnings.append(window_analysis.selection_reason)
             else:

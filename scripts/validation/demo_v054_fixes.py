@@ -18,10 +18,6 @@ from big_mood_detector.application.services.aggregation_pipeline import (
 from big_mood_detector.application.services.data_quality_validator import (
     DataQualityValidator,
 )
-from big_mood_detector.domain.entities.activity_record import (
-    ActivityRecord,
-    ActivityType,
-)
 from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 from big_mood_detector.domain.services.date_assignment import UniversalDateAssignment
 
@@ -68,7 +64,7 @@ def create_sparse_sleep_data():
 def demonstrate_date_assignment_fix():
     """Show that date assignment now works correctly."""
     print("\n=== DEMONSTRATING DATE ASSIGNMENT FIX ===")
-    
+
     # Create midnight-crossing sleep
     sleep = SleepRecord(
         source_name="Apple Watch",
@@ -76,18 +72,18 @@ def demonstrate_date_assignment_fix():
         end_date=datetime(2025, 6, 27, 6, 0),     # Friday 6am
         state=SleepState.ASLEEP,
     )
-    
+
     # Show how it's assigned
     assigned_date = UniversalDateAssignment.assign_sleep_to_date(sleep)
     print(f"Sleep from {sleep.start_date} to {sleep.end_date}")
     print(f"Assigned to: {assigned_date}")
-    print(f"✅ Correctly assigned to wake date (Friday)!")
-    
+    print("✅ Correctly assigned to wake date (Friday)!")
+
     # Show that we can find it
     found_records = UniversalDateAssignment.find_sleep_for_date(
         [sleep], date(2025, 6, 27)
     )
-    print(f"\nSearching for sleep on June 27...")
+    print("\nSearching for sleep on June 27...")
     print(f"Found {len(found_records)} record(s)")
     print("✅ Sleep is now findable!")
 
@@ -95,9 +91,9 @@ def demonstrate_date_assignment_fix():
 def demonstrate_no_fake_features():
     """Show that sparse data no longer generates fake features."""
     print("\n=== DEMONSTRATING NO FAKE FEATURES ===")
-    
+
     sleep_records = create_sparse_sleep_data()
-    
+
     # Configure aggregation
     config = AggregationConfig(
         window_size=7,
@@ -105,9 +101,9 @@ def demonstrate_no_fake_features():
         enable_dlmo_calculation=False,
         enable_circadian_analysis=False,
     )
-    
+
     pipeline = AggregationPipeline(config=config)
-    
+
     # Try to generate features for a full week
     features = pipeline.aggregate_seoul_features(
         sleep_records=sleep_records,
@@ -116,11 +112,11 @@ def demonstrate_no_fake_features():
         start_date=date(2025, 6, 25),
         end_date=date(2025, 7, 2),
     )
-    
-    print(f"\nProcessing 8 days with only 4 days of sleep data...")
+
+    print("\nProcessing 8 days with only 4 days of sleep data...")
     print(f"Generated {len(features)} feature sets")
     print("✅ Only generating features for days with sufficient data!")
-    
+
     if features:
         print("\nFeature values are varied (not all defaults):")
         sample = features[0].to_xgboost_dict()
@@ -133,9 +129,9 @@ def demonstrate_no_fake_features():
 def demonstrate_data_quality_validation():
     """Show the new data quality validator in action."""
     print("\n=== DEMONSTRATING DATA QUALITY VALIDATION ===")
-    
+
     sleep_records = create_sparse_sleep_data()
-    
+
     validator = DataQualityValidator()
     report = validator.validate_data_quality(
         sleep_records=sleep_records,
@@ -144,17 +140,17 @@ def demonstrate_data_quality_validation():
         start_date=date(2025, 6, 25),
         end_date=date(2025, 7, 2),
     )
-    
-    print(f"\nData Quality Report:")
+
+    print("\nData Quality Report:")
     print(f"  - Sleep coverage: {report.sleep_coverage:.0%}")
     print(f"  - Is sufficient: {report.is_sufficient}")
     print(f"  - Warnings: {len(report.warnings)}")
-    
+
     if report.warnings:
         print("\nWarnings:")
         for warning in report.warnings:
             print(f"  ⚠️ {warning}")
-    
+
     message = validator.generate_user_message(report)
     print(f"\nUser message: {message}")
     print("✅ Clear warnings about data quality!")
@@ -163,16 +159,16 @@ def demonstrate_data_quality_validation():
 def demonstrate_pat_encode_fix():
     """Show that PAT loader now has encode method."""
     print("\n=== DEMONSTRATING PAT ENCODE FIX ===")
-    
+
     from big_mood_detector.infrastructure.ml_models.pat_production_loader import (
         ProductionPATLoader,
     )
-    
+
     loader = ProductionPATLoader(skip_loading=True)
-    
+
     print(f"PAT loader has encode method: {hasattr(loader, 'encode')}")
     print("✅ Temporal ensemble can now use PAT loader!")
-    
+
     # Test encoding
     import numpy as np
     dummy_sequence = np.zeros((7, 1440), dtype=np.float32)
@@ -186,19 +182,19 @@ def main():
     print("=" * 60)
     print("BIG MOOD DETECTOR v0.5.4 FIXES DEMONSTRATION")
     print("=" * 60)
-    
+
     # 1. Date assignment is fixed
     demonstrate_date_assignment_fix()
-    
+
     # 2. No more fake features
     demonstrate_no_fake_features()
-    
+
     # 3. Data quality validation
     demonstrate_data_quality_validation()
-    
+
     # 4. PAT encode exists
     demonstrate_pat_encode_fix()
-    
+
     print("\n" + "=" * 60)
     print("ALL CRITICAL BUGS FROM v0.5.4 HAVE BEEN FIXED! 🎉")
     print("=" * 60)

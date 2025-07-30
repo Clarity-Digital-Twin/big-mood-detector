@@ -7,8 +7,6 @@ and XGBoost (30+ sparse days) models.
 
 from datetime import date, datetime, timedelta
 
-import pytest
-
 from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 
 
@@ -29,7 +27,7 @@ class TestDualModelWindowStrategy:
     def test_finds_overlapping_windows_when_available(self):
         """Should identify when both models can use same period."""
         records = []
-        
+
         # Create 45 consecutive days (good for both models)
         for day in range(1, 46):
             if day <= 31:
@@ -54,7 +52,7 @@ class TestDualModelWindowStrategy:
     def test_handles_pat_only_scenario(self):
         """Should handle when only PAT has valid windows (7 consecutive days)."""
         records = []
-        
+
         # Create only 8 consecutive days (not enough for XGBoost)
         for day in range(1, 9):
             records.append(self.create_sleep_record(f"2025-01-{day:02d}"))
@@ -75,7 +73,7 @@ class TestDualModelWindowStrategy:
     def test_handles_xgboost_only_scenario(self):
         """Should handle when only XGBoost has valid windows (sparse 30+ days)."""
         records = []
-        
+
         # Create sparse data: 4 days per week for 10 weeks = 40 days over 70 days (57% coverage)
         base_date = date(2025, 1, 1)
         for week in range(10):
@@ -100,13 +98,13 @@ class TestDualModelWindowStrategy:
     def test_selects_optimal_overlapping_window(self):
         """Should prefer windows where both models can run."""
         records = []
-        
+
         # Window 1: January 1-7 (PAT only, 7 days)
         for day in range(1, 8):
             records.append(self.create_sleep_record(f"2025-01-{day:02d}"))
-            
+
         # Gap
-        
+
         # Window 2: March-April (45 days, good for both)
         for day in range(1, 46):
             if day <= 31:
@@ -129,7 +127,7 @@ class TestDualModelWindowStrategy:
     def test_provides_clear_reason_when_no_windows_available(self):
         """Should explain why models cannot run."""
         records = []
-        
+
         # Only 5 sporadic days (not enough for either model)
         for day in [1, 5, 10, 15, 20]:
             records.append(self.create_sleep_record(f"2025-01-{day:02d}"))
@@ -150,20 +148,20 @@ class TestDualModelWindowStrategy:
     def test_real_world_mixed_data_scenario(self):
         """Test with realistic Apple Watch usage patterns."""
         records = []
-        
+
         # January: Good compliance (25 days)
         for day in range(1, 32):
             if day not in [6, 7, 13, 14, 20, 21]:  # Skip weekends
                 records.append(self.create_sleep_record(f"2025-01-{day:02d}"))
-                
+
         # February: Poor compliance (10 days)
         for day in [1, 5, 8, 12, 15, 18, 22, 25, 27, 28]:
             records.append(self.create_sleep_record(f"2025-02-{day:02d}"))
-            
+
         # March: Excellent compliance (all days)
         for day in range(1, 32):
             records.append(self.create_sleep_record(f"2025-03-{day:02d}"))
-            
+
         # April: Moderate compliance (20 days)
         for day in range(1, 31):
             if day % 3 != 0:  # Skip every 3rd day
@@ -180,7 +178,7 @@ class TestDualModelWindowStrategy:
         assert result.can_run_pat is True  # March has 31 consecutive days
         assert result.can_run_xgboost is True  # Multiple 30+ day windows
         assert result.can_run_ensemble is True
-        
+
         # Should find a window where both models can run
         assert result.optimal_window is not None
         # The optimal window should be within a period that has good coverage
@@ -195,11 +193,11 @@ class TestWindowAnalysisResult:
         from big_mood_detector.domain.services.dual_model_window_strategy import (
             WindowAnalysisResult,
         )
-        from big_mood_detector.domain.services.window_selection_strategy import (
-            DateWindow,
-        )
         from big_mood_detector.domain.services.sparse_window_strategy import (
             SparseDataWindow,
+        )
+        from big_mood_detector.domain.services.window_selection_strategy import (
+            DateWindow,
         )
 
         pat_window = DateWindow(

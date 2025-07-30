@@ -58,7 +58,7 @@ class TestSparseWindowStrategy:
         assert window.days_with_data == 16  # Days 1,3,5...31
         assert window.total_days == 31
         assert abs(window.coverage_ratio - 16/31) < 0.01  # ~0.516
-        
+
         # Also test the main interface returns DateWindow
         date_windows = strategy.find_windows(records, min_days=30, min_coverage=0.5)
         assert len(date_windows) >= 1
@@ -96,7 +96,6 @@ class TestSparseWindowStrategy:
         # Gap in February
 
         # Window 2: March-April - 35 days over 60 days (58% coverage)
-        march_april_days = []
         for day in range(1, 61):
             if day % 5 != 0:  # Skip every 5th day
                 if day <= 31:
@@ -150,33 +149,33 @@ class TestSparseWindowStrategy:
         )
 
         strategy = SparseWindowStrategy()
-        
+
         # Should not find window when min_days=30
         windows = strategy.find_sparse_windows(records, min_days=30, min_coverage=0.5)
         assert len(windows) == 0
 
         # Should find window when min_days=25
         windows = strategy.find_sparse_windows(records, min_days=25, min_coverage=0.5)
-        
+
         # Debug output if no windows found
         if not windows:
             dates = sorted({r.start_date.date() for r in records})
-            print(f"\nDebug info:")
+            print("\nDebug info:")
             print(f"Total unique dates: {len(dates)}")
             print(f"Date range: {dates[0]} to {dates[-1]}")
             print(f"Span: {(dates[-1] - dates[0]).days + 1} days")
             print(f"Coverage: {len(dates)}/{(dates[-1] - dates[0]).days + 1} = {len(dates)/((dates[-1] - dates[0]).days + 1):.2%}")
-        
+
         assert len(windows) >= 1  # Should find at least one window
 
     def test_sliding_window_finds_best_coverage(self):
         """Should use sliding window to find optimal coverage periods."""
         records = []
-        
+
         # Poor coverage at start
         for day in [1, 7, 14, 21, 28]:
             records.append(self.create_sleep_record(f"2025-01-{day:02d}"))
-        
+
         # Good coverage in middle (Feb-Mar)
         for day in range(1, 61):
             if day <= 28 and day % 3 != 0:  # 2 out of 3 days in Feb
@@ -199,21 +198,21 @@ class TestSparseWindowStrategy:
     def test_real_world_xgboost_scenario(self):
         """Test typical XGBoost use case: 60 days with 65% coverage."""
         records = []
-        
+
         # Simulate realistic Apple Watch usage over 3 months
         # Week 1-2: Good compliance
         for day in range(1, 15):
             records.append(self.create_sleep_record(f"2025-01-{day:02d}"))
-        
+
         # Week 3-4: Sporadic (vacation?)
         for day in [17, 20, 24, 28]:
             records.append(self.create_sleep_record(f"2025-01-{day:02d}"))
-        
+
         # February: Better compliance with some gaps
         for day in range(1, 29):
             if day not in [5, 6, 12, 13, 19, 20, 26, 27]:  # Weekend gaps
                 records.append(self.create_sleep_record(f"2025-02-{day:02d}"))
-        
+
         # March: Good compliance
         for day in range(1, 20):
             if day not in [7, 14]:  # Occasional misses
@@ -228,7 +227,7 @@ class TestSparseWindowStrategy:
 
         # Should find at least one 60-day window
         assert len(windows) >= 1
-        
+
         # Check the best window
         best_window = max(windows, key=lambda w: w.coverage_ratio)
         assert best_window.total_days >= 60

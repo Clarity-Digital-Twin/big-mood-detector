@@ -11,6 +11,8 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from xml.etree.ElementTree import Element, SubElement, tostring
 
+import pytest
+
 from big_mood_detector.application.services.aggregation_pipeline import (
     AggregationPipeline,
 )
@@ -85,9 +87,6 @@ class XMLDataGenerator:
             f.write(tostring(root, encoding="utf-8"))
 
         return filepath
-
-
-import pytest
 
 
 @pytest.mark.integration
