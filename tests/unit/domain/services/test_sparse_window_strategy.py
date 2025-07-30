@@ -133,8 +133,8 @@ class TestSparseWindowStrategy:
     def test_respects_minimum_days_parameter(self):
         """Should only find windows with enough total days."""
         records = []
-        # Create data: days 1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24 = 20 days
-        for day in range(1, 26):
+        # Create data: days 1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26 = 21 days
+        for day in range(1, 27):
             if day % 5 != 0:  # Skip every 5th day (5,10,15,20,25)
                 records.append(self.create_sleep_record(f"2025-01-{day:02d}"))
 
@@ -150,6 +150,16 @@ class TestSparseWindowStrategy:
 
         # Should find window when min_days=25
         windows = strategy.find_windows(records, min_days=25, min_coverage=0.5)
+        
+        # Debug output if no windows found
+        if not windows:
+            dates = sorted({r.start_date.date() for r in records})
+            print(f"\nDebug info:")
+            print(f"Total unique dates: {len(dates)}")
+            print(f"Date range: {dates[0]} to {dates[-1]}")
+            print(f"Span: {(dates[-1] - dates[0]).days + 1} days")
+            print(f"Coverage: {len(dates)}/{(dates[-1] - dates[0]).days + 1} = {len(dates)/((dates[-1] - dates[0]).days + 1):.2%}")
+        
         assert len(windows) >= 1  # Should find at least one window
 
     def test_sliding_window_finds_best_coverage(self):

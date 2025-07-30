@@ -654,6 +654,8 @@ class MoodPredictionPipeline:
         metadata = {}
         if window:
             metadata["window_used"] = window
+        if window_analysis:
+            metadata["window_analysis"] = window_analysis
         if self.personal_calibrator:
             metadata["personal_calibration_used"] = True
             metadata["user_id"] = self.personal_calibrator.user_id

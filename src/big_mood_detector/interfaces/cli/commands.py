@@ -280,6 +280,21 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
         f.write(f"Analysis Period: {len(result.daily_predictions)} days\n")
         f.write(f"Total Records Processed: {result.records_processed}\n")
         f.write(f"Data Quality Score: {result.confidence_score:.1%}\n")
+        
+        # Add window analysis information if available
+        if result.metadata and "window_analysis" in result.metadata:
+            window_analysis = result.metadata["window_analysis"]
+            f.write(f"\nData Window Selection:\n")
+            if window_analysis.optimal_window:
+                opt = window_analysis.optimal_window
+                f.write(f"  Window: {opt.start_date} to {opt.end_date} ({opt.days_count} days)\n")
+            f.write(f"  Strategy: {window_analysis.selection_reason}\n")
+            if window_analysis.can_run_ensemble:
+                f.write("  Models: Ensemble (PAT + XGBoost)\n")
+            elif window_analysis.can_run_pat:
+                f.write("  Models: PAT only\n")
+            elif window_analysis.can_run_xgboost:
+                f.write("  Models: XGBoost only\n")
 
         if result.metadata.get("personal_calibration_used"):
             f.write(
@@ -595,6 +610,11 @@ def process_command(
     default=False,
     help="Automatically find the most recent valid data window",
 )
+@click.option(
+    "--auto-window/--no-auto-window", 
+    default=True,
+    help="Automatically analyze and select optimal windows for both models (default: on)",
+)
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 def predict_command(
     input_path: str,
@@ -610,6 +630,7 @@ def predict_command(
     report: bool,
     window_strategy: str | None,
     auto_find_window: bool,
+    auto_window: bool,
     verbose: bool,
 ) -> None:
     """Generate mood predictions from health data."""
@@ -655,7 +676,16 @@ def predict_command(
             WindowSelectionStrategy,
         )
         strategy: WindowSelectionStrategy | None = None
-        if auto_find_window or window_strategy:
+        
+        # Use dual model analysis if auto_window is enabled (default)
+        if auto_window and not (start_date or end_date or days_back or date_range):
+            from big_mood_detector.domain.services.dual_model_window_strategy import (
+                DualModelWindowStrategy,
+            )
+            strategy = DualModelWindowStrategy()
+            if verbose:
+                click.echo("Using automatic dual-model window selection")
+        elif auto_find_window or window_strategy:
             from big_mood_detector.domain.services.window_selection_strategy import (
                 AllValidWindowsStrategy,
                 BestQualityWindowStrategy,
@@ -706,6 +736,64 @@ def predict_command(
             start_date=start_date_param,
             end_date=end_date_param,
         )
+        
+        # Display window analysis if dual model strategy was used
+        if auto_window and result.metadata and "window_analysis" in result.metadata:
+            window_analysis = result.metadata["window_analysis"]
+            click.echo("\n📊 Data Window Analysis:")
+            click.echo("=" * 50)
+            
+            # PAT windows
+            if window_analysis.pat_windows:
+                click.echo(f"\n✅ PAT Model: {len(window_analysis.pat_windows)} valid window(s)")
+                for i, window in enumerate(window_analysis.pat_windows[:3], 1):
+                    click.echo(
+                        f"   {i}. {window.start_date} to {window.end_date} "
+                        f"({window.days_count} days, quality: {window.data_quality:.2f})"
+                    )
+                if len(window_analysis.pat_windows) > 3:
+                    click.echo(f"   ... and {len(window_analysis.pat_windows) - 3} more")
+            else:
+                click.echo("\n❌ PAT Model: No valid windows (requires 7 consecutive days)")
+            
+            # XGBoost windows
+            if window_analysis.xgboost_windows:
+                click.echo(f"\n✅ XGBoost Model: {len(window_analysis.xgboost_windows)} valid window(s)")
+                for i, window in enumerate(window_analysis.xgboost_windows[:3], 1):
+                    click.echo(
+                        f"   {i}. {window.start_date} to {window.end_date} "
+                        f"({window.total_days} days, {window.days_with_data} days with data, "
+                        f"coverage: {window.coverage_ratio:.1%})"
+                    )
+                if len(window_analysis.xgboost_windows) > 3:
+                    click.echo(f"   ... and {len(window_analysis.xgboost_windows) - 3} more")
+            else:
+                click.echo("\n❌ XGBoost Model: No valid windows (requires 30+ days with ≥50% coverage)")
+            
+            # Selected window
+            click.echo(f"\n🎯 Selected Strategy: {window_analysis.selection_reason}")
+            if window_analysis.optimal_window:
+                opt = window_analysis.optimal_window
+                click.echo(
+                    f"   Using: {opt.start_date} to {opt.end_date} "
+                    f"({opt.days_count} days)"
+                )
+            
+            # Model availability
+            click.echo("\n📈 Model Availability:")
+            if window_analysis.can_run_ensemble:
+                click.echo("   ✅ Ensemble (PAT + XGBoost) available")
+            else:
+                if window_analysis.can_run_pat:
+                    click.echo("   ✅ PAT model available")
+                else:
+                    click.echo("   ❌ PAT model unavailable")
+                if window_analysis.can_run_xgboost:
+                    click.echo("   ✅ XGBoost model available")
+                else:
+                    click.echo("   ❌ XGBoost model unavailable")
+            
+            click.echo("=" * 50 + "\n")
 
         # Special handling for "all" strategy - show all windows found
         if window_strategy == "all" and isinstance(strategy, AllValidWindowsStrategy):
