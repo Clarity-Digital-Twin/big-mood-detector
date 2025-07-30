@@ -83,7 +83,7 @@ class TestTemporalCLIIntegration:
             str(test_health_data),
             "--ensemble",
             "--report",
-            "--output", str(output_dir)
+            "--output", str(output_dir / "results.json")
         ])
 
         # Command should succeed or fail gracefully if PAT not available
@@ -94,8 +94,8 @@ class TestTemporalCLIIntegration:
             else:
                 assert False, f"Command failed unexpectedly: {result.output}"
 
-        # Check report was created
-        report_path = output_dir / "clinical_report.txt"
+        # Check report was created - it should be next to the output file
+        report_path = output_dir / "results.txt"
         assert report_path.exists()
 
         # Read report content
@@ -125,14 +125,14 @@ class TestTemporalCLIIntegration:
             "predict",
             str(test_health_data),
             "--report",
-            "--output", str(output_dir)
+            "--output", str(output_dir / "results.json")
         ])
 
         # Command should succeed
         assert result.exit_code == 0, f"Command failed: {result.output}"
 
         # Check report
-        report_path = output_dir / "clinical_report.txt"
+        report_path = output_dir / "results.txt"
         assert report_path.exists()
         content = report_path.read_text()
 
