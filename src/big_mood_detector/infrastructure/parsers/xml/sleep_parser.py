@@ -18,6 +18,7 @@ from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import ParseError
 
 from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
+from big_mood_detector.domain.contracts.timezone_contract import TimezoneContract
 
 
 class SleepParser:
@@ -110,4 +111,5 @@ class SleepParser:
 
     def _parse_date(self, date_string: str) -> datetime:
         """Parse HealthKit date format to datetime object."""
-        return datetime.strptime(date_string, self.HEALTHKIT_DATE_FORMAT)
+        aware_dt = datetime.strptime(date_string, self.HEALTHKIT_DATE_FORMAT)
+        return TimezoneContract.ensure_naive(aware_dt)

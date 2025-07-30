@@ -14,6 +14,7 @@ from big_mood_detector.domain.entities.activity_record import (
     ActivityRecord,
     ActivityType,
 )
+from big_mood_detector.domain.contracts.timezone_contract import TimezoneContract
 
 
 class ActivityParser:
@@ -129,4 +130,6 @@ class ActivityParser:
     def _parse_date(self, date_string: str) -> datetime:
         """Parse Apple Health date format."""
         # Apple Health format: "2024-01-01 00:00:00 -0800"
-        return datetime.strptime(date_string[:19], "%Y-%m-%d %H:%M:%S")
+        # First parse with timezone info
+        aware_dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S %z")
+        return TimezoneContract.ensure_naive(aware_dt)
