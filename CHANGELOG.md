@@ -7,7 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.5.6] - 2025-07-30 - Intelligent Auto-Window Selection
+## [0.5.7] - 2025-07-30 - Production Fixes & Robustness
+
+### Fixed
+- **Timezone Handling** - Fixed TypeError with timezone-aware vs naive datetimes
+  - Implemented `TimezoneContract` to ensure UTC consistency
+  - All XML parsers now convert to naive datetimes
+  - Resolves crashes with real Apple Health exports
+- **Window-Level Predictions** - Fixed duplicate predictions in XGBoost-only mode
+  - Added proper window-level aggregation
+  - Single prediction per analysis window (not daily)
+  - Correct handling of sparse data scenarios
+- **Cross-Platform Compatibility** - Fixed Windows WSL2 timeout issues
+  - Platform-aware timeout handling
+  - Graceful degradation when SIGALRM unavailable
+  - Dynamic timeout based on file size
+
+### Added
+- **Summary Calculator Service** - Refactored overall summary logic
+  - Centralized calculation for daily and window predictions
+  - Improved code organization and testability
+  - Consistent confidence score handling
+- **Enhanced Report Format** - Improved clinical report clarity
+  - DATA WINDOW SELECTION section with coverage stats
+  - WINDOW-LEVEL ANALYSIS for non-daily predictions
+  - Clear model availability messaging
+
+### Improved
+- **Dynamic Timeouts** - File-size based timeout configuration
+  - <50MB: 2 minutes
+  - 50-200MB: 5 minutes
+  - >200MB: No timeout
+  - Progress messages for large files
+- **Test Coverage** - Added regression tests for edge cases
+  - PAT-only mode scenarios
+  - Cross-platform timeout behavior
+  - Window-level prediction logic
+
+### Technical
+- All mypy type errors resolved
+- Ruff linting clean
+- Test coverage at 73%
+- Version bumped to 0.5.7
+
+## [0.5.6] - 2025-07-29 - Intelligent Auto-Window Selection
 
 ### Added
 - **Auto-Window Selection** (#83) - Automatically finds optimal data windows for both models
