@@ -787,23 +787,30 @@ def predict_command(
         end_date_param: date | None = end_date.date() if end_date else None
 
         # Process data with dynamic timeout
+        import platform
         import signal
+        from collections.abc import Iterator
         from contextlib import contextmanager
         
         @contextmanager
-        def timeout_handler(seconds):
-            def timeout_error(signum, frame):
-                raise TimeoutError(f"Processing timed out after {seconds} seconds")
-            
-            if seconds > 0:
-                # Set up the signal handler
+        def timeout_handler(seconds: int) -> Iterator[None]:
+            """Cross-platform timeout handler."""
+            if seconds > 0 and platform.system() != "Windows":
+                # Unix-based systems: use signal-based timeout
+                def timeout_error(signum: int, frame: Any) -> None:
+                    raise TimeoutError(f"Processing timed out after {seconds} seconds")
+                
                 signal.signal(signal.SIGALRM, timeout_error)
                 signal.alarm(seconds)
-            try:
+                try:
+                    yield
+                finally:
+                    signal.alarm(0)
+            else:
+                # Windows or no timeout: just proceed
+                if seconds > 0 and platform.system() == "Windows":
+                    click.echo("⚠️  Note: Timeout protection not available on Windows")
                 yield
-            finally:
-                if seconds > 0:
-                    signal.alarm(0)  # Disable the alarm
         
         try:
             with timeout_handler(timeout):

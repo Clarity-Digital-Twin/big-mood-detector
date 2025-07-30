@@ -30,6 +30,9 @@ from big_mood_detector.application.services.aggregation_pipeline import (
 from big_mood_detector.application.services.data_parsing_service import (
     DataParsingService,
 )
+from big_mood_detector.application.services.summary_calculator import (
+    SummaryCalculator,
+)
 from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
     TemporalEnsembleOrchestrator,
 )
@@ -538,7 +541,7 @@ class MoodPredictionPipeline:
                 if seoul_features_list:
                     # Aggregate all daily features into a single window feature
                     # This represents the overall pattern across the window
-                    aggregated_features = {}
+                    aggregated_features: dict[str, list[float]] = {}
                     feature_count = 0
                     
                     for daily_feature in seoul_features_list:
@@ -697,44 +700,25 @@ class MoodPredictionPipeline:
 
         # Calculate overall summary
         if daily_predictions:
-            all_predictions = list(daily_predictions.values())
-            overall_summary.update({
-                "avg_depression_risk": float(
-                    np.mean([float(p["depression_risk"]) for p in all_predictions])
-                ),
-                "avg_hypomanic_risk": float(
-                    np.mean([float(p["hypomanic_risk"]) for p in all_predictions])
-                ),
-                "avg_manic_risk": float(
-                    np.mean([float(p["manic_risk"]) for p in all_predictions])
-                ),
-                "days_analyzed": len(daily_predictions),
-            })
-            new_confidence = float(
-                np.mean([float(p["confidence"]) for p in all_predictions])
+            summary, new_confidence = SummaryCalculator.calculate_from_daily_predictions(
+                daily_predictions
             )
-            if not np.isnan(new_confidence):
+            overall_summary.update(summary)
+            if new_confidence > 0:
                 confidence_score = new_confidence
         elif window_predictions and not overall_summary:
             # If we only have window predictions and no overall summary set yet
-            # Use the first (and likely only) window prediction for summary
-            for window_key, pred in window_predictions.items():
-                overall_summary.update({
-                    "depression_risk": pred["depression_risk"],
-                    "hypomanic_risk": pred["hypomanic_risk"],
-                    "manic_risk": pred["manic_risk"],
-                    "window_analyzed": f"{window_key[0]} to {window_key[1]}",
-                    "analysis_type": "window",
-                    "model": pred.get("model", "unknown")
-                })
-                confidence_score = pred.get("confidence", 0.5)
-                break  # Use first window
+            summary, new_confidence = SummaryCalculator.calculate_from_window_predictions(
+                window_predictions
+            )
+            overall_summary.update(summary)
+            if new_confidence > 0:
+                confidence_score = new_confidence
 
         # Adjust confidence based on data quality
-        if warnings:
-            confidence_score = float(
-                confidence_score * 0.7
-            )  # Reduce confidence for data issues
+        confidence_score = SummaryCalculator.adjust_confidence_for_warnings(
+            confidence_score, has_warnings=bool(warnings)
+        )
 
         # Build metadata
         metadata: dict[str, Any] = {}

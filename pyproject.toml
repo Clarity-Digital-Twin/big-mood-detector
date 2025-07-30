@@ -8,7 +8,7 @@ exclude = ["reference_repos"]
 
 [project]
 name = "big-mood-detector"
-version = "0.5.4"
+version = "0.5.7"
 description = "Clinical-grade bipolar mood detection backend using Apple HealthKit data"
 authors = [{name = "The-Obstacle-Is-The-Way", email = "The-Obstacle-Is-The-Way@users.noreply.github.com"}]
 license = {text = "Apache-2.0"}
@@ -311,6 +311,7 @@ markers = [
     "ml: marks tests that require ML models",
     "clinical: marks tests for clinical validation",
     "flaky: marks tests that are known to be flaky (pre-existing issues)",
+    "regression: marks tests for regression testing",
     "performance: marks tests for performance testing (deselect with '-m \"not performance\"')",
     "e2e: marks tests as end-to-end tests (deselect with '-m \"not e2e\"')",
 ]
