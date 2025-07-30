@@ -344,7 +344,7 @@ class MoodPredictionPipeline:
                 data_dates.extend([r.start_date.date() for r in activity_records])
             if heart_records:
                 data_dates.extend([r.timestamp.date() for r in heart_records])
-            
+
             if data_dates:
                 actual_end_date = max(data_dates)
                 logger.info(f"Using latest data date as target: {actual_end_date}")
@@ -352,7 +352,7 @@ class MoodPredictionPipeline:
                 # Only use today if there's literally no data
                 actual_end_date = date.today()
                 logger.warning("No data found, using today's date as target")
-        
+
         # Process health data
         result = self.process_health_data(
             sleep_records=sleep_records,
@@ -390,7 +390,7 @@ class MoodPredictionPipeline:
         start_time = time.time()
         warnings = []
         errors = []
-        
+
         # Validate target_date
         if target_date is None:
             raise ValueError("target_date cannot be None. Use process_apple_health_file() which determines dates automatically.")
@@ -631,7 +631,7 @@ class MoodPredictionPipeline:
             metadata["personal_calibration_used"] = True
             metadata["user_id"] = self.personal_calibrator.user_id
             metadata["baseline_available"] = bool(self.personal_calibrator.baseline)
-        
+
         # Add data date range metadata
         if sleep_records or activity_records or heart_records:
             all_dates = []
@@ -641,7 +641,7 @@ class MoodPredictionPipeline:
                 all_dates.extend([r.start_date.date() for r in activity_records])
             if heart_records:
                 all_dates.extend([r.timestamp.date() for r in heart_records])
-            
+
             if all_dates:
                 metadata["data_start_date"] = min(all_dates)
                 metadata["data_end_date"] = max(all_dates)

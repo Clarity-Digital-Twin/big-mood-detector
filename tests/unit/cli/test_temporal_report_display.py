@@ -4,8 +4,7 @@ Test temporal report display functionality.
 Following TDD principles - these tests define the behavior we want.
 """
 
-from datetime import date, datetime
-from pathlib import Path
+from datetime import date
 
 import pytest
 
@@ -70,90 +69,90 @@ class TestTemporalReportDisplay:
         """Report should have a dedicated temporal assessment section."""
         report_path = tmp_path / "report.txt"
         generate_clinical_report(pipeline_result_with_temporal, report_path)
-        
+
         content = report_path.read_text()
-        
+
         # Should have temporal section
         assert "TEMPORAL MOOD ASSESSMENT" in content
         assert "NOW vs TOMORROW" in content
-        
+
     def test_temporal_section_shows_current_state(self, pipeline_result_with_temporal, tmp_path):
         """Temporal section should clearly show NOW (PAT) assessment."""
         report_path = tmp_path / "report.txt"
         generate_clinical_report(pipeline_result_with_temporal, report_path)
-        
+
         content = report_path.read_text()
-        
+
         # Should show current state
         assert "NOW (Current State - PAT):" in content
         assert "65.0%" in content or "65%" in content  # Current depression
-        
+
     def test_temporal_section_shows_future_risk(self, pipeline_result_with_temporal, tmp_path):
         """Temporal section should clearly show TOMORROW (XGBoost) prediction."""
         report_path = tmp_path / "report.txt"
         generate_clinical_report(pipeline_result_with_temporal, report_path)
-        
+
         content = report_path.read_text()
-        
+
         # Should show future risk
         assert "TOMORROW (Future Risk - XGBoost):" in content
         assert "42.0%" in content or "42%" in content  # Future depression risk
-        
+
     def test_temporal_concordance_displayed(self, pipeline_result_with_temporal, tmp_path):
         """Report should show temporal concordance metric."""
         report_path = tmp_path / "report.txt"
         generate_clinical_report(pipeline_result_with_temporal, report_path)
-        
+
         content = report_path.read_text()
-        
+
         # Should show concordance
         assert "Temporal Concordance:" in content
         assert "77.0%" in content or "77%" in content
-        
+
     def test_temporal_pattern_interpretation(self, pipeline_result_with_temporal, tmp_path):
         """Report should interpret the temporal pattern."""
         report_path = tmp_path / "report.txt"
         generate_clinical_report(pipeline_result_with_temporal, report_path)
-        
+
         content = report_path.read_text()
-        
+
         # Should have pattern interpretation
         assert "Pattern:" in content
         # With 65% NOW and 42% TOMORROW, this is improving
         assert "Improving" in content or "improving" in content
-        
+
     def test_daily_predictions_show_temporal_data(self, pipeline_result_with_temporal, tmp_path):
         """Daily predictions should show both NOW and TOMORROW."""
         report_path = tmp_path / "report.txt"
         generate_clinical_report(pipeline_result_with_temporal, report_path)
-        
+
         content = report_path.read_text()
-        
+
         # Find daily section
         daily_section_start = content.find("DETAILED DAILY ANALYSIS")
         assert daily_section_start > 0
-        
+
         daily_content = content[daily_section_start:]
-        
+
         # Should show temporal data for each day
         assert "NOW:" in daily_content or "Current State:" in daily_content
         assert "TOMORROW:" in daily_content or "Future Risk:" in daily_content
-        
+
     def test_overall_summary_includes_temporal_averages(self, pipeline_result_with_temporal, tmp_path):
         """Overall summary should include average temporal metrics."""
         report_path = tmp_path / "report.txt"
         generate_clinical_report(pipeline_result_with_temporal, report_path)
-        
+
         content = report_path.read_text()
-        
+
         # Should show average current state
         assert "Average Current State:" in content or "Avg Current Depression:" in content
         assert "68" in content  # 68% average
-        
+
         # Should show average concordance
         assert "Average Concordance:" in content or "Avg Temporal Concordance:" in content
         assert "72" in content  # 72% average
-        
+
     def test_no_temporal_section_without_temporal_data(self, tmp_path):
         """Temporal section should not appear if no temporal data available."""
         # Create result without temporal data
@@ -179,16 +178,16 @@ class TestTemporalReportDisplay:
             metadata={},
             processing_time_seconds=1.2
         )
-        
+
         report_path = tmp_path / "report.txt"
         generate_clinical_report(result, report_path)
-        
+
         content = report_path.read_text()
-        
+
         # Should NOT have temporal section
         assert "TEMPORAL MOOD ASSESSMENT" not in content
         assert "NOW vs TOMORROW" not in content
-        
+
     def test_temporal_clinical_recommendations(self, tmp_path):
         """Temporal patterns should generate appropriate clinical recommendations."""
         # Test improving pattern
@@ -214,16 +213,16 @@ class TestTemporalReportDisplay:
             metadata={"ensemble_used": True},
             processing_time_seconds=1.3
         )
-        
+
         report_path = tmp_path / "improving.txt"
         generate_clinical_report(improving_result, report_path)
-        
+
         content = report_path.read_text()
-        
+
         # Should recognize improving pattern
         assert "Improving" in content or "improving" in content
         assert "Crisis resolving" in content or "improvement" in content
-        
+
     def test_format_handles_missing_pat_gracefully(self, tmp_path):
         """Report should handle missing PAT data gracefully."""
         result = PipelineResult(
@@ -248,12 +247,12 @@ class TestTemporalReportDisplay:
             metadata={"ensemble_used": True, "pat_available": False},
             processing_time_seconds=1.4
         )
-        
+
         report_path = tmp_path / "report.txt"
         generate_clinical_report(result, report_path)
-        
+
         content = report_path.read_text()
-        
+
         # Should indicate PAT unavailable
         assert "PAT unavailable" in content or "PAT model unavailable" in content
         # Should still show XGBoost predictions

@@ -60,7 +60,7 @@ class TestFastStreamingXMLDateFilter:
 
             # Should include May records only
             assert len(records) == 2
-            
+
             # Check dates
             dates = [r["startDate"] for r in records]
             assert any("2025-05-15" in d for d in dates)
@@ -82,7 +82,7 @@ class TestFastStreamingXMLDateFilter:
             # This should not raise TypeError when comparing date vs datetime
             # The fix converts datetime.date() for comparison
             try:
-                records = list(
+                list(
                     parser.iter_records(
                         temp_path,
                         start_date=datetime(2025, 5, 1),

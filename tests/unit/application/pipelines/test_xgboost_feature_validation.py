@@ -93,9 +93,7 @@ class TestXGBoostFeatureValidation:
         # For new interface
         mock_daily = Mock()
         # Return dict with only 35 features (missing one)
-        mock_daily.to_model_dict.return_value = {
-            name: 0.5 for name in loader.FEATURE_NAMES[:-1]  # Skip last feature
-        }
+        mock_daily.to_model_dict.return_value = dict.fromkeys(loader.FEATURE_NAMES[:-1], 0.5)
         mock_feature_extractor.aggregate_seoul_features.return_value = [mock_daily]
 
         # For old interface (if still used)

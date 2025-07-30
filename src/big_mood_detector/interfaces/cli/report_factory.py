@@ -14,18 +14,18 @@ from big_mood_detector.domain.services.report_formatter_interface import (
 
 class ReportFormatterFactory:
     """Factory for creating report formatters."""
-    
+
     @staticmethod
     def create_formatter(format_type: str = "clinical") -> ReportFormatterInterface:
         """
         Create a report formatter based on type.
-        
+
         Args:
             format_type: Type of formatter to create
-            
+
         Returns:
             Report formatter instance
-            
+
         Raises:
             ValueError: If format_type is not recognized
         """

@@ -6,7 +6,6 @@ produces accurate, real predictions with correct dates.
 """
 
 import os
-import tempfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -37,7 +36,7 @@ from big_mood_detector.interfaces.cli.main import cli
 @pytest.mark.real_integration
 class TestClinicalReportAccuracy:
     """Full pipeline tests with real data producing accurate reports."""
-    
+
     @pytest.fixture
     def comprehensive_test_data(self):
         """Create comprehensive test data for 14 days with dense activity for PAT."""
@@ -45,29 +44,29 @@ class TestClinicalReportAccuracy:
         sleep_records = []
         activity_records = []
         heart_records = []
-        
+
         for day in range(14):
             current_date = base_date + timedelta(days=day)
-            
+
             # Sleep: 10 PM to 6 AM with some variation
             sleep_duration = 8 + np.sin(day * 0.5) * 1  # 7-9 hours
             sleep_records.append(
                 SleepRecord(
                     source_name="Apple Watch",
-                    start_date=datetime.combine(current_date, datetime.min.time()) 
+                    start_date=datetime.combine(current_date, datetime.min.time())
                               + timedelta(hours=22),
-                    end_date=datetime.combine(current_date + timedelta(days=1), datetime.min.time()) 
+                    end_date=datetime.combine(current_date + timedelta(days=1), datetime.min.time())
                             + timedelta(hours=22 + sleep_duration - 24),
                     state=SleepState.ASLEEP,
                 )
             )
-            
+
             # Activity: Dense minute-by-minute data for PAT
             # Create activity records for every 15 minutes throughout the day
             for hour in range(24):
                 for minute_offset in [0, 15, 30, 45]:
                     timestamp = datetime.combine(current_date, datetime.min.time()) + timedelta(hours=hour, minutes=minute_offset)
-                    
+
                     # Base activity pattern
                     if 6 <= hour <= 22:  # Awake hours
                         base_steps = 50 + (10 * np.sin(hour * 0.5))  # Vary by hour
@@ -79,7 +78,7 @@ class TestClinicalReportAccuracy:
                             base_steps += 60
                     else:  # Sleep hours
                         base_steps = 0
-                    
+
                     activity_records.append(
                         ActivityRecord(
                             source_name="Apple Watch",
@@ -90,21 +89,21 @@ class TestClinicalReportAccuracy:
                             unit="count",
                         )
                     )
-            
+
             # Heart rate: Several measurements throughout day
             for hour in [7, 12, 15, 20]:
                 hr_value = 70 + np.sin(day * 0.2 + hour * 0.1) * 10
                 heart_records.append(
                     HeartRateRecord(
                         source_name="Apple Watch",
-                        timestamp=datetime.combine(current_date, datetime.min.time()) 
+                        timestamp=datetime.combine(current_date, datetime.min.time())
                                  + timedelta(hours=hour),
                         metric_type=HeartMetricType.HEART_RATE,
                         value=hr_value,
                         unit="bpm",
                     )
                 )
-        
+
         return {
             "sleep": sleep_records,
             "activity": activity_records,
@@ -112,7 +111,7 @@ class TestClinicalReportAccuracy:
             "start_date": base_date,
             "end_date": base_date + timedelta(days=13),
         }
-    
+
     @pytest.mark.skipif(
         os.getenv("TESTING") == "1",
         reason="Skip ensemble tests in fast mode - requires model files"
@@ -126,7 +125,7 @@ class TestClinicalReportAccuracy:
         )
         pipeline = MoodPredictionPipeline(config=config)
         formatter = ClinicalReportFormatter()
-        
+
         # Act
         result = pipeline.process_health_data(
             sleep_records=comprehensive_test_data["sleep"],
@@ -134,20 +133,20 @@ class TestClinicalReportAccuracy:
             heart_records=comprehensive_test_data["heart_rate"],
             target_date=comprehensive_test_data["end_date"],
         )
-        
+
         report = formatter.format(result)
-        
+
         # Assert - This will FAIL until PAT is properly integrated
         assert "models: xgboost, pat" in report.lower() or \
                "models_used" in str(result.daily_predictions), \
                "Report should indicate both models were used"
-        
+
         # Check that temporal assessment is present
         assert "TEMPORAL MOOD ASSESSMENT" in report, \
             "Should have temporal mood assessment section"
         assert "NOW" in report and "TOMORROW" in report, \
             "Should show current state and future risk"
-    
+
     @pytest.mark.skipif(
         os.getenv("TESTING") == "1",
         reason="Skip ensemble tests in fast mode - requires model files"
@@ -159,7 +158,7 @@ class TestClinicalReportAccuracy:
             include_pat_sequences=True,
         )
         pipeline = MoodPredictionPipeline(config=config)
-        
+
         # Act
         result = pipeline.process_health_data(
             sleep_records=comprehensive_test_data["sleep"],
@@ -167,27 +166,27 @@ class TestClinicalReportAccuracy:
             heart_records=comprehensive_test_data["heart_rate"],
             target_date=comprehensive_test_data["end_date"],
         )
-        
+
         # Assert - This will FAIL with hardcoded values
         temporal_values_found = False
-        for date_key, prediction in result.daily_predictions.items():
+        for _date_key, prediction in result.daily_predictions.items():
             if "current_depression" in prediction and "depression_risk" in prediction:
                 temporal_values_found = True
                 current = prediction["current_depression"]
                 future = prediction["depression_risk"]
-                
+
                 # Should be different values
                 assert current != future, \
                     f"NOW ({current}) and TOMORROW ({future}) should be different"
-                
+
                 # Should not be hardcoded
                 assert current not in [0.5, 0.56, 0.563], \
                     f"Current depression {current} appears to be hardcoded"
                 assert future not in [0.044, 0.033, 0.034], \
                     f"Future risk {future} appears to be hardcoded"
-        
+
         assert temporal_values_found, "Should have temporal predictions in results"
-    
+
     def test_predictions_vary_across_days(self, comprehensive_test_data):
         """Predictions should vary day-to-day based on changing patterns."""
         config = PipelineConfig(
@@ -195,56 +194,55 @@ class TestClinicalReportAccuracy:
             min_days_required=7,  # PAT requires 7 days of activity data
         )
         pipeline = MoodPredictionPipeline(config=config)
-        
+
         result = pipeline.process_health_data(
             sleep_records=comprehensive_test_data["sleep"],
             activity_records=comprehensive_test_data["activity"],
             heart_records=comprehensive_test_data["heart_rate"],
             target_date=comprehensive_test_data["end_date"],
         )
-        
+
         # Collect all depression risk values
         depression_risks = []
         for prediction in result.daily_predictions.values():
             if "depression_risk" in prediction:
                 depression_risks.append(prediction["depression_risk"])
-        
+
         # Debug output
         print(f"Number of predictions: {len(result.daily_predictions)}")
         print(f"Depression risks found: {len(depression_risks)}")
         print(f"Prediction keys: {list(result.daily_predictions.keys())}")
-        
+
         # Should have multiple days of predictions (PAT requires 7-day windows)
         assert len(depression_risks) >= 7, f"Should have at least 7 days of predictions, got {len(depression_risks)}"
-        
+
         # Should not all be the same (indicates fake data)
         unique_risks = set(depression_risks)
         assert len(unique_risks) > 1, \
             f"All predictions are the same: {depression_risks[0]}, indicates fake data"
-        
+
         # Check variance is reasonable
         if len(depression_risks) > 1:
             variance = np.var(depression_risks)
             assert variance > 0.0001, \
                 f"Predictions have too little variance: {variance}, may be fake"
-    
+
     def test_cli_ensemble_command_produces_report(self, comprehensive_test_data, tmp_path):
         """Test full CLI command with --ensemble flag."""
         # Check if model files exist
-        from pathlib import Path
         xgb_models = list(Path("model_weights/xgboost/converted").glob("*.json")) if Path("model_weights/xgboost/converted").exists() else []
         pat_models = list(Path("model_weights/pat").glob("*.pth")) + list(Path("model_weights/pat").glob("*.pt")) if Path("model_weights/pat").exists() else []
-        
+
         if not xgb_models or not pat_models:
             pytest.skip("Model files not available in CI environment")
-        
+
         # Create test XML file
         xml_content = self._create_test_xml(comprehensive_test_data)
         xml_file = tmp_path / "test_export.xml"
         xml_file.write_text(xml_content)
-        
+
         runner = CliRunner()
-        
+
         # Run CLI command
         result = runner.invoke(cli, [
             "predict",
@@ -253,35 +251,35 @@ class TestClinicalReportAccuracy:
             "--report",
             "--output", str(tmp_path),
         ])
-        
+
         # Print output for debugging if failed
         if result.exit_code != 0:
             print(f"CLI output: {result.output}")
             print(f"CLI exception: {result.exception}")
         assert result.exit_code == 0, f"CLI failed with exit code {result.exit_code}"
-        
+
         # Check report file created
         report_file = tmp_path / "clinical_report.txt"
         assert report_file.exists(), "Report file should be created"
-        
+
         report_content = report_file.read_text()
-        
+
         # Verify report content
         assert "CLINICAL DECISION SUPPORT (CDS) REPORT" in report_content
         assert "TEMPORAL MOOD ASSESSMENT" in report_content
         assert "NOW" in report_content and "TOMORROW" in report_content
-        
+
         # Should not have repetitive warnings
         warning_count = report_content.count("PAT sequence unavailable")
         assert warning_count < 3, \
             f"Too many PAT warnings ({warning_count}), indicates PAT failing repeatedly"
-    
+
     def test_report_dates_match_data_dates(self, comprehensive_test_data):
         """Report should show dates from actual data, not current date."""
         config = PipelineConfig()
         pipeline = MoodPredictionPipeline(config=config)
         formatter = ClinicalReportFormatter()
-        
+
         # Process with the actual end date from test data
         result = pipeline.process_health_data(
             sleep_records=comprehensive_test_data["sleep"],
@@ -289,44 +287,44 @@ class TestClinicalReportAccuracy:
             heart_records=comprehensive_test_data["heart_rate"],
             target_date=comprehensive_test_data["end_date"],
         )
-        
+
         report = formatter.format(result)
-        
+
         # Check that dates in report match data dates
         data_end = comprehensive_test_data["end_date"]
-        
+
         # This will FAIL - currently uses today's date
         assert str(data_end) in report, \
             f"Report should contain actual data end date {data_end}"
-        
+
         # Should not contain today's date (unless data is from today)
         if data_end != date.today():
             assert str(date.today()) not in report, \
                 f"Report should not contain today's date {date.today()} when data is older"
-    
+
     def _create_test_xml(self, test_data):
         """Create a minimal test XML file."""
         xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
         xml += '<HealthData>\n'
         xml += f'  <ExportDate value="{datetime.now()}"/>\n'
-        
+
         # Add sleep records - include ALL to ensure we have proper 7-day windows
         for sleep in test_data["sleep"]:
             xml += f'  <Record type="SleepAnalysis" sourceName="{sleep.source_name}" '
             xml += f'startDate="{sleep.start_date}" endDate="{sleep.end_date}" '
             xml += f'value="HKCategoryValueSleepAnalysis{sleep.state.value}"/>\n'
-        
+
         # Add activity records - include ALL for proper PAT sequence
         for activity in test_data["activity"]:
             xml += f'  <Record type="StepCount" sourceName="{activity.source_name}" '
             xml += f'startDate="{activity.start_date}" endDate="{activity.end_date}" '
             xml += f'value="{activity.value}" unit="{activity.unit}"/>\n'
-        
+
         # Add heart rate records - include some for better predictions
         for hr in test_data["heart_rate"][:50]:  # Include a good sample
             xml += f'  <Record type="HeartRate" sourceName="{hr.source_name}" '
             xml += f'startDate="{hr.timestamp}" endDate="{hr.timestamp}" '
             xml += f'value="{hr.value}" unit="{hr.unit}"/>\n'
-        
+
         xml += '</HealthData>'
         return xml

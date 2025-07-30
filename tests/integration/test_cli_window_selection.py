@@ -5,8 +5,6 @@ Tests the --auto-find-window and --window-strategy flags
 with realistic data patterns.
 """
 
-from datetime import date, datetime, timedelta
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -39,26 +37,26 @@ class TestCLIWindowSelection:
 ]>
 <HealthData locale="en_US">
   <!-- Sleep records from June 26 - July 2 (7 days) -->
-  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" 
-          startDate="2025-06-26 22:00:00 +0000" endDate="2025-06-27 06:00:00 +0000" 
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch"
+          startDate="2025-06-26 22:00:00 +0000" endDate="2025-06-27 06:00:00 +0000"
           value="HKCategoryValueSleepAnalysisAsleep"/>
-  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" 
-          startDate="2025-06-27 22:00:00 +0000" endDate="2025-06-28 06:00:00 +0000" 
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch"
+          startDate="2025-06-27 22:00:00 +0000" endDate="2025-06-28 06:00:00 +0000"
           value="HKCategoryValueSleepAnalysisAsleep"/>
-  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" 
-          startDate="2025-06-28 22:00:00 +0000" endDate="2025-06-29 06:00:00 +0000" 
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch"
+          startDate="2025-06-28 22:00:00 +0000" endDate="2025-06-29 06:00:00 +0000"
           value="HKCategoryValueSleepAnalysisAsleep"/>
-  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" 
-          startDate="2025-06-29 22:00:00 +0000" endDate="2025-06-30 06:00:00 +0000" 
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch"
+          startDate="2025-06-29 22:00:00 +0000" endDate="2025-06-30 06:00:00 +0000"
           value="HKCategoryValueSleepAnalysisAsleep"/>
-  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" 
-          startDate="2025-06-30 22:00:00 +0000" endDate="2025-07-01 06:00:00 +0000" 
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch"
+          startDate="2025-06-30 22:00:00 +0000" endDate="2025-07-01 06:00:00 +0000"
           value="HKCategoryValueSleepAnalysisAsleep"/>
-  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" 
-          startDate="2025-07-01 22:00:00 +0000" endDate="2025-07-02 06:00:00 +0000" 
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch"
+          startDate="2025-07-01 22:00:00 +0000" endDate="2025-07-02 06:00:00 +0000"
           value="HKCategoryValueSleepAnalysisAsleep"/>
-  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" 
-          startDate="2025-07-02 22:00:00 +0000" endDate="2025-07-03 06:00:00 +0000" 
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch"
+          startDate="2025-07-02 22:00:00 +0000" endDate="2025-07-03 06:00:00 +0000"
           value="HKCategoryValueSleepAnalysisAsleep"/>
 </HealthData>
 """)
@@ -77,7 +75,7 @@ class TestCLIWindowSelection:
             confidence=0.35
         )
         mock_predictor_class.return_value = mock_predictor
-        
+
         # Run command with auto-find-window
         result = runner.invoke(cli, [
             'predict',
@@ -85,7 +83,7 @@ class TestCLIWindowSelection:
             '--auto-find-window',
             '--verbose'
         ])
-        
+
         # Should succeed and use MostRecentValidWindowStrategy
         assert result.exit_code == 0
         assert "Using window selection strategy: MostRecentValidWindowStrategy" in result.output
@@ -104,7 +102,7 @@ class TestCLIWindowSelection:
             confidence=0.9
         )
         mock_predictor_class.return_value = mock_predictor
-        
+
         # Run command with window-strategy best
         result = runner.invoke(cli, [
             'predict',
@@ -112,7 +110,7 @@ class TestCLIWindowSelection:
             '--window-strategy', 'best',
             '--verbose'
         ])
-        
+
         # Should succeed and use BestQualityWindowStrategy
         assert result.exit_code == 0
         assert "Using window selection strategy: BestQualityWindowStrategy" in result.output
@@ -126,7 +124,7 @@ class TestCLIWindowSelection:
             str(mock_health_file),
             '--window-strategy', 'all'
         ])
-        
+
         # Should show all windows and exit early
         assert result.exit_code == 0
         assert "Found" in result.output
@@ -146,14 +144,14 @@ class TestCLIWindowSelection:
             confidence=0.5
         )
         mock_predictor_class.return_value = mock_predictor
-        
+
         # Run command without window selection
         result = runner.invoke(cli, [
             'predict',
             str(mock_health_file),
             '--verbose'
         ])
-        
+
         # Should use legacy behavior (no window strategy message)
         assert result.exit_code == 0
         assert "Using window selection strategy" not in result.output
@@ -174,25 +172,25 @@ class TestCLIWindowSelection:
 ]>
 <HealthData locale="en_US">
   <!-- Only 3 days of sleep (not enough for 7-day window) -->
-  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" 
-          startDate="2025-06-01 22:00:00 +0000" endDate="2025-06-02 06:00:00 +0000" 
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch"
+          startDate="2025-06-01 22:00:00 +0000" endDate="2025-06-02 06:00:00 +0000"
           value="HKCategoryValueSleepAnalysisAsleep"/>
-  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" 
-          startDate="2025-06-02 22:00:00 +0000" endDate="2025-06-03 06:00:00 +0000" 
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch"
+          startDate="2025-06-02 22:00:00 +0000" endDate="2025-06-03 06:00:00 +0000"
           value="HKCategoryValueSleepAnalysisAsleep"/>
-  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" 
-          startDate="2025-06-03 22:00:00 +0000" endDate="2025-06-04 06:00:00 +0000" 
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch"
+          startDate="2025-06-03 22:00:00 +0000" endDate="2025-06-04 06:00:00 +0000"
           value="HKCategoryValueSleepAnalysisAsleep"/>
 </HealthData>
 """)
-        
+
         # Run with auto-find-window
         result = runner.invoke(cli, [
             'predict',
             str(export_file),
             '--auto-find-window'
         ])
-        
+
         # Should report no valid windows
         assert result.exit_code == 0
         assert "No valid 7-day windows found" in result.output

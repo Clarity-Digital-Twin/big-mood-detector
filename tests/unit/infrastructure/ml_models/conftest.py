@@ -31,7 +31,7 @@ def mock_normalizer():
 def pat_loader_no_normalization(mock_normalizer):
     """
     Create a PAT loader that bypasses normalization.
-    
+
     This is the clean replacement for setting _test_skip_normalization.
     """
     loader = ProductionPATLoader(

@@ -113,7 +113,7 @@ class TestPATValidator:
         self, validator: PATValidator
     ) -> None:
         """Test that PAT can find a valid 7-day window within sparse data."""
-        base_date = date(2025, 7, 1)
+        date(2025, 7, 1)
         records = []
 
         # Create sparse data with a 7-day consecutive window in the middle

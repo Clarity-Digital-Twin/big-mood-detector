@@ -211,7 +211,7 @@ class TestTemporalEnsembleOrchestrator:
 
         # Execute - should raise exception now instead of returning fake data
         with pytest.raises(RuntimeError, match="PAT assessment failed"):
-            result = orchestrator.predict(
+            orchestrator.predict(
                 statistical_features=np.random.rand(36),
                 pat_sequence=np.random.rand(7, 1440),
                 user_id="test_user"
@@ -234,7 +234,7 @@ class TestTemporalEnsembleOrchestrator:
 
         # Execute - should raise exception now instead of returning fake data
         with pytest.raises(RuntimeError, match="XGBoost prediction failed"):
-            result = orchestrator.predict(
+            orchestrator.predict(
                 statistical_features=np.random.rand(36),
                 pat_sequence=np.random.rand(7, 1440),
                 user_id="test_user"

@@ -13,16 +13,16 @@ from big_mood_detector.interfaces.cli.report_factory import ReportFormatterFacto
 
 
 def generate_clinical_report_v2(
-    result: PipelineResult, 
+    result: PipelineResult,
     output_path: Path,
     format_type: str = "clinical"
 ) -> None:
     """
     Generate a clinical report using clean architecture.
-    
+
     This function follows the Dependency Inversion Principle by depending
     on abstractions (ReportFormatterInterface) rather than concrete implementations.
-    
+
     Args:
         result: Pipeline processing result
         output_path: Where to save the report
@@ -30,6 +30,6 @@ def generate_clinical_report_v2(
     """
     # Use factory to create formatter (supports future formats)
     formatter = ReportFormatterFactory.create_formatter(format_type)
-    
+
     # Delegate to formatter
     formatter.save(result, output_path)

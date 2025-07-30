@@ -266,7 +266,7 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
     """Generate a detailed clinical report."""
     # Ensure parent directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # Import temporal formatter
     from big_mood_detector.application.services.report_formatters import (
         TemporalAssessmentSection,
@@ -350,7 +350,7 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
         # Show first week of daily predictions
         for date, pred in list(result.daily_predictions.items())[:7]:
             f.write(f"\n{date}:\n")
-            
+
             # Check if we have temporal data
             if 'current_depression' in pred:
                 # Show temporal format
@@ -365,7 +365,7 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
                 f.write(f"  Depression: {format_risk_level(pred['depression_risk'])}\n")
                 f.write(f"  Hypomania: {format_risk_level(pred['hypomanic_risk'])}\n")
                 f.write(f"  Mania: {format_risk_level(pred['manic_risk'])}\n")
-            
+
             f.write(f"  Confidence: {pred['confidence']:.1%}\n")
 
             # Add PAT scores if available (but not if already shown as NOW)

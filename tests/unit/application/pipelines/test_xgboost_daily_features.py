@@ -134,7 +134,7 @@ class TestXGBoostPipelineWithDailyFeatures:
         assert len(captured_features) == 36
 
         # Verify it's a list (XGBoost expects a list/array)
-        assert isinstance(captured_features, (list, np.ndarray))
+        assert isinstance(captured_features, list | np.ndarray)
 
     def test_daily_features_format_matches_xgboost_expectations(self):
         """Verify DailyFeatures produces the correct feature dictionary."""
@@ -144,7 +144,7 @@ class TestXGBoostPipelineWithDailyFeatures:
         )
 
         # This is what should happen inside the pipeline
-        aggregation_pipeline = AggregationPipeline()
+        AggregationPipeline()
 
         # Mock some daily features
         daily_features = DailyFeatures(
@@ -199,4 +199,4 @@ class TestXGBoostPipelineWithDailyFeatures:
         # Verify we can convert to list in correct order
         feature_vector = [xgboost_dict[name] for name in loader.FEATURE_NAMES]
         assert len(feature_vector) == 36
-        assert all(isinstance(x, (int, float)) for x in feature_vector)
+        assert all(isinstance(x, int | float) for x in feature_vector)

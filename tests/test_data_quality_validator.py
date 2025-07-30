@@ -7,8 +7,6 @@ appropriate warnings to users.
 
 from datetime import date, datetime, timedelta
 
-import pytest
-
 from big_mood_detector.application.services.data_quality_validator import (
     DataQualityReport,
     DataQualityValidator,
@@ -22,13 +20,13 @@ from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepSta
 
 class TestDataQualityValidator:
     """Test data quality validation logic."""
-    
+
     def test_perfect_data_quality(self):
         """Test validation with complete data."""
         # Create 14 days of perfect data
         sleep_records = []
         activity_records = []
-        
+
         base_date = datetime(2025, 6, 1)
         for day in range(14):
             # Nightly sleep
@@ -40,7 +38,7 @@ class TestDataQualityValidator:
                     state=SleepState.ASLEEP,
                 )
             )
-            
+
             # Daily activity
             for hour in range(24):
                 activity_records.append(
@@ -53,7 +51,7 @@ class TestDataQualityValidator:
                         unit="count",
                     )
                 )
-        
+
         validator = DataQualityValidator()
         report = validator.validate_data_quality(
             sleep_records=sleep_records,
@@ -62,7 +60,7 @@ class TestDataQualityValidator:
             start_date=date(2025, 6, 1),
             end_date=date(2025, 6, 14),
         )
-        
+
         assert report.is_sufficient
         # Due to date assignment, last night's sleep is assigned to next day
         assert report.sleep_coverage >= 0.9  # Should be 13/14
@@ -70,10 +68,10 @@ class TestDataQualityValidator:
         assert len(report.warnings) == 0
         # With no heart data, score will be lower
         assert report.overall_quality_score >= 0.7
-        
+
         message = validator.generate_user_message(report)
         assert "Good" in message or "Excellent" in message
-    
+
     def test_sparse_sleep_data(self):
         """Test validation with sparse sleep data (the v0.5.4 scenario)."""
         # Only 4 nights out of 14
@@ -103,7 +101,7 @@ class TestDataQualityValidator:
                 state=SleepState.ASLEEP,
             ),
         ]
-        
+
         validator = DataQualityValidator()
         report = validator.validate_data_quality(
             sleep_records=sleep_records,
@@ -112,21 +110,21 @@ class TestDataQualityValidator:
             start_date=date(2025, 6, 1),
             end_date=date(2025, 6, 14),
         )
-        
+
         assert not report.is_sufficient  # Less than 7 days
         assert report.sleep_coverage < 0.5  # 4/14 = 0.29
         assert len(report.warnings) > 0
         assert "Critical" in report.warnings[0]
         assert len(report.recommendations) > 0
-        
+
         message = validator.generate_user_message(report)
         assert "Insufficient" in message
-    
+
     def test_data_gaps_detection(self):
         """Test detection of gaps in data."""
         # Create data with a 5-day gap
         sleep_records = []
-        
+
         # First week
         for day in range(7):
             sleep_records.append(
@@ -137,9 +135,9 @@ class TestDataQualityValidator:
                     state=SleepState.ASLEEP,
                 )
             )
-        
+
         # Skip 5 days (June 8-12)
-        
+
         # Last two days
         for day in [13, 14]:
             sleep_records.append(
@@ -150,7 +148,7 @@ class TestDataQualityValidator:
                     state=SleepState.ASLEEP,
                 )
             )
-        
+
         validator = DataQualityValidator()
         report = validator.validate_data_quality(
             sleep_records=sleep_records,
@@ -159,11 +157,11 @@ class TestDataQualityValidator:
             start_date=date(2025, 6, 1),
             end_date=date(2025, 6, 14),
         )
-        
+
         assert report.is_sufficient  # Has 9 days total
         assert any("gaps" in w for w in report.warnings)
         assert any("5 days" in w for w in report.warnings)
-    
+
     def test_edge_case_exactly_minimum_days(self):
         """Test with exactly the minimum required days."""
         # Exactly 7 days of sleep
@@ -177,7 +175,7 @@ class TestDataQualityValidator:
                     state=SleepState.ASLEEP,
                 )
             )
-        
+
         validator = DataQualityValidator(min_sleep_days=7)
         report = validator.validate_data_quality(
             sleep_records=sleep_records,
@@ -186,14 +184,14 @@ class TestDataQualityValidator:
             start_date=date(2025, 6, 1),
             end_date=date(2025, 6, 14),
         )
-        
+
         assert report.is_sufficient
         assert report.sleep_coverage == 0.5  # 7/14
-    
+
     def test_date_assignment_consistency(self):
         """
         Test that validator uses the same date assignment as the pipeline.
-        
+
         This ensures we don't have mismatches like in v0.5.3.
         """
         # Create midnight-crossing sleep
@@ -205,7 +203,7 @@ class TestDataQualityValidator:
                 state=SleepState.ASLEEP,
             )
         ]
-        
+
         validator = DataQualityValidator()
         report = validator.validate_data_quality(
             sleep_records=sleep_records,
@@ -214,14 +212,14 @@ class TestDataQualityValidator:
             start_date=date(2025, 6, 26),
             end_date=date(2025, 6, 27),
         )
-        
+
         # Should count as 1 day (June 27), not 2
         assert report.sleep_coverage == 0.5  # 1 day out of 2
-    
+
     def test_user_messages_are_helpful(self):
         """Test that user messages are clear and actionable."""
         validator = DataQualityValidator()
-        
+
         # Test different quality levels
         excellent_report = DataQualityReport(
             is_sufficient=True,
@@ -232,7 +230,7 @@ class TestDataQualityValidator:
             recommendations=[],
         )
         assert "Excellent" in validator.generate_user_message(excellent_report)
-        
+
         good_report = DataQualityReport(
             is_sufficient=True,
             sleep_coverage=0.7,
@@ -242,7 +240,7 @@ class TestDataQualityValidator:
             recommendations=[],
         )
         assert "Good" in validator.generate_user_message(good_report)
-        
+
         poor_report = DataQualityReport(
             is_sufficient=False,
             sleep_coverage=0.3,

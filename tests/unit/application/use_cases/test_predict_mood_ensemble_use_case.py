@@ -192,10 +192,10 @@ class TestEnsembleOrchestrator:
         )
 
         features = np.random.randn(36)
-        
+
         # Should raise ValueError when both models fail
         with pytest.raises(ValueError, match="No valid predictions available from any model"):
-            result = orchestrator.predict(features)
+            orchestrator.predict(features)
 
     def test_confidence_calculation(self, mock_xgboost_predictor, mock_pat_model):
         """Test confidence score calculation."""

@@ -83,9 +83,6 @@ def get_ensemble_orchestrator() -> EnsembleOrchestrator | TemporalEnsembleOrches
     pat_predictor = None
     pat_encoder = None
     try:
-        from big_mood_detector.domain.services.pat_model_interface import (
-            PATModelInterface,
-        )
         from big_mood_detector.domain.services.pat_predictor import (
             PATPredictorInterface,
         )
