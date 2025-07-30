@@ -79,6 +79,16 @@ big-mood predict data/input/apple_export/export.xml --auto-find-window --report
 
 See full output in `data/output/clinical_report.txt`
 
+## 📦 Model Weights for Contributors & Researchers
+
+**Need model weights?** Please contact me for a convenient Google Drive link containing:
+- Pre-trained PAT transformer weights
+- Fine-tuned depression detection head
+- XGBoost model files
+- Sample data for testing
+
+This ensures you can run the application immediately without training models from scratch.
+
 ## How It Works
 
 ```
