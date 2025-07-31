@@ -1,12 +1,15 @@
 """Integration tests for the CLI --scan feature."""
 
-import pytest
 from pathlib import Path
-from click.testing import CliRunner
 from unittest.mock import Mock, patch
 
+import pytest
+from click.testing import CliRunner
+
+from big_mood_detector.domain.value_objects.feature_availability import (
+    FeatureAvailability,
+)
 from big_mood_detector.interfaces.cli.main import cli
-from big_mood_detector.domain.value_objects.feature_availability import FeatureAvailability
 
 
 class TestScanFeature:

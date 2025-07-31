@@ -18,7 +18,9 @@ from big_mood_detector.application.use_cases.process_health_data_use_case import
     PipelineConfig,
     PipelineResult,
 )
-from big_mood_detector.domain.value_objects.feature_requirements import FEATURE_REQUIREMENTS
+from big_mood_detector.domain.value_objects.feature_requirements import (
+    FEATURE_REQUIREMENTS,
+)
 
 
 class ProcessingMetadata(TypedDict, total=False):
@@ -575,7 +577,9 @@ def process_command(
             click.echo(f"\n📊 Scanning {input_path_obj.name} ({file_size_mb:.1f} MB)...")
             
             # Create data parsing service
-            from big_mood_detector.application.services.data_parsing_service import DataParsingService
+            from big_mood_detector.application.services.data_parsing_service import (
+                DataParsingService,
+            )
             data_service = DataParsingService()
             
             start_time = time.time()
@@ -824,7 +828,9 @@ def predict_command(
             click.echo(f"\n📊 Scanning {input_path_obj.name} ({file_size_mb:.1f} MB)...")
             
             # Create data parsing service
-            from big_mood_detector.application.services.data_parsing_service import DataParsingService
+            from big_mood_detector.application.services.data_parsing_service import (
+                DataParsingService,
+            )
             data_service = DataParsingService()
             
             start_time = time.time()

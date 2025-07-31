@@ -1,13 +1,20 @@
 """Test feature availability checking in DataParsingService."""
 
-import pytest
+import time
 from pathlib import Path
 from unittest.mock import Mock, patch
-import time
 
-from big_mood_detector.application.services.data_parsing_service import DataParsingService
-from big_mood_detector.domain.value_objects.feature_availability import FeatureAvailability
-from big_mood_detector.domain.value_objects.feature_requirements import FEATURE_REQUIREMENTS
+import pytest
+
+from big_mood_detector.application.services.data_parsing_service import (
+    DataParsingService,
+)
+from big_mood_detector.domain.value_objects.feature_availability import (
+    FeatureAvailability,
+)
+from big_mood_detector.domain.value_objects.feature_requirements import (
+    FEATURE_REQUIREMENTS,
+)
 
 
 class TestFeatureAvailability:

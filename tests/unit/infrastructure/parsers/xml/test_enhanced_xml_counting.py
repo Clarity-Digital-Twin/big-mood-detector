@@ -1,9 +1,10 @@
 """Test enhanced XML counting functionality."""
 
-import pytest
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import Mock, patch
-from datetime import datetime
+
+import pytest
 
 from big_mood_detector.infrastructure.parsers.xml.fast_streaming_parser import (
     FastStreamingXMLParser,

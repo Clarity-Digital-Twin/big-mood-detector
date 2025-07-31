@@ -10,18 +10,22 @@ Design Patterns:
 - Facade Pattern: Unified interface for all parsing operations
 """
 
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Protocol
-import time
 
 from big_mood_detector.domain.entities.activity_record import ActivityRecord
 from big_mood_detector.domain.entities.heart_rate_record import HeartRateRecord
 from big_mood_detector.domain.entities.sleep_record import SleepRecord
-from big_mood_detector.domain.value_objects.feature_availability import FeatureAvailability
-from big_mood_detector.domain.value_objects.feature_requirements import FEATURE_REQUIREMENTS
+from big_mood_detector.domain.value_objects.feature_availability import (
+    FeatureAvailability,
+)
+from big_mood_detector.domain.value_objects.feature_requirements import (
+    FEATURE_REQUIREMENTS,
+)
 from big_mood_detector.infrastructure.parsers.json.json_parsers import (
     ActivityJSONParser,
     SleepJSONParser,
