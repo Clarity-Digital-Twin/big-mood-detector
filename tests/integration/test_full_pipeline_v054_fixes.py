@@ -231,7 +231,7 @@ class TestFullPipelineIntegration:
         class MockPrediction:
             depression_risk: float
             mania_risk: float
-            hypomania_risk: float
+            hypomanic_risk: float  # Fixed attribute name
             
         class MockXGBoostPredictor:
             def predict_episode_tomorrow(self, features):
@@ -240,7 +240,7 @@ class TestFullPipelineIntegration:
                 return MockPrediction(
                     depression_risk=min(base_risk * 1.2, 0.8),
                     mania_risk=min(base_risk * 0.5, 0.3),
-                    hypomania_risk=min(base_risk * 0.8, 0.5),
+                    hypomanic_risk=min(base_risk * 0.8, 0.5),  # Fixed attribute name
                 )
 
             def predict(self, features):
