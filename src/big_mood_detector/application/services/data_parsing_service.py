@@ -12,13 +12,16 @@ Design Patterns:
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Protocol
+import time
 
 from big_mood_detector.domain.entities.activity_record import ActivityRecord
 from big_mood_detector.domain.entities.heart_rate_record import HeartRateRecord
 from big_mood_detector.domain.entities.sleep_record import SleepRecord
+from big_mood_detector.domain.value_objects.feature_availability import FeatureAvailability
+from big_mood_detector.domain.value_objects.feature_requirements import FEATURE_REQUIREMENTS
 from big_mood_detector.infrastructure.parsers.json.json_parsers import (
     ActivityJSONParser,
     SleepJSONParser,
@@ -651,3 +654,98 @@ class DataParsingService:
         if data.errors:
             result["errors"] = data.errors
         return result
+
+    def check_feature_availability(self, xml_path: Path) -> FeatureAvailability:
+        """
+        Check what clinical features can be processed from an XML file.
+        
+        Args:
+            xml_path: Path to Apple Health export.xml
+            
+        Returns:
+            FeatureAvailability with available/unavailable features and reasons
+        """
+        start_time = time.time()
+        
+        # Get the XML parser
+        parser = self._xml_parser
+        
+        # Count all record types
+        record_counts = parser.count_records_by_type(xml_path, detailed=True)
+        
+        available_features = []
+        unavailable_features = []
+        
+        # Check each feature's requirements
+        for feature_name, requirement in FEATURE_REQUIREMENTS.items():
+            if self._meets_requirements(record_counts, requirement):
+                available_features.append((feature_name, requirement.description))
+            else:
+                reason = self._explain_missing(record_counts, requirement)
+                unavailable_features.append((feature_name, reason))
+        
+        scan_duration = time.time() - start_time
+        
+        return FeatureAvailability(
+            available_features=available_features,
+            unavailable_features=unavailable_features,
+            record_counts=record_counts,
+            scan_duration_seconds=scan_duration,
+        )
+    
+    def _meets_requirements(self, record_counts: dict[str, int], requirement) -> bool:
+        """Check if record counts meet feature requirements."""
+        # Check all required types exist with sufficient data
+        for required_type in requirement.required_types:
+            count = record_counts.get(required_type, 0)
+            
+            # Estimate days of data based on record type
+            # Sleep: ~1-3 records per night
+            # Steps: ~24 records per day (hourly)
+            # Heart rate: ~100+ records per day
+            if "Sleep" in required_type:
+                estimated_days = count / 2  # Assume 2 records per night average
+            elif "StepCount" in required_type:
+                estimated_days = count / 24  # Hourly records
+            elif "HeartRate" in required_type and "Variability" not in required_type:
+                estimated_days = count / 100  # Many per day
+            else:
+                # For other types, assume 1 per day
+                estimated_days = count
+            
+            if estimated_days < requirement.min_days * requirement.completeness:
+                return False
+        
+        return True
+    
+    def _explain_missing(self, record_counts: dict[str, int], requirement) -> str:
+        """Explain why a feature is unavailable."""
+        missing_types = []
+        insufficient_types = []
+        
+        for required_type in requirement.required_types:
+            count = record_counts.get(required_type, 0)
+            if count == 0:
+                missing_types.append(required_type)
+            else:
+                # Check if insufficient
+                if "Sleep" in required_type:
+                    estimated_days = count / 2
+                elif "StepCount" in required_type:
+                    estimated_days = count / 24
+                elif "HeartRate" in required_type and "Variability" not in required_type:
+                    estimated_days = count / 100
+                else:
+                    estimated_days = count
+                
+                if estimated_days < requirement.min_days * requirement.completeness:
+                    insufficient_types.append(
+                        f"{required_type} ({int(estimated_days)} days, need {requirement.min_days})"
+                    )
+        
+        if missing_types:
+            return f"Missing required type: {missing_types[0]}"
+        elif insufficient_types:
+            return f"Insufficient data: {insufficient_types[0]}"
+        else:
+            return "Unknown requirement not met"

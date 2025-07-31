@@ -6,6 +6,7 @@ This module contains all command implementations for the Big Mood Detector.
 """
 
 import sys
+import time
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any, TypedDict
@@ -17,6 +18,7 @@ from big_mood_detector.application.use_cases.process_health_data_use_case import
     PipelineConfig,
     PipelineResult,
 )
+from big_mood_detector.domain.value_objects.feature_requirements import FEATURE_REQUIREMENTS
 
 
 class ProcessingMetadata(TypedDict, total=False):
@@ -515,6 +517,9 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
 @click.option(
     "--max-records", type=int, help="Maximum records to process (for testing)"
 )
+@click.option(
+    "--scan", is_flag=True, help="Quick scan to show available data without processing"
+)
 def process_command(
     input_path: str,
     output: str | None,
@@ -525,6 +530,7 @@ def process_command(
     verbose: bool,
     progress: bool,
     max_records: int | None,
+    scan: bool,
 ) -> None:
     """Process health data to extract features for mood prediction."""
     try:
@@ -557,6 +563,60 @@ def process_command(
             start_date = end_date - timedelta(days=days_back)
 
         validate_date_range(start_date, end_date)
+
+        # Handle --scan flag for quick data availability check
+        if scan:
+            # Only scan XML files
+            if input_path_obj.suffix.lower() != '.xml':
+                click.echo("⚠️  Scan is only available for XML files")
+                return
+            
+            file_size_mb = input_path_obj.stat().st_size / (1024 * 1024)
+            click.echo(f"\n📊 Scanning {input_path_obj.name} ({file_size_mb:.1f} MB)...")
+            
+            # Create data parsing service
+            from big_mood_detector.application.services.data_parsing_service import DataParsingService
+            data_service = DataParsingService()
+            
+            start_time = time.time()
+            availability = data_service.check_feature_availability(input_path_obj)
+            
+            click.echo(f"✅ Scan complete in {availability.scan_duration_seconds:.1f}s\n")
+            
+            # Display available data types
+            click.echo("Available Data:")
+            major_types = availability.get_major_types()
+            if major_types:
+                for type_name, count in major_types:
+                    click.echo(f"✅ {type_name}: {count:,} records")
+            else:
+                click.echo("⚠️  No recognized data types found")
+            
+            # Display missing data
+            missing_summary = availability.format_missing_data_summary()
+            if missing_summary != "All data types available!":
+                click.echo(f"\n⚠️  {missing_summary}")
+            
+            # Display available features
+            click.echo("\nProcessable Features:")
+            if availability.available_features:
+                for feature_name, description in availability.available_features:
+                    click.echo(f"✅ {description}")
+            else:
+                click.echo("⚠️  No features can be processed with available data")
+            
+            # Display unavailable features if any
+            if availability.unavailable_features:
+                click.echo("\nUnavailable Features:")
+                for feature_name, reason in availability.unavailable_features:
+                    req = FEATURE_REQUIREMENTS.get(feature_name)
+                    desc = req.description if req else feature_name
+                    click.echo(f"⚠️  {desc}: {reason}")
+            
+            click.echo(f"\nTotal records found: {availability.total_records:,}")
+            
+            # Exit after scan
+            return
 
         click.echo(f"Processing health data from: {input_path}")
 
@@ -699,6 +759,9 @@ def process_command(
     help="Automatically analyze and select optimal windows for both models (default: on)",
 )
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
+@click.option(
+    "--scan", is_flag=True, help="Quick scan to show available data without prediction"
+)
 def predict_command(
     input_path: str,
     output: str | None,
@@ -715,6 +778,7 @@ def predict_command(
     auto_find_window: bool,
     auto_window: bool,
     verbose: bool,
+    scan: bool,
 ) -> None:
     """Generate mood predictions from health data."""
     try:
@@ -749,8 +813,82 @@ def predict_command(
         validate_date_range(start_date, end_date)
         validate_user_id(user_id)
 
+        # Handle --scan flag for quick data availability check
+        if scan:
+            # Only scan XML files
+            if input_path_obj.suffix.lower() != '.xml':
+                click.echo("⚠️  Scan is only available for XML files")
+                return
+            
+            file_size_mb = input_path_obj.stat().st_size / (1024 * 1024)
+            click.echo(f"\n📊 Scanning {input_path_obj.name} ({file_size_mb:.1f} MB)...")
+            
+            # Create data parsing service
+            from big_mood_detector.application.services.data_parsing_service import DataParsingService
+            data_service = DataParsingService()
+            
+            start_time = time.time()
+            availability = data_service.check_feature_availability(input_path_obj)
+            
+            click.echo(f"✅ Scan complete in {availability.scan_duration_seconds:.1f}s\n")
+            
+            # Display available data types
+            click.echo("Available Data:")
+            major_types = availability.get_major_types()
+            if major_types:
+                for type_name, count in major_types:
+                    click.echo(f"✅ {type_name}: {count:,} records")
+            else:
+                click.echo("⚠️  No recognized data types found")
+            
+            # Display missing data
+            missing_summary = availability.format_missing_data_summary()
+            if missing_summary != "All data types available!":
+                click.echo(f"\n⚠️  {missing_summary}")
+            
+            # Display available features
+            click.echo("\nPredictable Conditions:")
+            if availability.available_features:
+                for feature_name, description in availability.available_features:
+                    click.echo(f"✅ {description}")
+            else:
+                click.echo("⚠️  No predictions can be made with available data")
+            
+            # Display unavailable features if any
+            if availability.unavailable_features and verbose:
+                click.echo("\nUnavailable Predictions:")
+                for feature_name, reason in availability.unavailable_features:
+                    req = FEATURE_REQUIREMENTS.get(feature_name)
+                    desc = req.description if req else feature_name
+                    click.echo(f"⚠️  {desc}: {reason}")
+            
+            click.echo(f"\nTotal records found: {availability.total_records:,}")
+            
+            # Show recommendation if data is insufficient
+            if not availability.has_minimum_features():
+                click.echo("\n💡 Recommendation: Ensure your Apple Health export includes:")
+                click.echo("   - Sleep data (7+ days)")
+                click.echo("   - Step count data (7+ days)")
+                click.echo("   - Heart rate data (optional but improves accuracy)")
+            
+            # Exit after scan
+            return
+
         model_dir_obj = Path(model_dir) if model_dir else None
         validate_ensemble_requirements(ensemble, model_dir_obj)
+
+        # For large XML files, offer to scan first
+        if input_path_obj.suffix.lower() == '.xml' and not scan:
+            file_size_mb = input_path_obj.stat().st_size / (1024 * 1024)
+            if file_size_mb > 100:  # Files larger than 100MB
+                click.echo(f"\n⚠️  Large file detected: {file_size_mb:.1f} MB")
+                click.echo("Processing may take several minutes...")
+                
+                if click.confirm("Would you like to scan the file first to see available data?"):
+                    # Recursively call with --scan flag
+                    ctx = click.get_current_context()
+                    ctx.params['scan'] = True
+                    return predict_command(**ctx.params)
 
         click.echo(f"Processing health data from: {input_path}")
 
