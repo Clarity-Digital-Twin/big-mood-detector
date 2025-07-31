@@ -177,6 +177,15 @@ class TestFeatureExtractionAPIActivity:
   <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Apple Watch" unit="count"
           startDate="{date_str} 18:00:00 -0800" endDate="{date_str} 20:00:00 -0800" value="2000"/>"""
 
+        # Add activity data for the last day (2024-01-18) since sleep ends on that day
+        xml_content += """
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Apple Watch" unit="count"
+          startDate="2024-01-18 08:00:00 -0800" endDate="2024-01-18 12:00:00 -0800" value="4500"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Apple Watch" unit="count"
+          startDate="2024-01-18 13:00:00 -0800" endDate="2024-01-18 17:00:00 -0800" value="6000"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Apple Watch" unit="count"
+          startDate="2024-01-18 18:00:00 -0800" endDate="2024-01-18 20:00:00 -0800" value="2000"/>"""
+
         xml_content += """
 </HealthData>"""
 

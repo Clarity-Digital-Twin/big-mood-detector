@@ -157,7 +157,9 @@ class TestDepressionDisplayUnhappyPaths:
 
             # Check it handles zero days analyzed
             report_content = report_path.read_text()
-            assert "Analysis Period: 0 days" in report_content
+            # Should still generate a report with zero records
+            assert "Total Records Processed: 0" in report_content
+            assert "Data Quality Score: 0.0%" in report_content
 
     def test_clinical_report_handles_partial_pat_data(self):
         """Report should handle when only some days have PAT scores."""

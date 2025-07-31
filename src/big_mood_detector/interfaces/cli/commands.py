@@ -31,6 +31,32 @@ class ProcessingMetadata(TypedDict, total=False):
     has_errors: bool
 
 
+def calculate_timeout(file_size_mb: float) -> int:
+    """
+    Calculate appropriate timeout based on file size.
+    
+    Args:
+        file_size_mb: File size in megabytes
+        
+    Returns:
+        Timeout in seconds (0 = no timeout)
+    """
+    from big_mood_detector.core.constants import (
+        LARGE_FILE_THRESHOLD_MB,
+        MEDIUM_FILE_TIMEOUT_SECONDS,
+        NO_TIMEOUT,
+        SMALL_FILE_THRESHOLD_MB,
+        SMALL_FILE_TIMEOUT_SECONDS,
+    )
+    
+    if file_size_mb < SMALL_FILE_THRESHOLD_MB:
+        return SMALL_FILE_TIMEOUT_SECONDS
+    elif file_size_mb < LARGE_FILE_THRESHOLD_MB:
+        return MEDIUM_FILE_TIMEOUT_SECONDS
+    else:
+        return NO_TIMEOUT
+
+
 def validate_input_path(input_path: Path) -> None:
     """Validate input path and provide helpful error messages."""
     if not input_path.exists():
@@ -165,6 +191,36 @@ def format_risk_level(risk_score: float | None) -> str:
 
 def print_summary(result: PipelineResult, verbose: bool = False) -> None:
     """Print analysis summary to console."""
+    # Check if using default models (no PAT ensemble)
+    using_default_models = False
+    partial_pat_coverage = False
+    if result.daily_predictions:
+        # Count predictions with PAT
+        total_predictions = len(result.daily_predictions)
+        pat_predictions = sum(
+            1 for pred in result.daily_predictions.values()
+            if pred.get("models_used", []) == ["xgboost", "pat"]
+        )
+        
+        if pat_predictions == 0:
+            using_default_models = True
+        elif pat_predictions < total_predictions:
+            partial_pat_coverage = True
+    
+    # Display warning banner if using default models
+    if using_default_models:
+        click.echo("\n" + "="*60)
+        click.echo("⚠️  WARNING: Using default models (XGBoost only)")
+        click.echo("PAT ensemble models not available or not loaded")
+        click.echo("Results may have reduced accuracy")
+        click.echo("="*60)
+    elif partial_pat_coverage and verbose:
+        # Only show partial coverage warning in verbose mode
+        click.echo("\n" + "="*60)
+        click.echo("⚠️  NOTE: PAT ensemble partially available")
+        click.echo(f"PAT used for {pat_predictions}/{total_predictions} predictions")
+        click.echo("="*60)
+    
     if result.overall_summary:
         click.echo("\n📊 Analysis Complete!")
         click.echo(
@@ -277,29 +333,54 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
         f.write("=" * 50 + "\n\n")
 
         f.write("PATIENT DATA SUMMARY\n")
-        f.write(f"Analysis Period: {len(result.daily_predictions)} days\n")
+        # Handle both daily and window predictions
+        if result.daily_predictions:
+            f.write(f"Analysis Period: {len(result.daily_predictions)} days\n")
+        elif result.metadata and "data_start_date" in result.metadata:
+            start = result.metadata["data_start_date"]
+            end = result.metadata["data_end_date"]
+            f.write(f"Analysis Period: {start} to {end}\n")
         f.write(f"Total Records Processed: {result.records_processed}\n")
         f.write(f"Data Quality Score: {result.confidence_score:.1%}\n")
 
         # Add window analysis information if available
         if result.metadata and "window_analysis" in result.metadata:
             window_analysis = result.metadata["window_analysis"]
-            f.write("\nData Window Selection:\n")
+            f.write("\nDATA WINDOW SELECTION\n")
+            f.write("-" * 30 + "\n")
             if window_analysis.optimal_window:
                 opt = window_analysis.optimal_window
-                f.write(f"  Window: {opt.start_date} to {opt.end_date} ({opt.days_count} days)\n")
-            f.write(f"  Strategy: {window_analysis.selection_reason}\n")
+                f.write(f"Window Period: {opt.start_date} to {opt.end_date} ({opt.days_count} days)\n")
+                f.write(f"Data Coverage: {opt.data_quality:.0%}\n")
+            f.write(f"Strategy: {window_analysis.selection_reason}\n")
             if window_analysis.can_run_ensemble:
-                f.write("  Models: Ensemble (PAT + XGBoost)\n")
+                f.write("Models Available: Ensemble (PAT + XGBoost)\n")
             elif window_analysis.can_run_pat:
-                f.write("  Models: PAT only\n")
+                f.write("Models Available: PAT only\n")
             elif window_analysis.can_run_xgboost:
-                f.write("  Models: XGBoost only\n")
+                f.write("Models Available: XGBoost only\n")
 
         if result.metadata.get("personal_calibration_used"):
             f.write(
                 f"\nPersonalized Model: Active (User: {result.metadata.get('user_id')})\n"
             )
+
+        # Check if we have window predictions
+        if result.window_predictions:
+            f.write("\nWINDOW-LEVEL ANALYSIS\n")
+            f.write("-" * 30 + "\n")
+
+            for (start, end), pred in result.window_predictions.items():
+                f.write(f"\nPeriod: {start} to {end}\n")
+                f.write(f"  Model: {pred.get('model', 'Unknown').upper()}\n")
+                if 'window_coverage' in pred:
+                    f.write(f"  Coverage: {pred['window_coverage']:.0%}\n")
+                if 'days_analyzed' in pred:
+                    f.write(f"  Days Analyzed: {pred['days_analyzed']}\n")
+                f.write(f"\n  Depression Risk: {format_risk_level(pred['depression_risk'])}\n")
+                f.write(f"  Hypomanic Risk: {format_risk_level(pred['hypomanic_risk'])}\n")
+                f.write(f"  Manic Risk: {format_risk_level(pred['manic_risk'])}\n")
+                f.write(f"  Confidence: {pred['confidence']:.0%}\n")
 
         f.write("\nCLINICAL RISK ASSESSMENT\n")
         f.write("-" * 30 + "\n")
@@ -359,8 +440,10 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
             for warning in result.warnings:
                 f.write(f"• {warning}\n")
 
-        f.write("\nDETAILED DAILY ANALYSIS\n")
-        f.write("-" * 30 + "\n")
+        # Only show daily analysis if we have daily predictions
+        if result.daily_predictions:
+            f.write("\nDETAILED DAILY ANALYSIS\n")
+            f.write("-" * 30 + "\n")
 
         # Show first week of daily predictions
         for date, pred in list(result.daily_predictions.items())[:7]:
@@ -673,6 +756,7 @@ def predict_command(
 
         # Set up window selection strategy
         from typing import Any
+
         from big_mood_detector.domain.services.window_selection_strategy import (
             WindowSelectionStrategy,
         )
@@ -727,16 +811,56 @@ def predict_command(
         # Initialize pipeline
         pipeline = MoodPredictionPipeline(config=config, di_container=di_container)
 
+        # Calculate timeout based on file size
+        file_size_mb = input_path_obj.stat().st_size / (1024 * 1024)
+        timeout = calculate_timeout(file_size_mb)
+
+        if timeout == 0:
+            click.echo(f"📁 Large file detected ({file_size_mb:.0f}MB). Processing may take 10-15 minutes...")
+        elif file_size_mb > 50:
+            click.echo(f"📁 Processing {file_size_mb:.0f}MB file (timeout: {timeout//60} minutes)...")
+
         # Convert datetime to date at the edge for clean internal APIs
         start_date_param: date | None = start_date.date() if start_date else None
         end_date_param: date | None = end_date.date() if end_date else None
 
-        # Process data
-        result = pipeline.process_apple_health_file(
-            file_path=Path(input_path),
-            start_date=start_date_param,
-            end_date=end_date_param,
-        )
+        # Process data with dynamic timeout
+        import platform
+        import signal
+        from collections.abc import Iterator
+        from contextlib import contextmanager
+
+        @contextmanager
+        def timeout_handler(seconds: int) -> Iterator[None]:
+            """Cross-platform timeout handler."""
+            if seconds > 0 and platform.system() != "Windows":
+                # Unix-based systems: use signal-based timeout
+                def timeout_error(signum: int, frame: Any) -> None:
+                    raise TimeoutError(f"Processing timed out after {seconds} seconds")
+
+                signal.signal(signal.SIGALRM, timeout_error)
+                signal.alarm(seconds)
+                try:
+                    yield
+                finally:
+                    signal.alarm(0)
+            else:
+                # Windows or no timeout: just proceed
+                if seconds > 0 and platform.system() == "Windows":
+                    click.echo("⚠️  Note: Timeout protection not available on Windows")
+                yield
+
+        try:
+            with timeout_handler(timeout):
+                result = pipeline.process_apple_health_file(
+                    file_path=Path(input_path),
+                    start_date=start_date_param,
+                    end_date=end_date_param,
+                )
+        except TimeoutError as e:
+            click.echo(f"❌ {str(e)}", err=True)
+            click.echo("💡 Tip: Try processing a smaller date range or use --start-date and --end-date", err=True)
+            sys.exit(1)
 
         # Display window analysis if dual model strategy was used
         if auto_window and result.metadata and "window_analysis" in result.metadata:
@@ -797,7 +921,7 @@ def predict_command(
             click.echo("=" * 50 + "\n")
 
         # Special handling for "all" strategy - show all windows found
-        if window_strategy == "all" and isinstance(strategy, AllValidWindowsStrategy):
+        if window_strategy == "all" and strategy is not None and strategy.__class__.__name__ == "AllValidWindowsStrategy":
             # Parse the file to get sleep records
             from big_mood_detector.application.services.data_parsing_service import (
                 DataParsingService,
