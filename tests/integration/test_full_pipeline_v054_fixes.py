@@ -221,9 +221,8 @@ class TestFullPipelineIntegration:
         """
         Test that temporal ensemble works with all fixes applied.
         """
-        # Create components
-        pat_loader = ProductionPATLoader(skip_loading=True)
-        XGBoostModelLoader()
+        # Create components with stub loading for testing
+        pat_loader = ProductionPATLoader()
 
         # Mock XGBoost predictor
         class MockXGBoostPredictor:

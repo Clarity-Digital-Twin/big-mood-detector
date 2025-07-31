@@ -204,7 +204,8 @@ class TestDateHandlingReality:
         )
 
         # Assert - No features beyond June 15
-        for feature_date in features.keys():
+        # features is a list of tuples (date, features)
+        for feature_date, _ in features:
             assert feature_date <= end_date, \
                 f"Feature date {feature_date} is beyond data end date {end_date}"
 
