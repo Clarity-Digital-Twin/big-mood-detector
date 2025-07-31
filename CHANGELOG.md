@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented `TimezoneContract` to ensure UTC consistency
   - All XML parsers now convert to naive datetimes
   - Resolves crashes with real Apple Health exports
+  - Fixed `datetime.UTC` (Python 3.11+) to `timezone.utc` (Python 3.8+) compatibility
 - **Window-Level Predictions** - Fixed duplicate predictions in XGBoost-only mode
   - Added proper window-level aggregation
   - Single prediction per analysis window (not daily)
@@ -22,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Platform-aware timeout handling
   - Graceful degradation when SIGALRM unavailable
   - Dynamic timeout based on file size
+- **Test Suite** - Fixed all remaining test failures
+  - Added missing `import pytest` in ensemble integration tests
+  - Fixed DataParsingService mock patching in CLI tests
+  - Resolved Python version compatibility issues
 
 ### Added
 - **Summary Calculator Service** - Refactored overall summary logic
@@ -32,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - DATA WINDOW SELECTION section with coverage stats
   - WINDOW-LEVEL ANALYSIS for non-daily predictions
   - Clear model availability messaging
+- **Core Constants Module** - Centralized timeout and file size constants
+  - `SMALL_FILE_THRESHOLD` = 50MB
+  - `LARGE_FILE_THRESHOLD` = 200MB
+  - Platform-aware timeout values
 
 ### Improved
 - **Dynamic Timeouts** - File-size based timeout configuration
@@ -43,11 +52,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - PAT-only mode scenarios
   - Cross-platform timeout behavior
   - Window-level prediction logic
+  - Timezone contract validation
 
 ### Technical
+- All tests passing (243 tests, 0 failures)
 - All mypy type errors resolved
 - Ruff linting clean
-- Test coverage at 73%
+- Test coverage at 72.65%
+- Full CI/CD pipeline green
+- Successfully merged to main branch
 - Version bumped to 0.5.7
 
 ## [0.5.6] - 2025-07-29 - Intelligent Auto-Window Selection
