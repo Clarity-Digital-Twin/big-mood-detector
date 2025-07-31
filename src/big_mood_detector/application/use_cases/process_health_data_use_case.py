@@ -30,6 +30,9 @@ from big_mood_detector.application.services.aggregation_pipeline import (
 from big_mood_detector.application.services.data_parsing_service import (
     DataParsingService,
 )
+from big_mood_detector.application.services.summary_calculator import (
+    SummaryCalculator,
+)
 from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
     TemporalEnsembleOrchestrator,
 )
@@ -85,6 +88,7 @@ class PipelineResult:
     overall_summary: dict[str, Any]
     confidence_score: float
     processing_time_seconds: float
+    window_predictions: dict[tuple[date, date], dict[str, Any]] = field(default_factory=dict)
     records_processed: int = 0
     features_extracted: int = 0
     has_warnings: bool = False
@@ -514,9 +518,79 @@ class MoodPredictionPipeline:
 
         # Generate predictions
         daily_predictions: dict[date, dict[str, Any]] = {}
+        window_predictions: dict[tuple[date, date], dict[str, Any]] = {}
+        overall_summary: dict[str, Any] = {}
+        confidence_score = 0.0
 
-        # If using Seoul features and not ensemble, use AggregationPipeline
-        if self.config.use_seoul_features and self.aggregation_pipeline and not self.ensemble_orchestrator:
+        # Check if we're in XGBoost-only mode (sparse data, no PAT)
+        if window_analysis and window_analysis.can_run_xgboost and not window_analysis.can_run_pat:
+            # XGBoost-only mode: generate ONE prediction for the entire window
+            logger.info("Using XGBoost-only mode with window-level prediction")
+
+            # Aggregate features across the entire window
+            if self.config.use_seoul_features and self.aggregation_pipeline:
+                # Get aggregated features for the window
+                seoul_features_list = self.aggregation_pipeline.aggregate_seoul_features(
+                    sleep_records=sleep_records,
+                    activity_records=activity_records,
+                    heart_records=heart_records,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
+
+                if seoul_features_list:
+                    # Aggregate all daily features into a single window feature
+                    # This represents the overall pattern across the window
+                    aggregated_features: dict[str, list[float]] = {}
+                    feature_count = 0
+
+                    for daily_feature in seoul_features_list:
+                        feature_dict = daily_feature.to_xgboost_dict()
+                        for key, value in feature_dict.items():
+                            if key not in aggregated_features:
+                                aggregated_features[key] = []
+                            aggregated_features[key].append(value)
+                        feature_count += 1
+
+                    # Compute window-level statistics (mean of daily features)
+                    window_features = {}
+                    for key, values in aggregated_features.items():
+                        window_features[key] = np.mean(values)
+
+                    # Create feature vector for XGBoost
+                    from big_mood_detector.infrastructure.ml_models.xgboost_models import (
+                        XGBoostModelLoader,
+                    )
+                    feature_vector = np.array([window_features.get(name, 0.0) for name in XGBoostModelLoader.FEATURE_NAMES])
+
+                    # Make single prediction for the window
+                    prediction = self.mood_predictor.predict(feature_vector)
+
+                    # Store as window prediction
+                    window_key = (start_date, end_date)
+                    window_predictions[window_key] = {
+                        "depression_risk": prediction.depression_risk,
+                        "hypomanic_risk": prediction.hypomanic_risk,
+                        "manic_risk": prediction.manic_risk,
+                        "confidence": prediction.confidence,
+                        "model": "xgboost",
+                        "window_coverage": window.data_quality if window else 1.0,
+                        "days_analyzed": feature_count,
+                        "feature_aggregation": "window_mean"
+                    }
+
+                    # For backward compatibility, also populate overall summary
+                    overall_summary["depression_risk"] = prediction.depression_risk
+                    overall_summary["hypomanic_risk"] = prediction.hypomanic_risk
+                    overall_summary["manic_risk"] = prediction.manic_risk
+                    overall_summary["primary_model"] = "xgboost"
+                    overall_summary["analysis_type"] = "window"
+
+                    # Don't create daily predictions in window mode
+                    logger.info(f"Generated window prediction for {start_date} to {end_date}")
+
+        # Original flow for ensemble mode or when PAT is available
+        elif self.config.use_seoul_features and self.aggregation_pipeline and not self.ensemble_orchestrator:
             # Generate Seoul features specifically for XGBoost
             seoul_features_list = self.aggregation_pipeline.aggregate_seoul_features(
                 sleep_records=sleep_records,
@@ -626,33 +700,25 @@ class MoodPredictionPipeline:
 
         # Calculate overall summary
         if daily_predictions:
-            all_predictions = list(daily_predictions.values())
-            overall_summary = {
-                "avg_depression_risk": float(
-                    np.mean([float(p["depression_risk"]) for p in all_predictions])
-                ),
-                "avg_hypomanic_risk": float(
-                    np.mean([float(p["hypomanic_risk"]) for p in all_predictions])
-                ),
-                "avg_manic_risk": float(
-                    np.mean([float(p["manic_risk"]) for p in all_predictions])
-                ),
-                "days_analyzed": len(daily_predictions),
-            }
-            confidence_score = float(
-                np.mean([float(p["confidence"]) for p in all_predictions])
+            summary, new_confidence = SummaryCalculator.calculate_from_daily_predictions(
+                daily_predictions
             )
-            if np.isnan(confidence_score):
-                confidence_score = 0.0
-        else:
-            overall_summary = {}
-            confidence_score = 0.0
+            overall_summary.update(summary)
+            if new_confidence > 0:
+                confidence_score = new_confidence
+        elif window_predictions and not overall_summary:
+            # If we only have window predictions and no overall summary set yet
+            summary, new_confidence = SummaryCalculator.calculate_from_window_predictions(
+                window_predictions
+            )
+            overall_summary.update(summary)
+            if new_confidence > 0:
+                confidence_score = new_confidence
 
         # Adjust confidence based on data quality
-        if warnings:
-            confidence_score = float(
-                confidence_score * 0.7
-            )  # Reduce confidence for data issues
+        confidence_score = SummaryCalculator.adjust_confidence_for_warnings(
+            confidence_score, has_warnings=bool(warnings)
+        )
 
         # Build metadata
         metadata: dict[str, Any] = {}
@@ -681,6 +747,7 @@ class MoodPredictionPipeline:
 
         return PipelineResult(
             daily_predictions=daily_predictions,
+            window_predictions=window_predictions,
             overall_summary=overall_summary,
             confidence_score=confidence_score,
             processing_time_seconds=time.time() - start_time,
