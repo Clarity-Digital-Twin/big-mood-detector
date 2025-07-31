@@ -42,11 +42,11 @@ def calculate_timeout(file_size_mb: float) -> int:
         Timeout in seconds (0 = no timeout)
     """
     from big_mood_detector.core.constants import (
-        SMALL_FILE_THRESHOLD_MB,
         LARGE_FILE_THRESHOLD_MB,
-        SMALL_FILE_TIMEOUT_SECONDS,
         MEDIUM_FILE_TIMEOUT_SECONDS,
         NO_TIMEOUT,
+        SMALL_FILE_THRESHOLD_MB,
+        SMALL_FILE_TIMEOUT_SECONDS,
     )
     
     if file_size_mb < SMALL_FILE_THRESHOLD_MB:
@@ -191,6 +191,36 @@ def format_risk_level(risk_score: float | None) -> str:
 
 def print_summary(result: PipelineResult, verbose: bool = False) -> None:
     """Print analysis summary to console."""
+    # Check if using default models (no PAT ensemble)
+    using_default_models = False
+    partial_pat_coverage = False
+    if result.daily_predictions:
+        # Count predictions with PAT
+        total_predictions = len(result.daily_predictions)
+        pat_predictions = sum(
+            1 for pred in result.daily_predictions.values()
+            if pred.get("models_used", []) == ["xgboost", "pat"]
+        )
+        
+        if pat_predictions == 0:
+            using_default_models = True
+        elif pat_predictions < total_predictions:
+            partial_pat_coverage = True
+    
+    # Display warning banner if using default models
+    if using_default_models:
+        click.echo("\n" + "="*60)
+        click.echo("⚠️  WARNING: Using default models (XGBoost only)")
+        click.echo("PAT ensemble models not available or not loaded")
+        click.echo("Results may have reduced accuracy")
+        click.echo("="*60)
+    elif partial_pat_coverage and verbose:
+        # Only show partial coverage warning in verbose mode
+        click.echo("\n" + "="*60)
+        click.echo("⚠️  NOTE: PAT ensemble partially available")
+        click.echo(f"PAT used for {pat_predictions}/{total_predictions} predictions")
+        click.echo("="*60)
+    
     if result.overall_summary:
         click.echo("\n📊 Analysis Complete!")
         click.echo(
