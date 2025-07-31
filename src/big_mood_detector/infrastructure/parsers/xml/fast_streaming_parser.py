@@ -358,6 +358,36 @@ class FastStreamingXMLParser:
 
         return counts
 
+    def count_records_by_type(
+        self,
+        file_path: str | Path,
+        detailed: bool = False,
+    ) -> dict[str, int]:
+        """
+        Count records by type with optional detailed breakdown.
+        
+        Args:
+            file_path: Path to XML file
+            detailed: If True, returns all individual record types.
+                     If False, returns basic categories (sleep/activity/heart/total)
+                     
+        Returns:
+            Dictionary of record type counts
+        """
+        if not detailed:
+            # Use existing method for basic categories
+            return self.count_records_by_date(file_path)
+        
+        # Detailed counting - return all record types
+        record_counts: dict[str, int] = {}
+        
+        # Use iter_records without entity conversion for speed
+        for record_dict in self.iter_records(file_path):
+            record_type = record_dict.get("type", "Unknown")
+            record_counts[record_type] = record_counts.get(record_type, 0) + 1
+        
+        return record_counts
+
     def _dict_to_element(self, record_dict: dict[str, Any]) -> Any:
         """Convert record dictionary to minimal XML element for parser compatibility."""
         # Always use stdlib ElementTree for compatibility with entity parsers
