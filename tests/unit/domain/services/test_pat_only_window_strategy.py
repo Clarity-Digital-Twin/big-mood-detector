@@ -1,12 +1,13 @@
 """Unit tests for PAT-only window selection scenarios."""
 
 from datetime import date, datetime, timedelta
+
 import pytest
 
+from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 from big_mood_detector.domain.services.dual_model_window_strategy import (
     DualModelWindowStrategy,
 )
-from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 
 
 class TestPATOnlyWindowStrategy:

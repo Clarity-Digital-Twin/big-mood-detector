@@ -2,6 +2,7 @@
 
 import tempfile
 from pathlib import Path
+import stat as stat_module
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -25,7 +26,10 @@ class TestDynamicTimeout:
         
         # Mock the file size
         with patch.object(Path, 'stat') as mock_stat:
-            mock_stat.return_value.st_size = 10 * 1024 * 1024  # 10MB
+            stat_result = MagicMock()
+            stat_result.st_size = 10 * 1024 * 1024  # 10MB
+            stat_result.st_mode = stat_module.S_IFREG  # Regular file
+            mock_stat.return_value = stat_result
             
             result = runner.invoke(predict_command, [str(test_file)])
             
@@ -45,7 +49,10 @@ class TestDynamicTimeout:
         
         # Mock the file size (100MB)
         with patch.object(Path, 'stat') as mock_stat:
-            mock_stat.return_value.st_size = 100 * 1024 * 1024  # 100MB
+            stat_result = MagicMock()
+            stat_result.st_size = 100 * 1024 * 1024  # 100MB
+            stat_result.st_mode = stat_module.S_IFREG  # Regular file
+            mock_stat.return_value = stat_result
             
             result = runner.invoke(predict_command, [str(test_file)])
             
@@ -65,7 +72,10 @@ class TestDynamicTimeout:
         
         # Mock the file size (500MB)
         with patch.object(Path, 'stat') as mock_stat:
-            mock_stat.return_value.st_size = 500 * 1024 * 1024  # 500MB
+            stat_result = MagicMock()
+            stat_result.st_size = 500 * 1024 * 1024  # 500MB
+            stat_result.st_mode = stat_module.S_IFREG  # Regular file
+            mock_stat.return_value = stat_result
             
             result = runner.invoke(predict_command, [str(test_file)])
             
