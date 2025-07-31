@@ -13,7 +13,7 @@ Design Patterns:
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -671,16 +671,16 @@ class DataParsingService:
             FeatureAvailability with available/unavailable features and reasons
         """
         start_time = time.time()
-        
+
         # Get the XML parser
         parser = self._xml_parser
-        
+
         # Count all record types
         record_counts = parser.count_records_by_type(xml_path, detailed=True)
-        
+
         available_features = []
         unavailable_features = []
-        
+
         # Check each feature's requirements
         for feature_name, requirement in FEATURE_REQUIREMENTS.items():
             if self._meets_requirements(record_counts, requirement):
@@ -688,22 +688,22 @@ class DataParsingService:
             else:
                 reason = self._explain_missing(record_counts, requirement)
                 unavailable_features.append((feature_name, reason))
-        
+
         scan_duration = time.time() - start_time
-        
+
         return FeatureAvailability(
             available_features=available_features,
             unavailable_features=unavailable_features,
             record_counts=record_counts,
             scan_duration_seconds=scan_duration,
         )
-    
+
     def _meets_requirements(self, record_counts: dict[str, int], requirement: FeatureRequirement) -> bool:
         """Check if record counts meet feature requirements."""
         # Check all required types exist with sufficient data
         for required_type in requirement.required_types:
             count = record_counts.get(required_type, 0)
-            
+
             # Estimate days of data based on record type
             # Sleep: ~1-3 records per night
             # Steps: ~24 records per day (hourly)
@@ -717,17 +717,17 @@ class DataParsingService:
             else:
                 # For other types, assume 1 per day
                 estimated_days = count
-            
+
             if estimated_days < requirement.min_days * requirement.completeness:
                 return False
-        
+
         return True
-    
+
     def _explain_missing(self, record_counts: dict[str, int], requirement: FeatureRequirement) -> str:
         """Explain why a feature is unavailable."""
         missing_types = []
         insufficient_types = []
-        
+
         for required_type in requirement.required_types:
             count = record_counts.get(required_type, 0)
             if count == 0:
@@ -742,12 +742,12 @@ class DataParsingService:
                     estimated_days = count / 100
                 else:
                     estimated_days = count
-                
+
                 if estimated_days < requirement.min_days * requirement.completeness:
                     insufficient_types.append(
                         f"{required_type} ({int(estimated_days)} days, need {requirement.min_days})"
                     )
-        
+
         if missing_types:
             return f"Missing required type: {missing_types[0]}"
         elif insufficient_types:

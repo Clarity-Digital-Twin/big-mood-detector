@@ -52,7 +52,7 @@ def calculate_timeout(file_size_mb: float) -> int:
         SMALL_FILE_THRESHOLD_MB,
         SMALL_FILE_TIMEOUT_SECONDS,
     )
-    
+
     if file_size_mb < SMALL_FILE_THRESHOLD_MB:
         return SMALL_FILE_TIMEOUT_SECONDS
     elif file_size_mb < LARGE_FILE_THRESHOLD_MB:
@@ -205,12 +205,12 @@ def print_summary(result: PipelineResult, verbose: bool = False) -> None:
             1 for pred in result.daily_predictions.values()
             if pred.get("models_used", []) == ["xgboost", "pat"]
         )
-        
+
         if pat_predictions == 0:
             using_default_models = True
         elif pat_predictions < total_predictions:
             partial_pat_coverage = True
-    
+
     # Display warning banner if using default models
     if using_default_models:
         click.echo("\n" + "="*60)
@@ -224,7 +224,7 @@ def print_summary(result: PipelineResult, verbose: bool = False) -> None:
         click.echo("⚠️  NOTE: PAT ensemble partially available")
         click.echo(f"PAT used for {pat_predictions}/{total_predictions} predictions")
         click.echo("="*60)
-    
+
     if result.overall_summary:
         click.echo("\n📊 Analysis Complete!")
         click.echo(
@@ -572,21 +572,21 @@ def process_command(
             if input_path_obj.suffix.lower() != '.xml':
                 click.echo("⚠️  Scan is only available for XML files")
                 return
-            
+
             file_size_mb = input_path_obj.stat().st_size / (1024 * 1024)
             click.echo(f"\n📊 Scanning {input_path_obj.name} ({file_size_mb:.1f} MB)...")
-            
+
             # Create data parsing service
             from big_mood_detector.application.services.data_parsing_service import (
                 DataParsingService,
             )
             data_service = DataParsingService()
-            
+
             start_time = time.time()
             availability = data_service.check_feature_availability(input_path_obj)
-            
+
             click.echo(f"✅ Scan complete in {availability.scan_duration_seconds:.1f}s\n")
-            
+
             # Display available data types
             click.echo("Available Data:")
             major_types = availability.get_major_types()
@@ -595,12 +595,12 @@ def process_command(
                     click.echo(f"✅ {type_name}: {count:,} records")
             else:
                 click.echo("⚠️  No recognized data types found")
-            
+
             # Display missing data
             missing_summary = availability.format_missing_data_summary()
             if missing_summary != "All data types available!":
                 click.echo(f"\n⚠️  {missing_summary}")
-            
+
             # Display available features
             click.echo("\nProcessable Features:")
             if availability.available_features:
@@ -608,7 +608,7 @@ def process_command(
                     click.echo(f"✅ {description}")
             else:
                 click.echo("⚠️  No features can be processed with available data")
-            
+
             # Display unavailable features if any
             if availability.unavailable_features:
                 click.echo("\nUnavailable Features:")
@@ -616,9 +616,9 @@ def process_command(
                     req = FEATURE_REQUIREMENTS.get(feature_name)
                     desc = req.description if req else feature_name
                     click.echo(f"⚠️  {desc}: {reason}")
-            
+
             click.echo(f"\nTotal records found: {availability.total_records:,}")
-            
+
             # Exit after scan
             return
 
@@ -823,21 +823,21 @@ def predict_command(
             if input_path_obj.suffix.lower() != '.xml':
                 click.echo("⚠️  Scan is only available for XML files")
                 return
-            
+
             file_size_mb = input_path_obj.stat().st_size / (1024 * 1024)
             click.echo(f"\n📊 Scanning {input_path_obj.name} ({file_size_mb:.1f} MB)...")
-            
+
             # Create data parsing service
             from big_mood_detector.application.services.data_parsing_service import (
                 DataParsingService,
             )
             data_service = DataParsingService()
-            
+
             start_time = time.time()
             availability = data_service.check_feature_availability(input_path_obj)
-            
+
             click.echo(f"✅ Scan complete in {availability.scan_duration_seconds:.1f}s\n")
-            
+
             # Display available data types
             click.echo("Available Data:")
             major_types = availability.get_major_types()
@@ -846,12 +846,12 @@ def predict_command(
                     click.echo(f"✅ {type_name}: {count:,} records")
             else:
                 click.echo("⚠️  No recognized data types found")
-            
+
             # Display missing data
             missing_summary = availability.format_missing_data_summary()
             if missing_summary != "All data types available!":
                 click.echo(f"\n⚠️  {missing_summary}")
-            
+
             # Display available features
             click.echo("\nPredictable Conditions:")
             if availability.available_features:
@@ -859,7 +859,7 @@ def predict_command(
                     click.echo(f"✅ {description}")
             else:
                 click.echo("⚠️  No predictions can be made with available data")
-            
+
             # Display unavailable features if any
             if availability.unavailable_features and verbose:
                 click.echo("\nUnavailable Predictions:")
@@ -867,16 +867,16 @@ def predict_command(
                     req = FEATURE_REQUIREMENTS.get(feature_name)
                     desc = req.description if req else feature_name
                     click.echo(f"⚠️  {desc}: {reason}")
-            
+
             click.echo(f"\nTotal records found: {availability.total_records:,}")
-            
+
             # Show recommendation if data is insufficient
             if not availability.has_minimum_features():
                 click.echo("\n💡 Recommendation: Ensure your Apple Health export includes:")
                 click.echo("   - Sleep data (7+ days)")
                 click.echo("   - Step count data (7+ days)")
                 click.echo("   - Heart rate data (optional but improves accuracy)")
-            
+
             # Exit after scan
             return
 
@@ -889,7 +889,7 @@ def predict_command(
             if file_size_mb > 100:  # Files larger than 100MB
                 click.echo(f"\n⚠️  Large file detected: {file_size_mb:.1f} MB")
                 click.echo("Processing may take several minutes...")
-                
+
                 if click.confirm("Would you like to scan the file first to see available data?"):
                     # Recursively call with --scan flag
                     ctx = click.get_current_context()

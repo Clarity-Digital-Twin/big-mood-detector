@@ -237,14 +237,14 @@ class StreamingXMLParser:
         if not detailed:
             # Basic counting - delegate to existing count_records_by_date
             return self.count_records_by_date(file_path)
-        
+
         # Detailed counting - count all record types
         record_counts: dict[str, int] = {}
-        
+
         for record_dict in self.iter_records(file_path):
             record_type = record_dict.get("type", "Unknown")
             record_counts[record_type] = record_counts.get(record_type, 0) + 1
-        
+
         return record_counts
 
     def count_records_by_date(self, file_path: str | Path) -> dict[str, int]:
@@ -260,24 +260,24 @@ class StreamingXMLParser:
         sleep_count = 0
         activity_count = 0
         heart_count = 0
-        
+
         # Use the entity parsers' supported types
         sleep_types = ["HKCategoryTypeIdentifierSleepAnalysis"]
         activity_types = self.activity_parser.supported_activity_types
         heart_types = self.heart_parser.supported_heart_types
-        
+
         for record_dict in self.iter_records(file_path):
             record_type = record_dict.get("type")
-            
+
             if record_type in sleep_types:
                 sleep_count += 1
             elif record_type in activity_types:
                 activity_count += 1
             elif record_type in heart_types:
                 heart_count += 1
-        
+
         total = sleep_count + activity_count + heart_count
-        
+
         return {
             "sleep": sleep_count,
             "activity": activity_count,

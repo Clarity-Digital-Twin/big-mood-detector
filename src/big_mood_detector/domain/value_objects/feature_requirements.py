@@ -1,22 +1,21 @@
 """Feature requirements mapping for clinical predictions."""
 
 from dataclasses import dataclass
-from typing import Any, Dict, List
 
 
 @dataclass(frozen=True)
 class FeatureRequirement:
     """Requirements for a clinical feature to be available."""
-    
-    required_types: List[str]
-    optional_types: List[str] 
+
+    required_types: list[str]
+    optional_types: list[str]
     min_days: int
     completeness: float  # 0.0 to 1.0 (percentage of days with data)
     description: str
 
 
 # Clinical feature requirements based on model needs
-FEATURE_REQUIREMENTS: Dict[str, FeatureRequirement] = {
+FEATURE_REQUIREMENTS: dict[str, FeatureRequirement] = {
     "depression_risk": FeatureRequirement(
         required_types=[
             "HKCategoryTypeIdentifierSleepAnalysis",

@@ -5,7 +5,7 @@ These tests verify that all required services are properly registered
 and can be resolved.
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -135,7 +135,7 @@ class TestDIContainerRegistration:
         # Register a mock service as singleton
         class TestService:
             pass
-        
+
         mock_service = TestService()
         container.register_singleton(TestService, mock_service)
 

@@ -226,14 +226,14 @@ class TestFullPipelineIntegration:
 
         # Mock XGBoost predictor
         from dataclasses import dataclass
-        
+
         @dataclass
         class MockPrediction:
             depression_risk: float
             manic_risk: float  # Fixed to match what orchestrator expects
             hypomanic_risk: float
             confidence: float = 0.8  # Add confidence too
-            
+
         class MockXGBoostPredictor:
             def predict_episode_tomorrow(self, features):
                 # Return varied predictions based on input

@@ -18,7 +18,7 @@ class TestScanFeature:
     def test_process_command_with_scan(self):
         """Test process command with --scan flag."""
         runner = CliRunner()
-        
+
         # Mock the feature availability check
         mock_availability = FeatureAvailability(
             available_features=[
@@ -34,17 +34,17 @@ class TestScanFeature:
             },
             scan_duration_seconds=2.5,
         )
-        
+
         with patch('big_mood_detector.application.services.data_parsing_service.DataParsingService.check_feature_availability') as mock_check:
             mock_check.return_value = mock_availability
-            
+
             # Create a temporary test file
             with runner.isolated_filesystem():
                 test_file = Path("test_export.xml")
                 test_file.write_text("<HealthData></HealthData>")
-                
+
                 result = runner.invoke(cli, ["process", str(test_file), "--scan"])
-                
+
                 assert result.exit_code == 0
                 assert "Scanning test_export.xml" in result.output
                 assert "Scan complete in 2.5s" in result.output
@@ -56,7 +56,7 @@ class TestScanFeature:
     def test_predict_command_with_scan(self):
         """Test predict command with --scan flag."""
         runner = CliRunner()
-        
+
         mock_availability = FeatureAvailability(
             available_features=[
                 ("depression_risk", "Depression risk prediction (XGBoost)"),
@@ -68,16 +68,16 @@ class TestScanFeature:
             },
             scan_duration_seconds=1.8,
         )
-        
+
         with patch('big_mood_detector.application.services.data_parsing_service.DataParsingService.check_feature_availability') as mock_check:
             mock_check.return_value = mock_availability
-            
+
             with runner.isolated_filesystem():
                 test_file = Path("test_export.xml")
                 test_file.write_text("<HealthData></HealthData>")
-                
+
                 result = runner.invoke(cli, ["predict", str(test_file), "--scan"])
-                
+
                 if result.exit_code != 0:
                     print(f"Error: {result.output}")
                     print(f"Exception: {result.exception}")
@@ -89,13 +89,13 @@ class TestScanFeature:
     def test_scan_non_xml_file(self):
         """Test that scan only works with XML files."""
         runner = CliRunner()
-        
+
         with runner.isolated_filesystem():
             test_file = Path("test_data.json")
             test_file.write_text("{}")
-            
+
             result = runner.invoke(cli, ["process", str(test_file), "--scan"])
-            
+
             assert result.exit_code == 0
             assert "Scan is only available for XML files" in result.output
 
@@ -103,35 +103,35 @@ class TestScanFeature:
     def test_large_file_prompt(self):
         """Test that large files prompt for scanning."""
         runner = CliRunner()
-        
+
         with runner.isolated_filesystem():
             # Create a file that appears large
             test_file = Path("large_export.xml")
             test_file.write_text("<HealthData></HealthData>")
-            
+
             # Mock the file size check within the command
             original_stat = Path.stat
             def mock_stat(self):
                 if self.name == "large_export.xml":
                     return Mock(st_size=150 * 1024 * 1024)  # 150MB
                 return original_stat(self)
-            
+
             with patch.object(Path, 'stat', mock_stat):
                 # Respond 'N' to the prompt
                 result = runner.invoke(cli, ["predict", str(test_file)], input="N\n")
-                
+
                 # Check the output
                 if result.exit_code != 0:
                     print(f"Error output: {result.output}")
                     print(f"Exception: {result.exception}")
-                
+
                 assert "Large file detected: 150.0 MB" in result.output
                 assert "Would you like to scan the file first" in result.output
 
     def test_scan_with_insufficient_data(self):
         """Test scan output when data is insufficient."""
         runner = CliRunner()
-        
+
         mock_availability = FeatureAvailability(
             available_features=[],
             unavailable_features=[
@@ -143,16 +143,16 @@ class TestScanFeature:
             },
             scan_duration_seconds=0.5,
         )
-        
+
         with patch('big_mood_detector.application.services.data_parsing_service.DataParsingService.check_feature_availability') as mock_check:
             mock_check.return_value = mock_availability
-            
+
             with runner.isolated_filesystem():
                 test_file = Path("insufficient.xml")
                 test_file.write_text("<HealthData></HealthData>")
-                
+
                 result = runner.invoke(cli, ["predict", str(test_file), "--scan"])
-                
+
                 if result.exit_code != 0:
                     print(f"Error in insufficient data test: {result.output}")
                     print(f"Exception: {result.exception}")

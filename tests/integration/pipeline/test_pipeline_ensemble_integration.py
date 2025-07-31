@@ -61,12 +61,12 @@ class TestPipelineEnsembleIntegration:
                 model_dir=Path("model_weights/xgboost/converted"),
             )
             pipeline = MoodPredictionPipeline(config=config, di_container=get_container())
-            
+
             if pipeline.ensemble_orchestrator is None:
                 pytest.skip("Ensemble models not available")
         except Exception:
             pytest.skip("Models not available for test")
-            
+
         # If we get here, the pipeline loaded successfully
         # Just verify that ensemble orchestrator exists
         assert pipeline.ensemble_orchestrator is not None

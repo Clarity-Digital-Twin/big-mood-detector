@@ -32,7 +32,7 @@ class TestCLIPATIntegration:
                     # Setup mocks
                     mock_container = Mock()
                     mock_get_container.return_value = mock_container
-                    
+
                     # Mock DataParsingService
                     mock_parser = Mock()
                     mock_parsed_data = {
@@ -103,7 +103,7 @@ class TestCLIPATIntegration:
                     # Setup mocks
                     mock_container = Mock()
                     mock_get_container.return_value = mock_container
-                    
+
                     # Mock DataParsingService
                     mock_parser = Mock()
                     mock_parsed_data = {
@@ -169,7 +169,7 @@ class TestCLIPATIntegration:
                     }
                     mock_parser.parse_health_data.return_value = mock_parsed_data
                     mock_parser_class.return_value = mock_parser
-                    
+
                     # Setup mock pipeline
                     mock_pipeline = Mock()
                     mock_result = Mock()
