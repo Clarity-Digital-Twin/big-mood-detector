@@ -8,6 +8,8 @@ from datetime import date
 from pathlib import Path
 from unittest.mock import Mock, PropertyMock, patch
 
+import pytest
+
 from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
     TemporalEnsembleOrchestrator,
 )
