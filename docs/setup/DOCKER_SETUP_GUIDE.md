@@ -1,464 +1,296 @@
-# 🐳 Docker Setup Guide - Big Mood Detector
+# Docker Setup Guide
 
-Complete dockerization guide for cross-platform deployment and development.
+This guide covers everything you need to run Big Mood Detector in Docker, including troubleshooting common issues.
 
-## 🚀 Quick Start
+## Prerequisites
+
+- Docker Desktop (Windows/Mac) or Docker Engine (Linux)
+- 10GB+ free disk space (for full ML image)
+- Python 3.x (for generating secrets)
+
+## Quick Start
+
+### 1. Generate Security Credentials
+
+Production mode requires secure secrets. Generate them once:
 
 ```bash
-# Clone and setup
-git clone https://github.com/Clarity-Digital-Twin/big-mood-detector.git
-cd big-mood-detector
-
-# Build and run
-docker compose up --build
-
-# Or for GPU support
-docker compose -f docker-compose.gpu.yml up --build
+# Create .env file with secure secrets
+cat > .env << EOF
+SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')
+API_KEY_SALT=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')
+POSTGRES_USER=bigmood
+POSTGRES_PASSWORD=changeme
+POSTGRES_DB=bigmood
+EOF
 ```
 
-## 📋 Prerequisites
+**Important**: Never commit the `.env` file to version control!
 
-- Docker Desktop 4.0+ (Mac/Windows) or Docker Engine 20.10+ (Linux)
-- 8GB RAM allocated to Docker
-- For GPU: NVIDIA GPU with CUDA 12.0+ and nvidia-docker
+### 2. Build Docker Image
 
-## 🏗️ Docker Architecture
+Choose your configuration:
 
-```
-├── Dockerfile              # Production image
-├── Dockerfile.dev          # Development image with tools
-├── docker-compose.yml      # Standard CPU setup
-├── docker-compose.gpu.yml  # GPU-enabled setup
-└── .dockerignore          # Exclude unnecessary files
+```bash
+# Full ML support (9.2GB - includes XGBoost + PAT)
+docker build --build-arg INSTALL_ML=true -t big-mood-detector:latest .
+
+# Lightweight (2.2GB - XGBoost only, faster CI/CD)
+docker build --build-arg INSTALL_ML=false -t big-mood-detector:lite .
 ```
 
-## 📦 Production Dockerfile
+Build times:
+- Full ML: 5-10 minutes (downloads PyTorch/TensorFlow)
+- Lightweight: 2-3 minutes
 
-Create `Dockerfile.prod`:
+### 3. Start Services
 
-```dockerfile
-# Multi-stage build for minimal production image
-FROM python:3.12-slim as builder
+```bash
+# Start API and Redis
+docker-compose up -d api redis
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements
-WORKDIR /build
-COPY pyproject.toml .
-COPY src/ src/
-
-# Install Python dependencies
-RUN pip install --no-cache-dir --user -e ".[ml]"
-
-# Production image
-FROM python:3.12-slim
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy installed packages from builder
-COPY --from=builder /root/.local /root/.local
-
-# Make sure scripts are in PATH
-ENV PATH=/root/.local/bin:$PATH
-
-# Copy application
-WORKDIR /app
-COPY --from=builder /build/src ./src
-COPY model_weights/ ./model_weights/
-COPY scripts/verify_setup.py ./scripts/
-
-# Create required directories
-RUN mkdir -p data/input data/cache data/baselines logs
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import big_mood_detector; print('OK')" || exit 1
-
-# Default command
-CMD ["python", "-m", "big_mood_detector", "serve", "--host", "0.0.0.0"]
+# Check health
+docker logs mood-api
+curl http://localhost:8000/health
 ```
 
-## 🧑‍💻 Development Dockerfile
+Wait ~90 seconds for the full ML image to load all models.
 
-Create `Dockerfile.dev`:
+## Using the Application
 
-```dockerfile
-FROM python:3.12-slim
+### Process Apple Health Data
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    git \
-    curl \
-    vim \
-    && rm -rf /var/lib/apt/lists/*
+```bash
+# Process entire export
+docker run --rm \
+  -e BIGMOOD_DATA_DIR=/app/data \
+  -v "$(pwd)/data:/app/data" \
+  -v "$(pwd)/model_weights:/app/model_weights:ro" \
+  big-mood-detector:latest \
+  process /app/data/input/apple_export/export.xml \
+  -o /app/data/output/features.json --progress
 
-WORKDIR /app
-
-# Copy requirements first for better caching
-COPY pyproject.toml .
-
-# Install all dependencies including dev
-RUN pip install --no-cache-dir -e ".[dev,ml,monitoring]"
-
-# Copy source code
-COPY . .
-
-# Install pre-commit hooks
-RUN git init && pre-commit install || true
-
-# Create directories
-RUN mkdir -p data/input data/cache data/baselines logs
-
-# Development command
-CMD ["bash"]
+# Process last 30 days only (faster)
+docker run --rm \
+  -e BIGMOOD_DATA_DIR=/app/data \
+  -v "$(pwd)/data:/app/data" \
+  -v "$(pwd)/model_weights:/app/model_weights:ro" \
+  big-mood-detector:latest \
+  process /app/data/input/apple_export/export.xml \
+  --days-back 30 -o /app/data/output/features_30d.json
 ```
 
-## 🐋 Docker Compose Configuration
+### Make Predictions
 
-### CPU Version (`docker-compose.yml`):
+```bash
+# Generate clinical report
+docker run --rm \
+  -e BIGMOOD_DATA_DIR=/app/data \
+  -v "$(pwd)/data:/app/data" \
+  -v "$(pwd)/model_weights:/app/model_weights:ro" \
+  big-mood-detector:latest \
+  predict /app/data/input/apple_export/export.xml --report
+```
+
+### API Endpoints
+
+```bash
+# Check model status
+curl http://localhost:8000/api/v1/predictions/status
+
+# PAT depression prediction (requires 7-day activity data)
+curl -X POST http://localhost:8000/predictions/depression \
+  -H "Content-Type: application/json" \
+  -d '{"activity_sequence": [/* 10,080 minute-level values */]}'
+
+# XGBoost predictions
+curl -X POST http://localhost:8000/api/v1/predictions/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sleep_duration": 7.5,
+    "sleep_efficiency": 0.85,
+    "sleep_timing_variance": 1.2,
+    "daily_steps": 8500,
+    "activity_variance": 2500,
+    "sedentary_hours": 10.5
+  }'
+```
+
+## Volume Mounts Explained
 
 ```yaml
-version: '3.8'
-
-services:
-  big-mood:
-    build:
-      context: .
-      dockerfile: Dockerfile.prod
-    image: big-mood-detector:latest
-    container_name: big-mood-detector
-    
-    ports:
-      - "8000:8000"
-    
-    volumes:
-      # Data persistence
-      - ./data:/app/data
-      - ./model_weights:/app/model_weights
-      - ./logs:/app/logs
-      
-      # For development - hot reload
-      - ./src:/app/src:ro
-    
-    environment:
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - PYTHONUNBUFFERED=1
-      - BIG_MOOD_ENV=docker
-    
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    
-    restart: unless-stopped
-
-  # Development container
-  big-mood-dev:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    image: big-mood-detector:dev
-    container_name: big-mood-dev
-    
-    volumes:
-      - .:/app
-      - /app/.venv  # Exclude venv from mount
-    
-    environment:
-      - PYTHONPATH=/app
-    
-    command: bash
-    profiles: ["dev"]
-
-# Volumes for data persistence
 volumes:
-  model_weights:
-  data:
-  logs:
+  - ./data:/app/data           # Your health data files
+  - ./model_weights:/app/model_weights:ro  # ML model weights (read-only)
+  - logs:/app/logs            # Application logs
 ```
 
-### GPU Version (`docker-compose.gpu.yml`):
+The `BIGMOOD_DATA_DIR=/app/data` environment variable tells the app where to find mounted data.
 
-```yaml
-version: '3.8'
+## Troubleshooting
 
-services:
-  big-mood-gpu:
-    build:
-      context: .
-      dockerfile: Dockerfile.gpu
-    image: big-mood-detector:gpu
-    
-    runtime: nvidia
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - CUDA_VISIBLE_DEVICES=0
-      - TORCH_DEVICE=cuda
-    
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    
-    # Inherit other settings from main compose
-    extends:
-      file: docker-compose.yml
-      service: big-mood
+### "No write permission" Warnings
+
+**Symptom**: CLI shows warnings about `/data/output` permissions
+
+**Fix**: Already resolved in latest image. Ensure you're using:
+```bash
+-e BIGMOOD_DATA_DIR=/app/data
 ```
 
-## 🎯 GPU Dockerfile
+### API Won't Start
 
-Create `Dockerfile.gpu`:
+**Symptom**: Container exits with "SECURITY ERROR"
 
-```dockerfile
-FROM nvidia/cuda:12.3.2-cudnn9-runtime-ubuntu22.04
+**Fix**: Create `.env` file with secure secrets (see step 1)
 
-# Install Python
-RUN apt-get update && apt-get install -y \
-    python3.12 \
-    python3-pip \
-    && rm -rf /var/lib/apt/lists/*
+### Model Not Found
 
-WORKDIR /app
+**Symptom**: "Model file not found" errors
 
-# Install PyTorch with CUDA support
-RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+**Fix**: Ensure model weights are mounted:
+```bash
+# Check model files exist
+ls -la model_weights/xgboost/converted/
+ls -la model_weights/pat/pretrained/
 
-# Copy and install requirements
-COPY pyproject.toml .
-RUN pip3 install --no-cache-dir -e ".[ml]"
-
-# Copy application
-COPY . .
-
-# Create directories
-RUN mkdir -p data/input data/cache data/baselines logs
-
-CMD ["python3", "-m", "big_mood_detector", "serve", "--host", "0.0.0.0"]
+# Mount them read-only
+-v "$(pwd)/model_weights:/app/model_weights:ro"
 ```
 
-## 📁 Data Volume Management
+### Processing Timeouts
 
-### Prepare data before first run:
+**Symptom**: Large XML files timeout in shell
+
+**Fix**: Run directly in container:
+```bash
+# Enter container
+docker run --rm -it \
+  -e BIGMOOD_DATA_DIR=/app/data \
+  -v "$(pwd)/data:/app/data" \
+  -v "$(pwd)/model_weights:/app/model_weights:ro" \
+  big-mood-detector:latest \
+  bash
+
+# Inside container, process without timeout
+big-mood process /app/data/input/apple_export/export.xml --progress
+```
+
+### Memory Issues
+
+**Symptom**: Container killed during processing
+
+**Fix**: Increase Docker memory limit:
+- Docker Desktop: Settings → Resources → Memory → 8GB+
+- Linux: Use `--memory=8g` flag
+
+## Production Deployment
+
+### Environment Variables
 
 ```bash
-# Create directory structure
-mkdir -p data/input/{apple_export,health_auto_export}
-mkdir -p model_weights/{xgboost/converted,pat/pretrained}
+# Required for production
+ENVIRONMENT=production
+SECRET_KEY=<secure-random-string>
+API_KEY_SALT=<secure-random-string>
 
-# Copy your data
-cp ~/Downloads/export.xml data/input/apple_export/
-cp ~/Downloads/XGBoost_*.json model_weights/xgboost/converted/
-```
-
-### Use Docker volumes for persistence:
-
-```yaml
-# docker-compose.override.yml (for local overrides)
-version: '3.8'
-
-services:
-  big-mood:
-    volumes:
-      # Use absolute paths for large datasets
-      - /mnt/bigdata/nhanes:/app/data/nhanes:ro
-      - ${HOME}/health_exports:/app/data/input:ro
-```
-
-## 🔧 Common Docker Commands
-
-```bash
-# Build and start
-docker compose up --build
-
-# Run in background
-docker compose up -d
-
-# View logs
-docker compose logs -f big-mood
-
-# Run CLI commands
-docker compose run --rm big-mood python -m big_mood_detector process /app/data/input/
-
-# Interactive shell
-docker compose run --rm big-mood bash
-
-# Run tests
-docker compose run --rm big-mood-dev make test
-
-# Clean up
-docker compose down -v  # -v removes volumes
-```
-
-## 🌐 Environment Variables
-
-Create `.env` file:
-
-```bash
-# .env
+# Optional configuration
 LOG_LEVEL=INFO
-PYTHONUNBUFFERED=1
-
-# Model paths (optional overrides)
-BIG_MOOD_PAT_WEIGHTS_DIR=/app/model_weights/pat/pretrained
-BIGMOOD_DATA_DIR=/app/data
-
-# API settings
-API_HOST=0.0.0.0
-API_PORT=8000
-API_WORKERS=4
-
-# For GPU
-CUDA_VISIBLE_DEVICES=0
-TORCH_DEVICE=cuda
+WORKERS=4
+ENSEMBLE_PAT_TIMEOUT=10.0
+ENSEMBLE_XGBOOST_TIMEOUT=5.0
 ```
 
-## 🚪 Entry Points
+### Health Checks
 
-Create `docker-entrypoint.sh`:
+The container includes health checks that verify:
+- API is responding
+- Models are loaded
+- Database connections (if configured)
 
-```bash
-#!/bin/bash
-set -e
-
-# Verify setup on first run
-if [ ! -f "/app/.docker-initialized" ]; then
-    echo "🔍 First run - verifying setup..."
-    python scripts/verify_setup.py || {
-        echo "❌ Setup verification failed!"
-        echo "📖 See DATA_SETUP_GUIDE.md for instructions"
-        exit 1
-    }
-    touch /app/.docker-initialized
-fi
-
-# Run command
-exec "$@"
+Adjust start period for slow environments:
+```yaml
+healthcheck:
+  start_period: 180s  # 3 minutes for very slow systems
 ```
 
-## 🏃 Running Different Services
+### Resource Requirements
 
-```bash
-# API server
-docker compose run --rm -p 8000:8000 big-mood serve
+| Component | CPU | Memory | Disk |
+|-----------|-----|--------|------|
+| API (XGBoost only) | 2 cores | 2GB | 2.5GB |
+| API (Full ML) | 4 cores | 8GB | 10GB |
+| Redis | 1 core | 512MB | 1GB |
+| Processing 500MB XML | 2 cores | 2GB | - |
 
-# Process data
-docker compose run --rm big-mood process /app/data/input/
+## Advanced Usage
 
-# Generate predictions
-docker compose run --rm big-mood predict /app/data/input/ --report
+### Custom Model Paths
 
-# Train PAT model
-docker compose run --rm big-mood-gpu python scripts/pat_training/train_pat_canonical.py
-```
-
-## 🔍 Debugging Docker Issues
-
-```bash
-# Check if data is mounted correctly
-docker compose run --rm big-mood ls -la /app/data/
-
-# Verify model weights
-docker compose run --rm big-mood python scripts/verify_setup.py
-
-# Test imports
-docker compose run --rm big-mood python -c "import big_mood_detector; print('OK')"
-
-# GPU check
-docker compose run --rm big-mood-gpu nvidia-smi
-docker compose run --rm big-mood-gpu python -c "import torch; print(torch.cuda.is_available())"
-```
-
-## 🔐 Security Best Practices
-
-1. **Never include sensitive data in images**
-   ```dockerfile
-   # Bad
-   COPY data/ /app/data/
-   
-   # Good - use volumes
-   VOLUME ["/app/data"]
-   ```
-
-2. **Use .dockerignore**
-   ```
-   # .dockerignore
-   data/
-   *.xml
-   *.csv
-   .git/
-   .env
-   __pycache__/
-   *.pyc
-   ```
-
-3. **Run as non-root user**
-   ```dockerfile
-   RUN useradd -m -u 1000 appuser
-   USER appuser
-   ```
-
-## 🚀 Deployment Examples
-
-### Local Development
-```bash
-docker compose --profile dev up
-```
-
-### Production API
-```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up
-```
-
-### Batch Processing
+Override model locations:
 ```bash
 docker run --rm \
-  -v $(pwd)/data:/data \
-  -v $(pwd)/model_weights:/model_weights \
+  -e XGBOOST_MODEL_PATH=/models/custom/xgboost \
+  -e PAT_MODEL_PATH=/models/custom/pat \
+  -v "$(pwd)/custom_models:/models:ro" \
+  big-mood-detector:latest
+```
+
+### Development Mode
+
+Mount source code for hot reload:
+```bash
+docker run --rm -it \
+  -e ENVIRONMENT=development \
+  -e LOG_LEVEL=DEBUG \
+  -v "$(pwd)/src:/app/src" \
+  -v "$(pwd)/data:/app/data" \
+  -p 8000:8000 \
   big-mood-detector:latest \
-  process /data/input/
+  bash
 ```
 
-## 📊 Monitoring
+### Multi-Stage Builds
 
-Add Prometheus metrics:
+Build specific stages:
+```bash
+# Builder stage only (for CI caching)
+docker build --target builder -t big-mood-builder .
 
-```yaml
-# docker-compose.monitoring.yml
-services:
-  prometheus:
-    image: prom/prometheus
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
-  
-  grafana:
-    image: grafana/grafana
-    ports:
-      - "3000:3000"
+# Runtime without ML
+docker build --build-arg INSTALL_ML=false --target runtime -t big-mood-runtime .
 ```
 
-## ✅ Verification Checklist
+## Security Notes
 
-- [ ] Docker Desktop/Engine installed
-- [ ] Model weights downloaded to `model_weights/`
-- [ ] Health data in `data/input/`
-- [ ] `.env` file created
-- [ ] Ports 8000 available
-- [ ] For GPU: nvidia-docker installed
+1. **Never use default secrets in production** - Always generate new ones
+2. **Mount model weights read-only** - Use `:ro` flag
+3. **Run as non-root** - Container uses `appuser` (UID 1000)
+4. **Network isolation** - Use Docker networks for service communication
 
----
+## Performance Tips
 
-With this setup, you can develop on Mac and deploy to Windows/Linux seamlessly!
+1. **Use `.dockerignore`** - Excludes unnecessary files from build context
+2. **Layer caching** - Dependencies installed before code for faster rebuilds
+3. **Multi-stage builds** - Reduces final image size by ~40%
+4. **Parallel service startup** - Redis and API start concurrently
+
+## Updating
+
+```bash
+# Pull latest code
+git pull origin main
+
+# Rebuild image
+docker build --build-arg INSTALL_ML=true -t big-mood-detector:latest .
+
+# Restart services
+docker-compose down
+docker-compose up -d api redis
+```
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/Clarity-Digital-Twin/big-mood-detector/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Clarity-Digital-Twin/big-mood-detector/discussions)
+- **Logs**: `docker logs mood-api` or check `./logs/` volume
