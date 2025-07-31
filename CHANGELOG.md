@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.8] - 2025-07-31 - XML Data Scanning
+
+### Added
+- **XML Data Scanning** (Issue #64) - Preview data before processing
+  - Fast scanning: 12.5 seconds for 545MB files
+  - `--scan` flag for `process` and `predict` commands
+  - Auto-prompts for files >100MB
+  - Shows available/unavailable features with explanations
+- **Feature Availability Checking** - Know what's possible before processing
+  - Clinical feature requirements mapping
+  - Clear explanations for missing data
+  - Record count summaries by type
+- **Enhanced XML Parsers** - Efficient counting without object creation
+  - `count_records_by_type()` method for both parsers
+  - Detailed mode for all record types
+  - Memory-efficient streaming maintained
+
+### Fixed
+- **Type Annotations** - Fixed missing annotations in DataParsingService
+- **Interface Compatibility** - Added missing methods to StreamingXMLParser
+- **CLI Return Types** - Fixed recursive call return type issue
+
+### Improved
+- **User Experience** - No more 10+ minute waits to find missing data
+- **Performance** - Zero object allocation during scanning
+- **Documentation** - Added comprehensive test examples
+
 ## [0.5.7] - 2025-07-30 - Production Fixes & Robustness
 
 ### Fixed

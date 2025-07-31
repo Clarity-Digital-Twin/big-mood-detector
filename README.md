@@ -67,17 +67,20 @@ pip install big-mood-detector
 # 2. Export Apple Health data (Settings → Health → Export)
 #    Place export.xml in: data/input/apple_export/
 
-# 3. Analyze your data (research purposes)
+# 3. For large files (>100MB), scan first to check data availability
+big-mood predict data/input/apple_export/export.xml --scan
+
+# 4. Analyze your data (research purposes)
 big-mood predict data/input/apple_export/export.xml --report
 
-# 4. With temporal analysis (NOW vs TOMORROW)
+# 5. With temporal analysis (NOW vs TOMORROW)
 big-mood predict data/input/apple_export/export.xml --ensemble --report
 
-# 5. Auto-window selection (enabled by default in v0.5.6+)
+# 6. Auto-window selection (enabled by default in v0.5.6+)
 # Automatically finds optimal data windows for both models
 big-mood predict data/input/apple_export/export.xml --report
 
-# 6. To disable auto-window and specify dates manually
+# 7. To disable auto-window and specify dates manually
 big-mood predict data/input/apple_export/export.xml --no-auto-window --date-range 2024-01-01:2024-03-31
 ```
 
@@ -109,11 +112,37 @@ Research Risk Scores (Not Diagnostic)
 
 PAT = transformer AI, XGBoost = gradient boosting, ensemble = enhanced reliability.
 
+## Working with Large Files (v0.5.8+)
+
+**New!** Fast data scanning to preview what's available before processing:
+
+```bash
+# Scan a large export (takes seconds, not minutes)
+big-mood predict export.xml --scan
+
+# Example output:
+📊 Data Summary:
+• Total records: 8,755,251
+• Heart Rate: 5,074,424 records
+• Step Count: 3,513,756 records
+• Sleep Analysis: 3,608 records
+
+✅ Available Features:
+• depression_risk: Depression risk prediction (XGBoost)
+• mania_risk: Mania/hypomania risk prediction (XGBoost)
+
+⚠️ Unavailable Features:
+• hrv_analysis: Missing required type: HKQuantityTypeIdentifierHeartRateVariabilitySDNN
+```
+
+Files over 100MB will automatically prompt to scan first. This prevents waiting 10+ minutes only to discover missing data.
+
 ## Technical Features
 
 | Component | Status | Performance |
 |-----------|---------|-------------|
 | Apple Health XML parsing | ✅ | 33MB/s, <100MB RAM |
+| XML data scanning | ✅ | 12s for 545MB file |
 | PAT transformer model | ✅ | 0.593 AUC depression (NHANES) |
 | XGBoost circadian model | ✅ | 0.80-0.98 AUC (Korean cohort) |
 | Privacy-first processing | ✅ | 100% local, no data sharing |
