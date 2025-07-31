@@ -4,8 +4,9 @@ Simplified integration tests for ensemble functionality.
 These tests focus on verifying basic ensemble setup without heavy mocking.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
     TemporalEnsembleOrchestrator,

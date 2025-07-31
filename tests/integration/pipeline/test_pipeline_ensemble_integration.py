@@ -11,14 +11,14 @@ from unittest.mock import Mock, PropertyMock, patch
 from big_mood_detector.application.services.temporal_ensemble_orchestrator import (
     TemporalEnsembleOrchestrator,
 )
+from big_mood_detector.application.use_cases.predict_mood_ensemble_use_case import (
+    EnsemblePrediction,
+)
 from big_mood_detector.application.use_cases.process_health_data_use_case import (
     MoodPredictionPipeline,
     PipelineConfig,
 )
 from big_mood_detector.domain.services.mood_predictor import MoodPrediction
-from big_mood_detector.application.use_cases.predict_mood_ensemble_use_case import (
-    EnsemblePrediction,
-)
 
 
 class TestPipelineEnsembleIntegration:
