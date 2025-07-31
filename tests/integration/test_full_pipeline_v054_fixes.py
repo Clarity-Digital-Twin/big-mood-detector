@@ -230,8 +230,9 @@ class TestFullPipelineIntegration:
         @dataclass
         class MockPrediction:
             depression_risk: float
-            mania_risk: float
-            hypomanic_risk: float  # Fixed attribute name
+            manic_risk: float  # Fixed to match what orchestrator expects
+            hypomanic_risk: float
+            confidence: float = 0.8  # Add confidence too
             
         class MockXGBoostPredictor:
             def predict_episode_tomorrow(self, features):
@@ -239,8 +240,8 @@ class TestFullPipelineIntegration:
                 base_risk = float(np.mean(features)) / 100.0
                 return MockPrediction(
                     depression_risk=min(base_risk * 1.2, 0.8),
-                    mania_risk=min(base_risk * 0.5, 0.3),
-                    hypomanic_risk=min(base_risk * 0.8, 0.5),  # Fixed attribute name
+                    manic_risk=min(base_risk * 0.5, 0.3),  # Fixed to match
+                    hypomanic_risk=min(base_risk * 0.8, 0.5),
                 )
 
             def predict(self, features):

@@ -41,12 +41,20 @@ def calculate_timeout(file_size_mb: float) -> int:
     Returns:
         Timeout in seconds (0 = no timeout)
     """
-    if file_size_mb < 50:
-        return 120  # 2 minutes
-    elif file_size_mb < 200:
-        return 300  # 5 minutes
+    from big_mood_detector.core.constants import (
+        SMALL_FILE_THRESHOLD_MB,
+        LARGE_FILE_THRESHOLD_MB,
+        SMALL_FILE_TIMEOUT_SECONDS,
+        MEDIUM_FILE_TIMEOUT_SECONDS,
+        NO_TIMEOUT,
+    )
+    
+    if file_size_mb < SMALL_FILE_THRESHOLD_MB:
+        return SMALL_FILE_TIMEOUT_SECONDS
+    elif file_size_mb < LARGE_FILE_THRESHOLD_MB:
+        return MEDIUM_FILE_TIMEOUT_SECONDS
     else:
-        return 0    # No timeout for large files
+        return NO_TIMEOUT
 
 
 def validate_input_path(input_path: Path) -> None:
