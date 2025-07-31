@@ -8,7 +8,7 @@ exclude = ["reference_repos"]
 
 [project]
 name = "big-mood-detector"
-version = "0.5.4"
+version = "0.5.7"
 description = "Clinical-grade bipolar mood detection backend using Apple HealthKit data"
 authors = [{name = "The-Obstacle-Is-The-Way", email = "The-Obstacle-Is-The-Way@users.noreply.github.com"}]
 license = {text = "Apache-2.0"}
@@ -164,7 +164,7 @@ big-mood = "big_mood_detector.main:main"
 [tool.ruff]
 target-version = "py312"
 line-length = 88
-extend-exclude = ["reference_repos", "literature"]
+extend-exclude = ["reference_repos", "literature", "scripts/archive"]
 
 [tool.ruff.lint]
 select = [
@@ -296,7 +296,7 @@ ignore_missing_imports = true
 # Pytest Configuration
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-v --strict-markers --strict-config -m 'not slow_finetune and not large and not heavy and not performance and not e2e' --tb=short -p no:pytest_benchmark --disable-warnings"
+addopts = "-v --strict-markers --strict-config -m 'not slow_finetune and not large and not heavy and not performance and not e2e' --tb=short -p no:pytest_benchmark --disable-warnings --cov=big_mood_detector --cov-report=term --cov-fail-under=70"
 testpaths = ["tests"]
 timeout = 60  # Global timeout per test in seconds
 timeout_method = "thread"  # Works better with pytest-xdist
@@ -311,6 +311,7 @@ markers = [
     "ml: marks tests that require ML models",
     "clinical: marks tests for clinical validation",
     "flaky: marks tests that are known to be flaky (pre-existing issues)",
+    "regression: marks tests for regression testing",
     "performance: marks tests for performance testing (deselect with '-m \"not performance\"')",
     "e2e: marks tests as end-to-end tests (deselect with '-m \"not e2e\"')",
 ]

@@ -221,20 +221,28 @@ class TestFullPipelineIntegration:
         """
         Test that temporal ensemble works with all fixes applied.
         """
-        # Create components
-        pat_loader = ProductionPATLoader(skip_loading=True)
-        XGBoostModelLoader()
+        # Create components with stub loading for testing
+        pat_loader = ProductionPATLoader()
 
         # Mock XGBoost predictor
+        from dataclasses import dataclass
+        
+        @dataclass
+        class MockPrediction:
+            depression_risk: float
+            manic_risk: float  # Fixed to match what orchestrator expects
+            hypomanic_risk: float
+            confidence: float = 0.8  # Add confidence too
+            
         class MockXGBoostPredictor:
             def predict_episode_tomorrow(self, features):
                 # Return varied predictions based on input
                 base_risk = float(np.mean(features)) / 100.0
-                return {
-                    "depression": min(base_risk * 1.2, 0.8),
-                    "mania": min(base_risk * 0.5, 0.3),
-                    "hypomania": min(base_risk * 0.8, 0.5),
-                }
+                return MockPrediction(
+                    depression_risk=min(base_risk * 1.2, 0.8),
+                    manic_risk=min(base_risk * 0.5, 0.3),  # Fixed to match
+                    hypomanic_risk=min(base_risk * 0.8, 0.5),
+                )
 
             def predict(self, features):
                 # Alias for predict_episode_tomorrow

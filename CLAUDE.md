@@ -49,7 +49,7 @@ CLI/API → Use Cases → Domain ← Infrastructure
 - **Infrastructure**: ML models, parsers, DB
 - **Interfaces**: CLI commands, FastAPI routes
 
-## Current Capabilities (v0.5.0)
+## Current Capabilities (v0.5.7)
 
 ### ✅ Production Ready
 - **XGBoost**: Depression/mania risk (36 Seoul features)
@@ -57,6 +57,10 @@ CLI/API → Use Cases → Domain ← Infrastructure
 - **Temporal Ensemble**: XGBoost (tomorrow) + PAT (now)
 - **XML Parser**: 521MB files in <100MB RAM
 - **Fast CI/CD**: 2-minute test runs with TESTING=1
+- **Auto-Window Selection**: Smart data window selection for sparse/dense data
+- **Window-Level Predictions**: Proper aggregation for XGBoost-only scenarios
+- **Dynamic Timeout**: File-size based timeout (2min/5min/unlimited)
+- **Cross-Platform**: Windows WSL2 compatibility
 
 ### 🔧 Key Features
 - Process Apple Health export.xml
@@ -194,4 +198,4 @@ Avoid loading:
 ---
 **Remember**: Clinical accuracy > Feature complexity > Performance
 
-**Python**: 3.12+ required | **Coverage**: 90%+ | **Type-safe**: mypy clean
+**Python**: 3.12+ required | **Coverage**: 73%+ | **Type-safe**: mypy clean
