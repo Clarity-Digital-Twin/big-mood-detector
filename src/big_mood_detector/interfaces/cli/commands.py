@@ -894,7 +894,8 @@ def predict_command(
                     # Recursively call with --scan flag
                     ctx = click.get_current_context()
                     ctx.params['scan'] = True
-                    return predict_command(**ctx.params)
+                    predict_command(**ctx.params)
+                    return
 
         click.echo(f"Processing health data from: {input_path}")
 

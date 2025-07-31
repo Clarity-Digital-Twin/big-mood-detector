@@ -25,6 +25,7 @@ from big_mood_detector.domain.value_objects.feature_availability import (
 )
 from big_mood_detector.domain.value_objects.feature_requirements import (
     FEATURE_REQUIREMENTS,
+    FeatureRequirement,
 )
 from big_mood_detector.infrastructure.parsers.json.json_parsers import (
     ActivityJSONParser,
@@ -697,7 +698,7 @@ class DataParsingService:
             scan_duration_seconds=scan_duration,
         )
     
-    def _meets_requirements(self, record_counts: dict[str, int], requirement) -> bool:
+    def _meets_requirements(self, record_counts: dict[str, int], requirement: FeatureRequirement) -> bool:
         """Check if record counts meet feature requirements."""
         # Check all required types exist with sufficient data
         for required_type in requirement.required_types:
@@ -722,7 +723,7 @@ class DataParsingService:
         
         return True
     
-    def _explain_missing(self, record_counts: dict[str, int], requirement) -> str:
+    def _explain_missing(self, record_counts: dict[str, int], requirement: FeatureRequirement) -> str:
         """Explain why a feature is unavailable."""
         missing_types = []
         insufficient_types = []
