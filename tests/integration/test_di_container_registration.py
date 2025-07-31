@@ -133,9 +133,12 @@ class TestDIContainerRegistration:
         container = Container()
 
         # Register a mock service as singleton
-        mock_service = Mock()
-        container.register_singleton(type("TestService", (), {}), mock_service)
+        class TestService:
+            pass
+        
+        mock_service = TestService()
+        container.register_singleton(TestService, mock_service)
 
         # Resolve should return our mock
-        resolved = container.resolve(type("TestService", (), {}))
+        resolved = container.resolve(TestService)
         assert resolved is mock_service

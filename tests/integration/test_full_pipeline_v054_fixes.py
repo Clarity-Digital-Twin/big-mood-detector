@@ -225,15 +225,23 @@ class TestFullPipelineIntegration:
         pat_loader = ProductionPATLoader()
 
         # Mock XGBoost predictor
+        from dataclasses import dataclass
+        
+        @dataclass
+        class MockPrediction:
+            depression_risk: float
+            mania_risk: float
+            hypomania_risk: float
+            
         class MockXGBoostPredictor:
             def predict_episode_tomorrow(self, features):
                 # Return varied predictions based on input
                 base_risk = float(np.mean(features)) / 100.0
-                return {
-                    "depression": min(base_risk * 1.2, 0.8),
-                    "mania": min(base_risk * 0.5, 0.3),
-                    "hypomania": min(base_risk * 0.8, 0.5),
-                }
+                return MockPrediction(
+                    depression_risk=min(base_risk * 1.2, 0.8),
+                    mania_risk=min(base_risk * 0.5, 0.3),
+                    hypomania_risk=min(base_risk * 0.8, 0.5),
+                )
 
             def predict(self, features):
                 # Alias for predict_episode_tomorrow
