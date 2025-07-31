@@ -1,6 +1,6 @@
 """Contract for enforcing timezone consistency in the domain layer."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TypeVar
 
 T = TypeVar('T', bound=datetime)
@@ -14,7 +14,7 @@ class TimezoneContract:
     representing UTC time implicitly. This avoids timezone arithmetic
     errors and simplifies datetime operations.
     """
-    
+
     @staticmethod
     def ensure_naive(dt: T) -> T:
         """
@@ -28,10 +28,10 @@ class TimezoneContract:
         """
         if dt.tzinfo is not None:
             # Convert to UTC then make naive
-            utc_dt = dt.astimezone(timezone.utc)
+            utc_dt = dt.astimezone(UTC)
             return utc_dt.replace(tzinfo=None)
         return dt
-    
+
     @staticmethod
     def validate_domain_datetime(dt: datetime) -> None:
         """

@@ -144,7 +144,7 @@ class TestNoFakeMedicalData:
                 heart_records=[],
                 target_date=date.today(),
             )
-        
+
         # Verify we got real predictions, not fake defaults
         assert result is not None
         assert result.overall_prediction is not None

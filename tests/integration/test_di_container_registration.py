@@ -111,7 +111,7 @@ class TestDIContainerRegistration:
         """Services are registered directly in the container module."""
         # The registration happens automatically when getting the container
         container = get_container()
-        
+
         # Should be able to resolve core services
         from big_mood_detector.domain.services.sleep_aggregator import SleepAggregator
         sleep_agg = container.resolve(SleepAggregator)

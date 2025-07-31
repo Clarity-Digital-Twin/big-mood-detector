@@ -1,8 +1,6 @@
 """Integration tests for timezone handling throughout the pipeline."""
 
-from datetime import date, datetime, timezone
-
-import pytest
+from datetime import UTC, date, datetime
 
 from big_mood_detector.application.use_cases.process_health_data_use_case import (
     MoodPredictionPipeline,
@@ -18,8 +16,8 @@ class TestTimezoneRobustness:
         records = [
             SleepRecord(
                 source_name="Test",
-                start_date=datetime(2025, 1, 27, 22, 0, tzinfo=timezone.utc),
-                end_date=datetime(2025, 1, 28, 6, 0, tzinfo=timezone.utc),
+                start_date=datetime(2025, 1, 27, 22, 0, tzinfo=UTC),
+                end_date=datetime(2025, 1, 28, 6, 0, tzinfo=UTC),
                 state=SleepState.ASLEEP
             ),
             SleepRecord(
@@ -29,11 +27,11 @@ class TestTimezoneRobustness:
                 state=SleepState.ASLEEP
             )
         ]
-        
+
         pipeline = MoodPredictionPipeline(
             config=PipelineConfig(use_seoul_features=True)
         )
-        
+
         # This should not raise TypeError about mixing timezone-aware and naive
         result = pipeline.process_health_data(
             sleep_records=records,
@@ -41,29 +39,29 @@ class TestTimezoneRobustness:
             heart_records=[],
             target_date=date(2025, 1, 29)
         )
-        
+
         assert result.has_errors is False
         assert result.overall_summary is not None
-    
+
     def test_feature_extraction_with_aware_datetimes(self):
         """Feature extraction should handle timezone-aware inputs correctly."""
         # Create timezone-aware sleep records
         records = []
         for day in range(30):
-            start_dt = datetime(2025, 1, 1 + day, 22, 0, tzinfo=timezone.utc)
-            end_dt = datetime(2025, 1, 2 + day, 6, 0, tzinfo=timezone.utc)
-            
+            start_dt = datetime(2025, 1, 1 + day, 22, 0, tzinfo=UTC)
+            end_dt = datetime(2025, 1, 2 + day, 6, 0, tzinfo=UTC)
+
             records.append(SleepRecord(
                 source_name="Test",
                 start_date=start_dt,
                 end_date=end_dt,
                 state=SleepState.ASLEEP
             ))
-        
+
         pipeline = MoodPredictionPipeline(
             config=PipelineConfig(use_seoul_features=True)
         )
-        
+
         # Should complete without timezone errors
         result = pipeline.process_health_data(
             sleep_records=records,
@@ -71,6 +69,6 @@ class TestTimezoneRobustness:
             heart_records=[],
             target_date=date(2025, 1, 31)
         )
-        
+
         assert result.has_errors is False
         assert len(result.daily_predictions) > 0

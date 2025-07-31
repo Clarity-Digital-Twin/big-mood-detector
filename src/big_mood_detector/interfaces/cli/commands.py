@@ -331,7 +331,7 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
         if result.window_predictions:
             f.write("\nWINDOW-LEVEL ANALYSIS\n")
             f.write("-" * 30 + "\n")
-            
+
             for (start, end), pred in result.window_predictions.items():
                 f.write(f"\nPeriod: {start} to {end}\n")
                 f.write(f"  Model: {pred.get('model', 'Unknown').upper()}\n")
@@ -343,7 +343,7 @@ def generate_clinical_report(result: PipelineResult, output_path: Path) -> None:
                 f.write(f"  Hypomanic Risk: {format_risk_level(pred['hypomanic_risk'])}\n")
                 f.write(f"  Manic Risk: {format_risk_level(pred['manic_risk'])}\n")
                 f.write(f"  Confidence: {pred['confidence']:.0%}\n")
-        
+
         f.write("\nCLINICAL RISK ASSESSMENT\n")
         f.write("-" * 30 + "\n")
 
@@ -776,12 +776,12 @@ def predict_command(
         # Calculate timeout based on file size
         file_size_mb = input_path_obj.stat().st_size / (1024 * 1024)
         timeout = calculate_timeout(file_size_mb)
-        
+
         if timeout == 0:
             click.echo(f"📁 Large file detected ({file_size_mb:.0f}MB). Processing may take 10-15 minutes...")
         elif file_size_mb > 50:
             click.echo(f"📁 Processing {file_size_mb:.0f}MB file (timeout: {timeout//60} minutes)...")
-        
+
         # Convert datetime to date at the edge for clean internal APIs
         start_date_param: date | None = start_date.date() if start_date else None
         end_date_param: date | None = end_date.date() if end_date else None
@@ -791,7 +791,7 @@ def predict_command(
         import signal
         from collections.abc import Iterator
         from contextlib import contextmanager
-        
+
         @contextmanager
         def timeout_handler(seconds: int) -> Iterator[None]:
             """Cross-platform timeout handler."""
@@ -799,7 +799,7 @@ def predict_command(
                 # Unix-based systems: use signal-based timeout
                 def timeout_error(signum: int, frame: Any) -> None:
                     raise TimeoutError(f"Processing timed out after {seconds} seconds")
-                
+
                 signal.signal(signal.SIGALRM, timeout_error)
                 signal.alarm(seconds)
                 try:
@@ -811,7 +811,7 @@ def predict_command(
                 if seconds > 0 and platform.system() == "Windows":
                     click.echo("⚠️  Note: Timeout protection not available on Windows")
                 yield
-        
+
         try:
             with timeout_handler(timeout):
                 result = pipeline.process_apple_health_file(
@@ -821,7 +821,7 @@ def predict_command(
                 )
         except TimeoutError as e:
             click.echo(f"❌ {str(e)}", err=True)
-            click.echo(f"💡 Tip: Try processing a smaller date range or use --start-date and --end-date", err=True)
+            click.echo("💡 Tip: Try processing a smaller date range or use --start-date and --end-date", err=True)
             sys.exit(1)
 
         # Display window analysis if dual model strategy was used

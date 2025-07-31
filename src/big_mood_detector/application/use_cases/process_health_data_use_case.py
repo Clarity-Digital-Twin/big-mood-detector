@@ -526,7 +526,7 @@ class MoodPredictionPipeline:
         if window_analysis and window_analysis.can_run_xgboost and not window_analysis.can_run_pat:
             # XGBoost-only mode: generate ONE prediction for the entire window
             logger.info("Using XGBoost-only mode with window-level prediction")
-            
+
             # Aggregate features across the entire window
             if self.config.use_seoul_features and self.aggregation_pipeline:
                 # Get aggregated features for the window
@@ -537,13 +537,13 @@ class MoodPredictionPipeline:
                     start_date=start_date,
                     end_date=end_date,
                 )
-                
+
                 if seoul_features_list:
                     # Aggregate all daily features into a single window feature
                     # This represents the overall pattern across the window
                     aggregated_features: dict[str, list[float]] = {}
                     feature_count = 0
-                    
+
                     for daily_feature in seoul_features_list:
                         feature_dict = daily_feature.to_xgboost_dict()
                         for key, value in feature_dict.items():
@@ -551,21 +551,21 @@ class MoodPredictionPipeline:
                                 aggregated_features[key] = []
                             aggregated_features[key].append(value)
                         feature_count += 1
-                    
+
                     # Compute window-level statistics (mean of daily features)
                     window_features = {}
                     for key, values in aggregated_features.items():
                         window_features[key] = np.mean(values)
-                    
+
                     # Create feature vector for XGBoost
                     from big_mood_detector.infrastructure.ml_models.xgboost_models import (
                         XGBoostModelLoader,
                     )
                     feature_vector = np.array([window_features.get(name, 0.0) for name in XGBoostModelLoader.FEATURE_NAMES])
-                    
+
                     # Make single prediction for the window
                     prediction = self.mood_predictor.predict(feature_vector)
-                    
+
                     # Store as window prediction
                     window_key = (start_date, end_date)
                     window_predictions[window_key] = {
@@ -578,17 +578,17 @@ class MoodPredictionPipeline:
                         "days_analyzed": feature_count,
                         "feature_aggregation": "window_mean"
                     }
-                    
+
                     # For backward compatibility, also populate overall summary
                     overall_summary["depression_risk"] = prediction.depression_risk
                     overall_summary["hypomanic_risk"] = prediction.hypomanic_risk
                     overall_summary["manic_risk"] = prediction.manic_risk
                     overall_summary["primary_model"] = "xgboost"
                     overall_summary["analysis_type"] = "window"
-                    
+
                     # Don't create daily predictions in window mode
                     logger.info(f"Generated window prediction for {start_date} to {end_date}")
-        
+
         # Original flow for ensemble mode or when PAT is available
         elif self.config.use_seoul_features and self.aggregation_pipeline and not self.ensemble_orchestrator:
             # Generate Seoul features specifically for XGBoost

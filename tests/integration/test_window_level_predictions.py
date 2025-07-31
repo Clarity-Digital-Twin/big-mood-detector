@@ -2,8 +2,6 @@
 
 from datetime import date, datetime, timedelta
 
-import pytest
-
 from big_mood_detector.application.use_cases.process_health_data_use_case import (
     MoodPredictionPipeline,
     PipelineConfig,
@@ -11,9 +9,6 @@ from big_mood_detector.application.use_cases.process_health_data_use_case import
 from big_mood_detector.domain.entities.sleep_record import SleepRecord, SleepState
 from big_mood_detector.domain.services.dual_model_window_strategy import (
     DualModelWindowStrategy,
-)
-from big_mood_detector.domain.services.sparse_window_strategy import (
-    SparseWindowStrategy,
 )
 
 
@@ -34,7 +29,7 @@ class TestWindowLevelPredictions:
                         state=SleepState.ASLEEP
                     )
                 )
-        
+
         # Configure pipeline with dual model strategy (which will detect XGBoost-only scenario)
         pipeline = MoodPredictionPipeline(
             config=PipelineConfig(
@@ -42,11 +37,11 @@ class TestWindowLevelPredictions:
                 window_selection_strategy=DualModelWindowStrategy()
             )
         )
-        
+
         # Debug: check what we created
         print(f"Created {len(sleep_records)} sleep records")
         print(f"Date range: {min(r.start_date.date() for r in sleep_records)} to {max(r.start_date.date() for r in sleep_records)}")
-        
+
         # Process data
         result = pipeline.process_health_data(
             sleep_records=sleep_records,
@@ -54,49 +49,49 @@ class TestWindowLevelPredictions:
             heart_records=[],
             target_date=date(2025, 1, 18)  # Mid January
         )
-        
+
         # Debug: check what was returned
         print(f"Result metadata: {result.metadata}")
         print(f"Warnings: {result.warnings}")
-        
+
         # NEW behavior: window predictions instead of daily
         assert hasattr(result, 'window_predictions'), "Should have window_predictions attribute"
-        
+
         # Should have window predictions
         assert len(result.window_predictions) > 0, "Should have at least one window prediction"
-        
+
         # Should NOT have daily predictions in XGBoost-only mode
         assert len(result.daily_predictions) == 0, "Should not have daily predictions in window mode"
-        
+
         # Check window prediction structure
         for window_key, prediction in result.window_predictions.items():
             start_date, end_date = window_key
             assert isinstance(start_date, date)
             assert isinstance(end_date, date)
             assert start_date < end_date
-            
+
             # Check prediction contents
             assert "depression_risk" in prediction
             assert "model" in prediction
             assert prediction["model"] == "xgboost"
             assert "window_coverage" in prediction
             assert "days_analyzed" in prediction
-    
+
     def test_desired_window_prediction_structure(self):
         """Test the desired structure for window-level predictions."""
         # This is what we WANT the result to look like
-        
+
         from big_mood_detector.domain.services.window_selection_strategy import (
             DateWindow,
         )
-        
+
         window = DateWindow(
             start_date=date(2025, 1, 1),
             end_date=date(2025, 1, 30),
             days_count=30,
             data_quality=0.67  # 20 out of 30 days
         )
-        
+
         # Desired result structure
         desired_result = {
             "window_predictions": {
@@ -122,15 +117,15 @@ class TestWindowLevelPredictions:
                 }
             }
         }
-        
+
         # Verify structure
         assert "window_predictions" in desired_result
         assert len(desired_result["window_predictions"]) == 1
-        
+
         # Get the single window prediction
         window_key = list(desired_result["window_predictions"].keys())[0]
         window_pred = desired_result["window_predictions"][window_key]
-        
+
         # Verify it's a single prediction for the entire window
         assert window_pred["model"] == "xgboost"
         assert window_pred["days_analyzed"] == 30

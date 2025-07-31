@@ -8,8 +8,6 @@ They will FAIL until we fix the date handling bug.
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-import pytest
-
 from big_mood_detector.application.use_cases.process_health_data_use_case import (
     MoodPredictionPipeline,
 )
@@ -162,7 +160,7 @@ class TestDateHandlingReality:
             heart_records=[],
             target_date=tomorrow,  # Future date!
         )
-        
+
         # Assert - Currently just returns result without predictions for future date
         assert result is not None
         # No predictions should exist for the future date

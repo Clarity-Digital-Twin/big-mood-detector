@@ -1,7 +1,7 @@
 """Tests for timezone consistency throughout the application."""
 
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -39,17 +39,17 @@ class TestTimezoneContract:
           endDate="2025-01-28 06:30:00 +0000"
           value="HKCategoryValueSleepAnalysisAsleepCore"/>
 </HealthData>"""
-        
+
         # Write to temporary file since parser expects file path
         with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False) as f:
             f.write(xml_content)
             temp_path = f.name
-        
+
         try:
             parser = StreamingXMLParser()
             # parse_file returns a generator of records
             records = list(parser.parse_file(temp_path, entity_type="sleep"))
-            
+
             assert len(records) > 0
             sleep_record = records[0]
             assert sleep_record.start_date.tzinfo is None
@@ -59,30 +59,30 @@ class TestTimezoneContract:
             assert sleep_record.end_date == datetime(2025, 1, 28, 6, 30)
         finally:
             Path(temp_path).unlink()
-    
+
     def test_contract_converts_aware_to_naive(self):
         """Contract should convert aware datetimes to naive."""
-        aware_dt = datetime(2025, 1, 27, 22, 30, tzinfo=timezone.utc)
+        aware_dt = datetime(2025, 1, 27, 22, 30, tzinfo=UTC)
         naive_dt = TimezoneContract.ensure_naive(aware_dt)
-        
+
         assert naive_dt.tzinfo is None
         assert naive_dt == datetime(2025, 1, 27, 22, 30)
-    
+
     def test_contract_preserves_naive(self):
         """Contract should leave naive datetimes unchanged."""
         naive_dt = datetime(2025, 1, 27, 22, 30)
         result = TimezoneContract.ensure_naive(naive_dt)
-        
+
         assert result == naive_dt
         assert result.tzinfo is None
-    
+
     def test_contract_validates_domain_datetime(self):
         """Contract should validate that datetimes meet domain requirements."""
         # Naive datetime should pass
         naive_dt = datetime(2025, 1, 27, 22, 30)
         TimezoneContract.validate_domain_datetime(naive_dt)  # Should not raise
-        
+
         # Aware datetime should fail
-        aware_dt = datetime(2025, 1, 27, 22, 30, tzinfo=timezone.utc)
+        aware_dt = datetime(2025, 1, 27, 22, 30, tzinfo=UTC)
         with pytest.raises(ValueError, match="Domain layer requires timezone-naive datetimes"):
             TimezoneContract.validate_domain_datetime(aware_dt)

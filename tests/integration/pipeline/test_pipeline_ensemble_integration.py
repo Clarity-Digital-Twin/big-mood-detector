@@ -25,25 +25,25 @@ class TestPipelineEnsembleIntegration:
         """Test that pipeline creates temporal ensemble orchestrator when enabled."""
         from big_mood_detector.core.paths import MODEL_WEIGHTS_DIR
         from big_mood_detector.infrastructure.di import get_container
-        
+
         # Create pipeline with ensemble enabled
         config = PipelineConfig(
             include_pat_sequences=True,  # This triggers ensemble
             model_dir=MODEL_WEIGHTS_DIR / "xgboost" / "converted",
         )
-        
+
         # Get real DI container
         di_container = get_container()
-        
+
         # Create pipeline - this will load real models
         pipeline = MoodPredictionPipeline(config=config, di_container=di_container)
-        
+
         # Verify ensemble orchestrator is created
         if pipeline.ensemble_orchestrator is None:
             # Models might not be available in test env
             import pytest
             pytest.skip("Models not available for ensemble test")
-        
+
         assert isinstance(pipeline.ensemble_orchestrator, TemporalEnsembleOrchestrator)
 
     @patch(
