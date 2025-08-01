@@ -53,7 +53,7 @@ CLI/API → Use Cases → Domain ← Infrastructure
 
 ### ✅ Production Ready
 - **XGBoost**: Depression/mania risk (36 Seoul features)
-- **PAT-Conv-L**: Depression detection (0.593 AUC)
+- **PAT-Conv-L**: Depression detection (0.584 AUC honest test, paper: 0.625)
 - **Temporal Ensemble**: XGBoost (tomorrow) + PAT (now)
 - **XML Parser**: 521MB files in <100MB RAM
 - **Fast CI/CD**: 2-minute test runs with TESTING=1
@@ -74,7 +74,7 @@ CLI/API → Use Cases → Domain ← Infrastructure
 | Model | Purpose | Status | Accuracy |
 |-------|---------|--------|----------|
 | XGBoost | Future risk (circadian) | ✅ Ready | AUC 0.80-0.98 |
-| PAT-Conv-L | Current state (activity) | ✅ Ready | AUC 0.593 |
+| PAT-Conv-L | Current state (activity) | ✅ Ready | AUC 0.584 (honest) |
 | Ensemble | Temporal separation | ✅ Ready | Improved |
 
 ### Required Files
@@ -82,7 +82,7 @@ CLI/API → Use Cases → Domain ← Infrastructure
 model_weights/
 ├── xgboost/converted/*.json    # XGBoost models
 ├── pat/pretrained/PAT-*.h5     # PAT pretrained weights
-└── production/pat_conv_l_v0.5929.pth  # Trained depression head
+└── pat/production/pat_conv_l_v0.5929.pth  # Depression head (0.584 honest AUC)
 ```
 
 ## Development Guidelines

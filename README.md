@@ -143,7 +143,7 @@ Files over 100MB will automatically prompt to scan first. This prevents waiting 
 |-----------|---------|-------------|
 | Apple Health XML parsing | ✅ | 33MB/s, <100MB RAM |
 | XML data scanning | ✅ | 12s for 545MB file |
-| PAT transformer model | ✅ | 0.593 AUC depression (NHANES) |
+| PAT transformer model | ✅ | 0.584 AUC depression (NHANES honest test) |
 | XGBoost circadian model | ✅ | 0.80-0.98 AUC (Korean cohort) |
 | Privacy-first processing | ✅ | 100% local, no data sharing |
 | Clinical feature extraction | ✅ | DSM-5 aligned thresholds |
@@ -158,7 +158,7 @@ Files over 100MB will automatically prompt to scan first. This prevents waiting 
 
 **Model Accuracy** (from original research):
 - Current depression screening (PAT, general population):
-  - Depression detection: 0.593 AUC (US NHANES 2013-14)¹
+  - Depression detection: 0.584 AUC (US NHANES 2013-14, honest test set)¹
 - Next-day episode prediction (XGBoost, mood disorder patients):
   - Depression episodes: 0.80 AUC (Korean cohort, MDD+BD patients)²
   - Manic episodes: 0.98 AUC (Korean cohort, BD patients)²
@@ -190,7 +190,7 @@ Files over 100MB will automatically prompt to scan first. This prevents waiting 
 - PAT: Pre-trained on 21,538 US adults, fine-tuned on 2,800 with PHQ-9 scores
 
 **Performance constraints**:
-- Current depression screening: Moderate accuracy (0.593 AUC)
+- Current depression screening: Moderate accuracy (0.584 AUC honest test, paper claims 0.625)
 - Next-day episode prediction: High accuracy but limited to Korean cohort (0.80-0.98 AUC)
 - No validation across ethnicities, age groups, or comorbid conditions
 - Research tool only — not FDA approved or clinically validated
