@@ -208,14 +208,15 @@ Files over 100MB will automatically prompt to scan first. This prevents waiting 
 
 **Category**: Agents of Change
 
-This project was built with love (and Claude!) for the GitHub Universe 2024 hackathon. It represents a breakthrough in mental health technology - bringing clinical-grade mood prediction to everyone while keeping data completely private.
+This project was built with love (and Claude!) for the GitHub Universe 2025 hackathon. It represents a breakthrough in mental health technology - bringing clinical-grade mood prediction to everyone while keeping data completely private.
 
-**Built with GitHub Copilot**: Yes! Claude and Copilot worked together to implement cutting-edge research papers, debug complex ML pipelines, and even discover critical bugs in the original implementation.
+**Built with Claude**: This entire project was built with Claude as my AI pair programmer, implementing cutting-edge research papers, debugging complex ML pipelines, and discovering critical bugs that inflated the original performance metrics.
 
 ### The Journey
 - Started as an implementation of two breakthrough research papers
 - Discovered and fixed critical bugs (no test set!) that inflated performance metrics
-- Achieved **0.67 AUC** validation (surpassing paper's 0.625) with proper train/test split
+- Achieved **0.6708 AUC** validation (surpassing paper's 0.625) with proper train/test split
+- Test AUC: **0.5840** (honest evaluation without data leakage)
 - Built entirely with AI assistance over intense coding sessions
 
 ### Why This Matters

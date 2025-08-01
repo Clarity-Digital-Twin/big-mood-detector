@@ -6,5 +6,9 @@
   "parameters": 1984289,
   "architecture": "PAT-L with Conv1d patch embedding",
   "dataset": "NHANES 2013-2014",
-  "task": "Depression classification (PHQ-9 >= 10)"
+  "task": "Depression classification (PHQ-9 >= 10)",
+  "update_note": "UPDATED 2025-07-31: File replaced with v0.6708 model (correct train/test split)",
+  "actual_validation_auc": 0.6708,
+  "actual_test_auc": 0.5840,
+  "previous_test_auc_with_leakage": 0.5929
 }

@@ -1,0 +1,10 @@
+{
+  "validation_auc": 0.6708,
+  "test_auc": 0.5840,
+  "train_test_split": "correct",
+  "date": "2025-07-31",
+  "training_script": "train_pat_conv_l_final.py",
+  "notes": "Honest evaluation with proper train/test split, no data leakage",
+  "paper_target_auc": 0.625,
+  "previous_buggy_auc": 0.5929
+}
