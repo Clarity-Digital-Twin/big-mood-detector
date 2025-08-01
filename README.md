@@ -215,8 +215,9 @@ This project was built with love (and Claude!) for the GitHub Love of Code 2025 
 ### The Journey
 - Started as an implementation of two breakthrough research papers
 - Discovered and fixed critical bugs (no test set!) that inflated performance metrics
-- Achieved **0.6708 AUC** validation (surpassing paper's 0.625) with proper train/test split
-- Test AUC: **0.5840** (honest evaluation without data leakage)
+- Achieved **0.6708 AUC** validation with proper train/test split
+- Test AUC: **0.5840** (vs paper's **0.625 test AUC**)
+- Fixed critical data leakage bug that inflated previous results
 - Built entirely with AI assistance over intense coding sessions
 
 ### Why This Matters
