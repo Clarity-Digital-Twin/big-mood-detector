@@ -208,7 +208,7 @@ Files over 100MB will automatically prompt to scan first. This prevents waiting 
 
 **Category**: Agents of Change
 
-This project was built with love (and Claude!) for the GitHub Universe 2025 hackathon. It represents a breakthrough in mental health technology - bringing clinical-grade mood prediction to everyone while keeping data completely private.
+This project was built with love (and Claude!) for the GitHub Love of Code 2025 hackathon. It represents a breakthrough in mental health technology - bringing clinical-grade mood prediction to everyone while keeping data completely private.
 
 **Built with Claude**: This entire project was built with Claude as my AI pair programmer, implementing cutting-edge research papers, debugging complex ML pipelines, and discovering critical bugs that inflated the original performance metrics.
 
