@@ -204,6 +204,54 @@ Files over 100MB will automatically prompt to scan first. This prevents waiting 
 | **Researchers** | [Clinical Requirements](docs/clinical/CLINICAL_REQUIREMENTS_DOCUMENT.md) • [PAT Training Details](docs/training/PAT_DEPRESSION_TRAINING.md) |
 | **AI Assistants** | [CLAUDE.md](CLAUDE.md) |
 
+## 🏆 For the Love of Code Hackathon Submission
+
+**Category**: Agents of Change
+
+This project was built with love (and Claude!) for the GitHub Universe 2024 hackathon. It represents a breakthrough in mental health technology - bringing clinical-grade mood prediction to everyone while keeping data completely private.
+
+**Built with GitHub Copilot**: Yes! Claude and Copilot worked together to implement cutting-edge research papers, debug complex ML pipelines, and even discover critical bugs in the original implementation.
+
+### The Journey
+- Started as an implementation of two breakthrough research papers
+- Discovered and fixed critical bugs (no test set!) that inflated performance metrics
+- Achieved **0.67 AUC** validation (surpassing paper's 0.625) with proper train/test split
+- Built entirely with AI assistance over intense coding sessions
+
+### Why This Matters
+Mental health affects millions, but objective tools for early detection remain inaccessible. This project democratizes access to research-grade mood prediction while maintaining complete privacy - your data never leaves your device.
+
+### Demo
+```bash
+# Quick scan of your Apple Health export
+$ big-mood predict export.xml --scan
+
+📊 Data Summary (545MB file scanned in 12.5 seconds):
+• Total records: 8,755,251
+• Sleep Analysis: 3,608 records
+• Step Count: 3,513,756 records
+• Heart Rate: 5,074,424 records
+
+✅ Available Features:
+• depression_risk: Current depression screening (PAT transformer)
+• mania_risk: Next-day mania prediction (XGBoost)
+
+# Run full analysis with ensemble
+$ big-mood predict export.xml --ensemble --report
+
+🧠 Temporal Ensemble Assessment
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Current State (PAT Analysis):
+• Depression: 67.0% probability
+
+Future Risk (XGBoost, next 24h):
+• Depression: 42.3% risk
+• Mania: 8.1% risk
+• Hypomania: 15.2% risk
+
+Confidence: High (0.85)
+```
+
 ## Contributing
 
 Critical research needs:
