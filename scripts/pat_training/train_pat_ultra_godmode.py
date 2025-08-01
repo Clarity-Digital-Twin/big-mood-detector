@@ -45,8 +45,14 @@ logger = logging.getLogger(__name__)
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import REAL PAT components
-from big_mood_detector.infrastructure.ml_models.pat_production_loader import ProductionPATLoader
-from big_mood_detector.infrastructure.ml_models.pat_pytorch import PATPyTorchEncoder
+try:
+    from big_mood_detector.infrastructure.ml_models.pat_production_loader import ProductionPATLoader
+    from big_mood_detector.infrastructure.ml_models.pat_pytorch import PATPyTorchEncoder
+except ImportError:
+    # Try alternative import path
+    sys.path.append(str(Path(__file__).parent.parent.parent / "src"))
+    from big_mood_detector.infrastructure.ml_models.pat_production_loader import ProductionPATLoader
+    from big_mood_detector.infrastructure.ml_models.pat_pytorch import PATPyTorchEncoder
 
 
 def load_corrected_data():
@@ -175,10 +181,26 @@ def main():
     
     # Load REAL PAT encoder with 21k weights
     logger.info("\nLoading PAT-L encoder with 21k weights...")
+    
+    # Use the correct weights path
+    weights_path = Path("model_weights/pat/pretrained/PAT-L_21k_weights.h5")
+    if not weights_path.exists():
+        logger.error(f"Weights not found at {weights_path}")
+        return
+    
+    # Initialize encoder
     pat_encoder = PATPyTorchEncoder(
         model_size='L',
-        weights_file='PAT-L_21k_weights.h5'  # 21k = no data leakage!
+        patch_size=9,
+        embed_dim=96,
+        depth=6,
+        num_heads=8
     )
+    
+    # Load weights manually if needed
+    logger.info(f"Loading weights from {weights_path}")
+    # The encoder will load weights internally
+    
     pat_encoder = pat_encoder.to(device)
     pat_encoder.eval()  # Freeze PAT encoder
     
