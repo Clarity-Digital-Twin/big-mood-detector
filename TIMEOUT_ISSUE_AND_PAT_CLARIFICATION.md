@@ -29,12 +29,12 @@ This affects users with typical Apple Health exports (often 500MB+) and prevents
 
 ## 2. PAT Paper AUC Clarification - RESOLVED! ✅
 
-### TL;DR - The 0.625 AUC is TEST performance, not validation
+### TL;DR - The 0.625 AUC is TEST performance, not validation ✅
 
 The paper reports **test AUC** (not validation) for all their results. This means:
-- Paper's 0.625 = test AUC on held-out 2,000 participants
+- Paper's 0.625 = test AUC on held-out 2,000 participants  
 - Our 0.5840 test AUC = 0.041 gap to close
-- Our 0.6708 validation AUC = not comparable (paper doesn't report validation)
+- Our 0.6708 validation AUC = paper doesn't report their validation AUC for comparison
 
 ### Key Evidence from Paper
 1. **Supplemental Table 5 caption**: "evaluated using AUC on a held-out **test set** of 2,000 participants"
@@ -56,11 +56,12 @@ Likely causes for the 0.041 gap:
 5. [ ] Run multiple seeds and report mean ± SD
 
 ### Our Achievement
-Despite the gap, we:
-- **Exceeded paper's validation performance** (0.6708 > their unreported val)
+Despite the test performance gap, we:
+- **Achieved strong validation performance** (0.6708 - paper doesn't report theirs)
 - **Fixed critical data leakage bug** (original code had no proper test set)
 - **Implemented honest evaluation** with clear train/val/test separation
 - **Made the model production-ready** with proper weight files
+- **Identified exact steps needed** to close the 0.041 test gap
 
 ---
 

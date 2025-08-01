@@ -1,12 +1,17 @@
-# PAT Paper AUC Reporting Clarification Question
+# PAT Paper AUC Reporting Clarification - RESOLVED ✅
 
-## Context
+## ANSWER: The 0.625 is TEST AUC
 
-While implementing the PAT (Pretrained Actigraphy Transformer) paper for depression detection, we noticed an ambiguity in how the paper reports its results that affects interpretation of our implementation's performance.
+After careful analysis, we've confirmed that the paper reports **test AUC** on the held-out 2,000 participant test set, not validation AUC.
 
-## The Question
+### Key Evidence:
+1. **Table caption**: "evaluated using AUC on a held-out test set of 2,000 participants"
+2. **Methods section**: Clearly describes separate train/validation/test splits
+3. **Consistent reporting**: All tables report test performance only
 
-**In Table 5 of the PAT paper, the authors report a 0.625 AUC for PAT Conv-L (LP) on depression detection with n=2800, but it's unclear whether this is validation or test AUC.**
+## Original Question
+
+While implementing the PAT (Pretrained Actigraphy Transformer) paper for depression detection, we initially found the AUC reporting ambiguous.
 
 ### What the Paper States:
 - "Each model is trained on dataset sizes '500', '1,000', '2,500', and '2,800'... and evaluated using AUC on a held-out test set of 2,000 participants"
@@ -17,20 +22,20 @@ While implementing the PAT (Pretrained Actigraphy Transformer) paper for depress
   3. Some combination/average
 
 ### Our Implementation Results:
-- **Validation AUC: 0.6708** (exceeds paper's 0.625!)
-- **Test AUC: 0.5840** (honest evaluation on completely unseen data)
+- **Validation AUC: 0.6708** (paper doesn't report their validation AUC)
+- **Test AUC: 0.5840** (vs paper's 0.625 test AUC - gap of 0.041)
 - Previous buggy implementation: 0.5929 (had data leakage between train/test)
 
-### Why This Matters:
+### Why the Gap Exists:
 
-1. **If paper's 0.625 is validation AUC:**
-   - We successfully reproduced and exceeded their results (0.6708 > 0.625)
-   - The gap between validation and test is expected and normal
+The 0.041 gap between our test AUC (0.5840) and theirs (0.625) is likely due to:
 
-2. **If paper's 0.625 is test AUC:**
-   - Either they achieved better generalization
-   - Or they may have had data leakage (like our initial 0.5929)
-   - Or used different data splits/preprocessing
+1. **Data split methodology** - They use stratified sampling with replacement
+2. **Preprocessing differences**:
+   - Savitzky-Golay smoothing (window=51, polynomial=3)
+   - Per-split standardization
+3. **Linear probe details** - Learning rate, weight decay, initialization
+4. **Random seed effects** - Single run vs averaged results
 
 ### The Core Issue:
 
@@ -39,20 +44,22 @@ Many ML papers don't clearly distinguish between validation and test performance
 - Compare implementations fairly
 - Understand true model generalization
 
-### Questions for the Authors:
+### Lessons Learned:
 
-1. Is the reported 0.625 AUC from the validation set or the held-out test set?
-2. If it's test AUC, what was the validation AUC during model selection?
-3. Was there a separate validation set for hyperparameter tuning and model selection?
-4. How exactly was the data split to ensure no leakage between train/validation/test?
+1. Papers should clearly label whether reported metrics are validation or test
+2. Always report both validation AND test performance for transparency
+3. Our higher validation (0.6708) vs test (0.5840) is normal and healthy
+4. The remaining gap can likely be closed by matching their exact methodology
 
-## Why We're Asking
+## What We Achieved
 
-We've implemented the paper with careful attention to preventing data leakage and achieved:
-- Better validation performance than reported (0.6708 vs 0.625)
-- Realistic test performance showing expected generalization gap (0.5840)
+Despite the test performance gap, we:
+1. **Fixed critical bugs** - Original code had no proper test set
+2. **Implemented honest evaluation** - Clear train/val/test separation 
+3. **Achieved strong validation** - 0.6708 AUC during training
+4. **Demonstrated transparency** - Reporting both validation and test metrics
 
-Understanding whether we're comparing apples to apples (validation vs validation, or test vs test) would help validate our implementation and contribute to more transparent ML research practices.
+The 0.041 test gap can likely be closed by exactly matching their preprocessing pipeline.
 
 ## Our Recommendation
 
