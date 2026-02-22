@@ -6,7 +6,6 @@ This module contains all command implementations for the Big Mood Detector.
 """
 
 import sys
-import time
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any, TypedDict
@@ -38,10 +37,10 @@ class ProcessingMetadata(TypedDict, total=False):
 def calculate_timeout(file_size_mb: float) -> int:
     """
     Calculate appropriate timeout based on file size.
-    
+
     Args:
         file_size_mb: File size in megabytes
-        
+
     Returns:
         Timeout in seconds (0 = no timeout)
     """
@@ -71,10 +70,17 @@ def validate_input_path(input_path: Path) -> None:
         json_files = list(input_path.glob("*.json"))
         xml_files = list(input_path.glob("*.xml"))
 
+        # Accept Fitbit unzipped export layout (profile.json + activities/ + heart_rate/ + sleep/)
+        from big_mood_detector.infrastructure.parsers.json import FitbitDirectoryParser
+
+        if FitbitDirectoryParser().looks_like_fitbit_directory(input_path):
+            click.echo("📁 Found Fitbit directory layout")
+            return
+
         if not json_files and not xml_files:
             raise click.BadParameter(
                 f"No JSON or XML health data files found in directory: {input_path}\n"
-                "Expected files like 'Sleep Analysis.json', 'Heart Rate.json', or 'export.xml'"
+                "Expected files like 'Sleep Analysis.json', 'Heart Rate.json', 'export.xml', or Fitbit folders"
             )
 
         click.echo(f"📁 Found {len(json_files)} JSON and {len(xml_files)} XML files")
@@ -582,7 +588,6 @@ def process_command(
             )
             data_service = DataParsingService()
 
-            start_time = time.time()
             availability = data_service.check_feature_availability(input_path_obj)
 
             click.echo(f"✅ Scan complete in {availability.scan_duration_seconds:.1f}s\n")
@@ -604,7 +609,7 @@ def process_command(
             # Display available features
             click.echo("\nProcessable Features:")
             if availability.available_features:
-                for feature_name, description in availability.available_features:
+                for _feature_name, description in availability.available_features:
                     click.echo(f"✅ {description}")
             else:
                 click.echo("⚠️  No features can be processed with available data")
@@ -833,7 +838,6 @@ def predict_command(
             )
             data_service = DataParsingService()
 
-            start_time = time.time()
             availability = data_service.check_feature_availability(input_path_obj)
 
             click.echo(f"✅ Scan complete in {availability.scan_duration_seconds:.1f}s\n")
@@ -855,7 +859,7 @@ def predict_command(
             # Display available features
             click.echo("\nPredictable Conditions:")
             if availability.available_features:
-                for feature_name, description in availability.available_features:
+                for _feature_name, description in availability.available_features:
                     click.echo(f"✅ {description}")
             else:
                 click.echo("⚠️  No predictions can be made with available data")

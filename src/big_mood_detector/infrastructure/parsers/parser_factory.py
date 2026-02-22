@@ -12,7 +12,17 @@ from big_mood_detector.domain.entities.heart_rate_record import HeartRateRecord
 from big_mood_detector.domain.entities.sleep_record import SleepRecord
 
 # Import both parser types
-from .json import ActivityJSONParser, HeartRateJSONParser, SleepJSONParser
+from .json import (
+    ActivityJSONParser,
+    FitbitActivityParser,
+    FitbitDirectoryParser,
+    FitbitHeartRateParser,
+    FitbitJSONParser,
+    FitbitSleepParser,
+    HeartRateJSONParser,
+    SleepJSONParser,
+    is_fitbit_payload,
+)
 from .xml import ActivityParser, HeartRateParser, SleepParser
 
 
@@ -89,6 +99,8 @@ class ParserFactory:
                     self.sleep_parser = SleepJSONParser()
                     self.activity_parser = ActivityJSONParser()
                     self.heart_parser = HeartRateJSONParser()
+                    self.fitbit_parser = FitbitJSONParser()
+                    self.fitbit_directory_parser = FitbitDirectoryParser()
 
                 def parse(self, directory: Path) -> dict[str, Any]:
                     """Parse all JSON files in directory."""
@@ -98,10 +110,12 @@ class ParserFactory:
 
                     # Parse sleep data
                     sleep_file = directory / "Sleep Analysis.json"
+                    parsed_files: set[Path] = set()
                     if sleep_file.exists():
                         with open(sleep_file) as f:
                             data = json.load(f)
                         sleep_records = self.sleep_parser.parse(data)
+                        parsed_files.add(sleep_file)
 
                     # Parse activity data
                     step_file = directory / "Step Count.json"
@@ -109,6 +123,7 @@ class ParserFactory:
                         with open(step_file) as f:
                             data = json.load(f)
                         activity_records = self.activity_parser.parse(data)
+                        parsed_files.add(step_file)
 
                     # Parse heart rate data
                     heart_file = directory / "Heart Rate.json"
@@ -116,6 +131,26 @@ class ParserFactory:
                         with open(heart_file) as f:
                             data = json.load(f)
                         heart_records = self.heart_parser.parse(data)
+                        parsed_files.add(heart_file)
+
+                    # Parse additional JSON files by schema detection (e.g., Fitbit)
+                    for json_file in sorted(directory.glob("*.json")):
+                        if json_file in parsed_files:
+                            continue
+                        with open(json_file, encoding="utf-8") as f:
+                            payload = json.load(f)
+                        if is_fitbit_payload(payload):
+                            fitbit_records = self.fitbit_parser.parse(payload)
+                            sleep_records.extend(fitbit_records["sleep_records"])
+                            activity_records.extend(fitbit_records["activity_records"])
+                            heart_records.extend(fitbit_records["heart_rate_records"])
+
+                    # Parse Fitbit directory layout (profile.json + activities/ + heart_rate/ + sleep/)
+                    if self.fitbit_directory_parser.looks_like_fitbit_directory(directory):
+                        fitbit_records = self.fitbit_directory_parser.parse(directory)
+                        sleep_records.extend(fitbit_records["sleep_records"])
+                        activity_records.extend(fitbit_records["activity_records"])
+                        heart_records.extend(fitbit_records["heart_rate_records"])
 
                     return {
                         "sleep_records": sleep_records,
@@ -126,6 +161,11 @@ class ParserFactory:
             return CompositeJSONParser()
         else:
             raise ValueError(f"Unsupported file type or structure: {file_path}")
+
+    @staticmethod
+    def detect_json_source(data: dict[str, Any]) -> str:
+        """Detect JSON source schema: 'apple' or 'fitbit'."""
+        return "fitbit" if is_fitbit_payload(data) else "apple"
 
     @staticmethod
     def create_sleep_parser(format_type: str) -> DataParser:
@@ -184,8 +224,16 @@ class ParserFactory:
 
         # Parse based on format
         if format_type == "json":
-            with open(file_path) as f:
+            with open(file_path, encoding="utf-8") as f:
                 data = json.load(f)
+            source_type = cls.detect_json_source(data)
+            if source_type == "fitbit":
+                if data_type == "sleep":
+                    return FitbitSleepParser().parse(data)
+                if data_type == "activity":
+                    return FitbitActivityParser().parse(data)
+                if data_type == "heart_rate":
+                    return FitbitHeartRateParser().parse(data)
             return parser.parse(data)
         elif format_type == "xml":
             with open(file_path) as f:

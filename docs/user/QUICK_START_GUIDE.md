@@ -5,7 +5,7 @@ This guide will help you get started with Big Mood Detector in 5 minutes.
 ## 📋 Prerequisites
 
 - Python 3.12+
-- Apple Health data (either XML export or JSON from Health Auto Export app)
+- Health data from one of: Apple XML, Health Auto Export JSON, or Fitbit export
 - 8GB RAM minimum
 
 ## 🛠️ Installation
@@ -29,13 +29,16 @@ pip install -e ".[dev,ml,monitoring]"
 
 ```bash
 # Process JSON data (from Health Auto Export app)
-big-mood process data/health_auto_export/
+big-mood process data/input/health_auto_export/
 
 # Process Apple Health XML export
-big-mood process data/apple_export/export.xml
+big-mood process data/input/apple_export/export.xml
+
+# Process Fitbit export (unzipped folder)
+big-mood process data/input/fitbit/
 
 # Process with date range
-big-mood process data/health_auto_export/ \
+big-mood process data/input/health_auto_export/ \
     --start-date 2024-01-01 \
     --end-date 2024-03-31 \
     -o features.json
@@ -45,20 +48,25 @@ big-mood process data/health_auto_export/ \
 
 ```bash
 # Basic prediction
-big-mood predict data/health_auto_export/
+big-mood predict data/input/health_auto_export/
 
 # Generate detailed report
-big-mood predict data/health_auto_export/ \
+big-mood predict data/input/apple_export/export.xml \
     --report \
-    -o mood_report.txt
+    -o data/output/clinical_report_apple.txt
+
+# Fitbit report (kept separate)
+big-mood predict data/input/fitbit \
+    --report \
+    -o data/output/clinical_report_fitbit.txt
 
 # Use ensemble model (XGBoost + PAT)
-big-mood predict data/health_auto_export/ \
+big-mood predict data/input/health_auto_export/ \
     --ensemble \
     -o predictions.json
 
 # Use ensemble with temporal analysis and report
-big-mood predict data/health_auto_export/ \
+big-mood predict data/input/health_auto_export/ \
     --ensemble \
     --report \
     -o temporal_analysis.txt
@@ -67,6 +75,7 @@ big-mood predict data/health_auto_export/ \
 ## 📈 Example Output
 
 ### Basic Prediction Report
+
 ```
 Big Mood Detector - Clinical Report
 Generated: 2025-07-18 10:30:00
@@ -96,6 +105,7 @@ RECOMMENDATIONS:
 ```
 
 ### Temporal Analysis Report (with --ensemble)
+
 ```
 TEMPORAL MOOD ASSESSMENT (NOW vs TOMORROW)
 -------------------------------------------
@@ -116,7 +126,7 @@ DAILY PREDICTIONS WITH TEMPORAL CONTEXT:
   NOW:      65% [MODERATE]
   TOMORROW: 42% [MODERATE]
   Confidence: 89%
-  
+
 2024-03-30:
   NOW:      72% [HIGH]
   TOMORROW: 65% [MODERATE]
@@ -148,7 +158,7 @@ Once you have labeled data:
 
 ```bash
 # Prepare training data
-big-mood process data/health_auto_export/ \
+big-mood process data/input/health_auto_export/ \
     -o training_features.csv
 
 # Train personalized XGBoost model
@@ -165,7 +175,7 @@ Watch a directory for new health data files:
 
 ```bash
 # Start file watcher
-big-mood watch data/health_auto_export/
+big-mood watch data/input/health_auto_export/
 
 # The watcher will:
 # - Detect new JSON/XML files
@@ -200,18 +210,31 @@ curl "http://localhost:8000/api/v1/results/latest"
 ## 📁 Data Formats
 
 ### Health Auto Export JSON Format
-Place your JSON files in `data/health_auto_export/`:
+
+Place your JSON files in `data/input/health_auto_export/`:
+
 - `Sleep Analysis.json`
 - `Heart Rate.json`
 - `Step Count.json`
 - `Heart Rate Variability.json`
 
 ### Apple Health XML Format
-Place your `export.xml` in `data/apple_export/`
+
+Place your `export.xml` in `data/input/apple_export/`
+
+### Fitbit Export Format
+
+Place unzipped Fitbit export in `data/input/fitbit/` with:
+
+- `profile.json`
+- `activities/`
+- `heart_rate/`
+- `sleep/`
 
 ## 🚨 Clinical Thresholds
 
 The system uses validated thresholds from research:
+
 - **Depression**: PHQ-8 ≥ 10 equivalent
 - **Mania**: ASRM ≥ 6 equivalent
 - **Sleep Duration**: <3 hours (mania risk), >12 hours (depression risk)
@@ -220,15 +243,18 @@ The system uses validated thresholds from research:
 ## 🆘 Troubleshooting
 
 ### "No data found" Error
+
 - Check your data is in the correct directory
 - Ensure JSON files have the expected names
 - For XML, ensure it's a valid Apple Health export
 
 ### "Model not found" Error
+
 - Models are in `model_weights/xgboost/converted/`
 - Run `make setup` to download models
 
 ### Memory Issues
+
 - The streaming parser handles large files efficiently
 - For very large exports, use date ranges to process in chunks
 

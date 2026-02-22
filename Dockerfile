@@ -11,7 +11,7 @@ ARG INSTALL_ML
 # Security: Run as non-root user
 RUN useradd -m -u 1000 appuser
 
-# Install system dependencies
+# Install system dependencie
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \

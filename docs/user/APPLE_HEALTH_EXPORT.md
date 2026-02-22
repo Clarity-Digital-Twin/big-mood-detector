@@ -1,5 +1,7 @@
 # 🍎 **Apple Health Data Export Guide**
 
+> Using Fitbit instead of Apple Health? See [Fitbit Export Guide](FITBIT_EXPORT.md).
+
 ## **📱 Two Export Methods Available**
 
 ### **Method 1: Official Apple Health Export (XML)**
@@ -36,6 +38,17 @@ iPhone → Health App → Profile → Export All Health Data → ZIP file
 Personal Health Data Sources:
 ├── export.xml           # → Apple Health Bot (general health Q&A)
 └── data/*.json          # → Big Mood Detector (mood analysis)
+```
+
+For current Big Mood Detector CLI usage, place Apple XML at:
+
+- `data/input/apple_export/export.xml`
+
+and run:
+
+```bash
+big-mood process data/input/apple_export/export.xml
+big-mood predict data/input/apple_export/export.xml --report --output data/output/clinical_report_apple.txt
 ```
 
 ### **Apple Health Bot Pipeline (XML)**
