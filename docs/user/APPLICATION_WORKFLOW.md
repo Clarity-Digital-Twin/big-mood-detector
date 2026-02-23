@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Big Mood Detector analyzes your Apple Health data to predict risk of mood episodes (depression, mania, hypomania) using validated machine learning models. This guide explains how the application works from data upload through prediction generation.
+The Big Mood Detector analyzes Apple Health and Fitbit-derived health data to predict risk of mood episodes (depression, mania, hypomania) using validated machine learning models. This guide explains how the application works from data upload through prediction generation.
 
 ## How It Works
 
@@ -12,13 +12,17 @@ When you first use the application, it needs to establish your personal baseline
 
 ```bash
 # Process your initial health data export
-big-mood process ~/Desktop/apple_health_export/
+big-mood process data/input/apple_export/export.xml
 
 # Generate baseline predictions
-big-mood predict ~/Desktop/apple_health_export/ --report
+big-mood predict data/input/apple_export/export.xml --report --output data/output/clinical_report_apple.txt
+
+# Fitbit baseline prediction (if using Fitbit exports)
+big-mood predict data/input/fitbit --report --output data/output/clinical_report_fitbit.txt
 ```
 
 **What happens:**
+
 1. The system analyzes your historical data (ideally 30+ days)
 2. Calculates your personal norms for:
    - Sleep duration and timing
@@ -34,13 +38,14 @@ After baseline establishment, you periodically upload new data:
 
 ```bash
 # Process updated health export (e.g., weekly or monthly)
-big-mood process ~/Desktop/apple_health_export_latest/
+big-mood process data/input/apple_export/export.xml
 
 # Generate updated predictions with personal calibration
-big-mood predict ~/Desktop/apple_health_export_latest/ --report
+big-mood predict data/input/apple_export/export.xml --report --output data/output/clinical_report_apple.txt
 ```
 
 **What happens:**
+
 1. New data is compared against your established baseline
 2. Deviations from your normal patterns are calculated
 3. Both models analyze the data:
@@ -53,14 +58,17 @@ big-mood predict ~/Desktop/apple_health_export_latest/ --report
 The system provides three types of risk scores:
 
 #### Depression Risk
+
 - Based on patterns similar to PHQ-8 ≥ 10 (moderate depression)
 - Key indicators: Delayed sleep phase, reduced activity, irregular patterns
 
 #### Mania Risk
+
 - Based on patterns similar to ASRM ≥ 6 (manic episode)
 - Key indicators: Advanced sleep phase, very short sleep, erratic activity
 
 #### Hypomania Risk
+
 - Based on elevated mood patterns below full mania threshold
 - Key indicators: Moderately reduced sleep, increased activity
 
@@ -133,6 +141,7 @@ deviation = (current_sleep - your_normal_sleep) / your_std_dev
 ```
 
 This personalization means:
+
 - Athletes with naturally low heart rates won't trigger false alarms
 - Night owls are compared to their own late schedule, not population average
 - The system learns what's normal for YOU

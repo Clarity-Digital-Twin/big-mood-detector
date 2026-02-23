@@ -45,26 +45,30 @@ We use GitHub issues to track public bugs. Report a bug by [opening a new issue]
 
 ## Use a Consistent Coding Style
 
-* Run `make format` before committing
-* Run `make lint` to check for issues
-* Run `make test` to ensure tests pass
+- Run `make format` before committing
+- Run `make lint` to check for issues
+- Run `make test` to ensure tests pass
 
 ## Git Hooks and CI/CD
 
 This project uses Git hooks to maintain code quality:
 
 ### Pre-commit Hook
+
 - Runs automatically on every commit
 - Executes `ruff --fix` for automatic formatting
 - Checks for problematic imports in test files
 
 ### Pre-push Hook (Lightweight)
+
 - Runs quick smoke tests before pushing (~30 seconds)
 - Includes: ruff check, mypy on core modules, fast unit tests
 - Full test suite runs in GitHub Actions CI
 
 ### Bypassing Hooks (Emergency Use Only)
+
 If you need to bypass hooks in an emergency:
+
 ```bash
 # Skip pre-commit hook
 git commit --no-verify -m "Emergency fix"
@@ -74,20 +78,24 @@ git push --no-verify
 ```
 
 **Note:** Use bypass only when necessary. CI will still run full checks.
-* Follow the existing code style (Clean Architecture patterns)
+
+- Follow the existing code style (Clean Architecture patterns)
 
 ## 🎯 Current Status (v0.5.0)
 
 ### ✅ COMPLETED: True Ensemble Predictions Now Live!
+
 **What's New:** Both XGBoost AND PAT models now make clinical predictions together.
 
 **What We Built:**
+
 - ✅ PAT depression detection head trained on NHANES 2013-2014
 - ✅ Temporal ensemble that combines XGBoost (future risk) + PAT (current state)
 - ✅ Production-ready API with both models integrated
 - ✅ Docker support for easy deployment
 
 **Current Architecture:**
+
 ```python
 # v0.5.0 - Full ensemble predictions!
 xgboost_risk = xgboost.predict_tomorrow(circadian_features)  # 0.75 risk
@@ -120,6 +128,7 @@ ensemble = temporal_ensemble.combine(xgboost_risk, pat_current)  # 0.79 final
 ## Development Setup
 
 ### Prerequisites
+
 - Python 3.12 or higher (we test on Python 3.12 in CI)
 - Git
 - Make (optional but recommended)
@@ -187,6 +196,42 @@ docker run --rm \
   process /app/data/input/apple_export/export.xml --progress
 ```
 
+### Input Format Auto-Detection (XML vs JSON)
+
+Parsers are selected automatically in `ParserFactory`:
+
+- `.xml` file → Apple Health XML streaming parser
+- `.json` file → JSON parser selected by schema
+- directory path → composite JSON parser (loads known Apple files + additional JSON by schema)
+
+JSON schema routing currently supports:
+
+- **Apple Health Auto Export JSON** (existing parser set)
+- **Fitbit daily export JSON** (new parser set)
+
+Fitbit JSON is detected by top-level keys such as:
+
+- `activities-steps`
+- `activities-heart`
+- `sleep`
+
+For parser development/testing (Python API), examples:
+
+```python
+from pathlib import Path
+from big_mood_detector.infrastructure.parsers.parser_factory import ParserFactory
+
+# XML file
+xml_parser = ParserFactory.create_parser("data/input/apple_export/export.xml")
+
+# JSON directory (Apple + Fitbit mixed files)
+json_parser = ParserFactory.create_parser(Path("data/input/mixed_json"))
+records = json_parser.parse(Path("data/input/mixed_json"))
+
+# Single JSON file with explicit data type
+sleep_records = ParserFactory.parse_file("fitbit_export.json", "sleep")
+```
+
 ### Model Weights Setup
 
 You MUST have model weights in place before running:
@@ -242,6 +287,19 @@ We organize tests into two categories:
    - Tests that load real ML models
    - Run with: `pytest -m slow`
 
+### Parser Test Layout
+
+Parser unit tests are organized by format/source:
+
+- `tests/unit/infrastructure/parsers/` → core Apple JSON parser tests
+- `tests/unit/infrastructure/parsers/json/fitbit/` → Fitbit parser tests
+- `tests/unit/infrastructure/parsers/xml/apple/` → Apple XML parser and streaming tests
+
+When adding a new device parser (e.g., Garmin/Oura), create dedicated test subfolders:
+
+- `tests/unit/infrastructure/parsers/json/<device_name>/`
+- `tests/unit/infrastructure/parsers/xml/<device_name>/` (if that provider exports XML)
+
 ### TESTING Environment Variable
 
 To prevent model loading during tests (which can cause timeouts), we use the `TESTING` environment variable:
@@ -256,6 +314,7 @@ pytest --runslow
 ```
 
 The `TESTING=1` flag:
+
 - Skips loading PAT model weights
 - Uses mock predictors in tests
 - Prevents subprocess tests from hanging
@@ -264,6 +323,7 @@ The `TESTING=1` flag:
 ### Adding New Tests
 
 When adding tests:
+
 - Mark performance/integration tests with `@pytest.mark.slow`
 - Use `MoodPredictionPipeline.for_testing()` for pipeline tests
 - Avoid subprocess calls that might load models

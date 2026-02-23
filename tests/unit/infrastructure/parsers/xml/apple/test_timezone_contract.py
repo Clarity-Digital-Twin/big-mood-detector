@@ -32,9 +32,9 @@ class TestTimezoneContract:
 ]>
 <HealthData locale="en_US">
   <ExportDate value="2025-01-31 09:08:45 -0800"/>
-  <Record type="HKCategoryTypeIdentifierSleepAnalysis" 
-          sourceName="JJ's Apple Watch" 
-          sourceVersion="11.2" 
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis"
+      sourceName="JJ's Apple Watch"
+      sourceVersion="11.2"
           startDate="2025-01-27 22:30:00 +0000"
           endDate="2025-01-28 06:30:00 +0000"
           value="HKCategoryValueSleepAnalysisAsleepCore"/>

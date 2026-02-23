@@ -6,8 +6,9 @@
 
 [![Version](https://img.shields.io/badge/version-0.5.7-blue)](CHANGELOG_v0.5.7.md) [![Tests](https://img.shields.io/badge/tests-1050%2B%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-73%25-yellow)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. Two complementary models: 
-- PAT transformer screens for current depression. 
+Big Mood Detector analyzes Apple Health and Fitbit export data to predict mood episode risk using AI. Two complementary models:
+
+- PAT transformer screens for current depression.
 - XGBoost predicts tomorrow's depression/mania/hypomania risk.
 
 When used together (--ensemble), see how your mood state evolves from today to tomorrow.
@@ -19,6 +20,7 @@ Built by a clinical psychiatrist, implementing published research. Runs 100% on-
 ## Why Use Big Mood Detector?
 
 **Our breakthrough**:
+
 - **Early detection**: Spot mood episode risk before symptoms spiral
 - **Two applications**: Current depression screening (PAT) + next-day episode prediction (XGBoost)
 - **Objective data**: Complement clinical assessment with continuous behavioral biomarkers
@@ -32,7 +34,8 @@ Built by a clinical psychiatrist, implementing published research. Runs 100% on-
 ## 🚀 Quick Start
 
 ### Option 1: Docker (Recommended)
-*Consistent environment with all dependencies*
+
+_Consistent environment with all dependencies_
 
 ```bash
 # 1. Create security credentials
@@ -53,11 +56,20 @@ docker run --rm \
   -v "$(pwd)/data:/app/data" \
   -v "$(pwd)/model_weights:/app/model_weights:ro" \
   big-mood-detector:latest \
-  predict /app/data/input/apple_export/export.xml --report
+  predict /app/data/input/apple_export/export.xml --report --output /app/data/output/clinical_report_apple.txt
+
+# 5. Analyze Fitbit export (unzipped folder: profile.json + activities/ + heart_rate/ + sleep/)
+docker run --rm \
+  -e BIGMOOD_DATA_DIR=/app/data \
+  -v "$(pwd)/data:/app/data" \
+  -v "$(pwd)/model_weights:/app/model_weights:ro" \
+  big-mood-detector:latest \
+  predict /app/data/input/fitbit --report --output /app/data/output/clinical_report_fitbit.txt
 ```
 
 ### Option 2: Local Installation
-*Requires Python 3.12+*
+
+_Requires Python 3.12+_
 
 ```bash
 # 1. Install (numpy first to avoid conflicts)
@@ -71,24 +83,28 @@ pip install big-mood-detector
 big-mood predict data/input/apple_export/export.xml --scan
 
 # 4. Analyze your data (research purposes)
-big-mood predict data/input/apple_export/export.xml --report
+big-mood predict data/input/apple_export/export.xml --report --output data/output/clinical_report_apple.txt
+
+# 4b. Analyze Fitbit export (unzipped folder)
+big-mood predict data/input/fitbit --report --output data/output/clinical_report_fitbit.txt
 
 # 5. With temporal analysis (NOW vs TOMORROW)
-big-mood predict data/input/apple_export/export.xml --ensemble --report
+big-mood predict data/input/apple_export/export.xml --ensemble --report --output data/output/clinical_report_apple.txt
 
 # 6. Auto-window selection (enabled by default in v0.5.6+)
 # Automatically finds optimal data windows for both models
-big-mood predict data/input/apple_export/export.xml --report
+big-mood predict data/input/apple_export/export.xml --report --output data/output/clinical_report_apple.txt
 
 # 7. To disable auto-window and specify dates manually
 big-mood predict data/input/apple_export/export.xml --no-auto-window --date-range 2024-01-01:2024-03-31
 ```
 
-See full output in `data/output/clinical_report.txt`
+See outputs in `data/output/clinical_report_apple.txt` and `data/output/clinical_report_fitbit.txt`
 
 ## 📦 Model Weights for Contributors & Researchers
 
 **Need model weights?** Please contact me for a convenient Google Drive link containing:
+
 - Pre-trained PAT transformer weights
 - Fine-tuned depression detection head
 - XGBoost model files
@@ -104,7 +120,7 @@ Your Apple Health Data
 ┌─────────────────────┐
 │   Past 7 Days       │ ← PAT (transformer) analyzes activity patterns
 ├─────────────────────┤
-│   Past 30 Days      │ ← XGBoost models circadian rhythms  
+│   Past 30 Days      │ ← XGBoost models circadian rhythms
 └─────────────────────┘
       ↓
 Research Risk Scores (Not Diagnostic)
@@ -139,24 +155,26 @@ Files over 100MB will automatically prompt to scan first. This prevents waiting 
 
 ## Technical Features
 
-| Component | Status | Performance |
-|-----------|---------|-------------|
-| Apple Health XML parsing | ✅ | 33MB/s, <100MB RAM |
-| XML data scanning | ✅ | 12s for 545MB file |
-| PAT transformer model | ✅ | 0.593 AUC depression (NHANES) |
-| XGBoost circadian model | ✅ | 0.80-0.98 AUC (Korean cohort) |
-| Privacy-first processing | ✅ | 100% local, no data sharing |
-| Clinical feature extraction | ✅ | DSM-5 aligned thresholds |
-| REST API | ✅ | Real-time predictions |
+| Component                   | Status | Performance                   |
+| --------------------------- | ------ | ----------------------------- |
+| Apple Health XML parsing    | ✅     | 33MB/s, <100MB RAM            |
+| XML data scanning           | ✅     | 12s for 545MB file            |
+| PAT transformer model       | ✅     | 0.593 AUC depression (NHANES) |
+| XGBoost circadian model     | ✅     | 0.80-0.98 AUC (Korean cohort) |
+| Privacy-first processing    | ✅     | 100% local, no data sharing   |
+| Clinical feature extraction | ✅     | DSM-5 aligned thresholds      |
+| REST API                    | ✅     | Real-time predictions         |
 
 ## Performance Benchmarks
 
 **Processing Speed**:
+
 - 365 days of data: 17 seconds
 - Memory usage: <100MB for any file size
 - Parsing throughput: 33MB/s
 
 **Model Accuracy** (from original research):
+
 - Current depression screening (PAT, general population):
   - Depression detection: 0.593 AUC (US NHANES 2013-14)¹
 - Next-day episode prediction (XGBoost, mood disorder patients):
@@ -186,10 +204,12 @@ Files over 100MB will automatically prompt to scan first. This prevents waiting 
 ## ⚠️ Research Limitations
 
 **Population specificity**:
+
 - XGBoost: Trained on 168 Korean adults (18-35y) with mood disorders
 - PAT: Pre-trained on 21,538 US adults, fine-tuned on 2,800 with PHQ-9 scores
 
 **Performance constraints**:
+
 - Current depression screening: Moderate accuracy (0.593 AUC)
 - Next-day episode prediction: High accuracy but limited to Korean cohort (0.80-0.98 AUC)
 - No validation across ethnicities, age groups, or comorbid conditions
@@ -197,16 +217,17 @@ Files over 100MB will automatically prompt to scan first. This prevents waiting 
 
 ## 📚 Documentation
 
-| Audience | Start Here |
-|----------|------------|
-| **Users** | [Quick Start Guide](docs/user/QUICK_START_GUIDE.md) |
-| **Developers** | [Architecture Overview](docs/developer/ARCHITECTURE_OVERVIEW.md) |
-| **Researchers** | [Clinical Requirements](docs/clinical/CLINICAL_REQUIREMENTS_DOCUMENT.md) • [PAT Training Details](docs/training/PAT_DEPRESSION_TRAINING.md) |
-| **AI Assistants** | [CLAUDE.md](CLAUDE.md) |
+| Audience          | Start Here                                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Users**         | [Quick Start Guide](docs/user/QUICK_START_GUIDE.md)                                                                                         |
+| **Developers**    | [Architecture Overview](docs/developer/ARCHITECTURE_OVERVIEW.md)                                                                            |
+| **Researchers**   | [Clinical Requirements](docs/clinical/CLINICAL_REQUIREMENTS_DOCUMENT.md) • [PAT Training Details](docs/training/PAT_DEPRESSION_TRAINING.md) |
+| **AI Assistants** | [CLAUDE.md](CLAUDE.md)                                                                                                                      |
 
 ## Contributing
 
 Critical research needs:
+
 - 🏥 Clinical validation across diverse populations
 - 🌍 Multi-ethnic, multi-age cohort studies
 - 📱 Integration with additional wearable devices
@@ -221,6 +242,7 @@ Apache 2.0 - Use freely, even commercially. See [LICENSE](LICENSE).
 ## Acknowledgments
 
 Built on pioneering research:
+
 - **XGBoost models**: Seoul National University, Korea University, KAIST ([Lim et al., 2024](https://doi.org/10.1038/s41746-024-01333-z))
 - **PAT foundation model**: Dartmouth College ([Ruan et al., 2024](https://arxiv.org/abs/2411.15240))
 

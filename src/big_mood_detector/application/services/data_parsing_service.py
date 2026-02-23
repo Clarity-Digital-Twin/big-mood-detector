@@ -292,6 +292,25 @@ class DataParsingService:
         Returns:
             ParsedHealthData with all records
         """
+        # Fitbit unzipped layout support (profile.json + activities/ + heart_rate/ + sleep/)
+        from big_mood_detector.infrastructure.parsers.json import FitbitDirectoryParser
+
+        fitbit_directory_parser = FitbitDirectoryParser()
+        if fitbit_directory_parser.looks_like_fitbit_directory(json_dir):
+            if progress_callback:
+                progress_callback("Parsing Fitbit directory", 0.0)
+
+            fitbit_data = fitbit_directory_parser.parse(json_dir)
+
+            if progress_callback:
+                progress_callback("Parsing Fitbit directory", 1.0)
+
+            return ParsedHealthData(
+                sleep_records=fitbit_data.get("sleep_records", []),
+                activity_records=fitbit_data.get("activity_records", []),
+                heart_rate_records=fitbit_data.get("heart_rate_records", []),
+            )
+
         sleep_records = []
         activity_records = []
 
@@ -663,10 +682,10 @@ class DataParsingService:
     def check_feature_availability(self, xml_path: Path) -> FeatureAvailability:
         """
         Check what clinical features can be processed from an XML file.
-        
+
         Args:
             xml_path: Path to Apple Health export.xml
-            
+
         Returns:
             FeatureAvailability with available/unavailable features and reasons
         """

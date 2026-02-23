@@ -5,6 +5,7 @@ TDD approach for extracting data parsing responsibilities from MoodPredictionPip
 The DataParsingService will handle all file I/O and parsing operations.
 """
 
+import json
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
@@ -124,6 +125,39 @@ class TestDataParsingService:
                     assert hasattr(result, "heart_rate_records")
                     assert isinstance(result.sleep_records, list)
                     assert isinstance(result.activity_records, list)
+
+    def test_parse_json_export_fitbit_directory(self, parsing_service, tmp_path):
+        """Test parsing Fitbit unzipped export directory layout."""
+        (tmp_path / "profile.json").write_text("{}", encoding="utf-8")
+        activities = tmp_path / "activities"
+        heart_rate = tmp_path / "heart_rate"
+        sleep = tmp_path / "sleep"
+        activities.mkdir()
+        heart_rate.mkdir()
+        sleep.mkdir()
+
+        (activities / "steps-2026-01-01.json").write_text(
+            json.dumps([{"value": 8000}]), encoding="utf-8"
+        )
+        (heart_rate / "heart_rate-2026-01-01.json").write_text(
+            json.dumps([{"value": 60}]), encoding="utf-8"
+        )
+        (sleep / "sleep-2026-01-01.json").write_text(
+            json.dumps([
+                {
+                    "startTime": "2025-12-31T23:00:00.000",
+                    "endTime": "2026-01-01T06:30:00.000",
+                    "isMainSleep": True,
+                }
+            ]),
+            encoding="utf-8",
+        )
+
+        result = parsing_service.parse_json_export(tmp_path)
+
+        assert len(result.sleep_records) == 1
+        assert len(result.activity_records) == 1
+        assert len(result.heart_rate_records) == 1
 
     def test_filter_records_by_date_range(self, parsing_service, sample_sleep_records):
         """Test filtering records by date range."""

@@ -20,16 +20,19 @@ done
 
 ```bash
 # Process only last 30 days
-big-mood process data/health_auto_export/ \
+big-mood process data/input/health_auto_export/ \
     --start-date $(date -d "30 days ago" +%Y-%m-%d) \
     --end-date $(date +%Y-%m-%d) \
     -o recent_features.json
 
 # Process specific months
-big-mood process data/health_auto_export/ \
+big-mood process data/input/health_auto_export/ \
     --start-date 2024-01-01 \
     --end-date 2024-03-31 \
     -v
+
+# Process Fitbit export directory (unzipped)
+big-mood process data/input/fitbit/ -v
 ```
 
 ### Combining Multiple Data Sources
@@ -41,12 +44,12 @@ from big_mood_detector.infrastructure.parsers.parser_factory import UnifiedHealt
 parser = UnifiedHealthDataParser()
 
 # Add JSON sources
-parser.add_json_source("data/health_auto_export/Sleep Analysis.json", "sleep")
-parser.add_json_source("data/health_auto_export/Heart Rate.json", "heart_rate")
-parser.add_json_source("data/health_auto_export/Step Count.json", "activity")
+parser.add_json_source("data/input/health_auto_export/Sleep Analysis.json", "sleep")
+parser.add_json_source("data/input/health_auto_export/Heart Rate.json", "heart_rate")
+parser.add_json_source("data/input/health_auto_export/Step Count.json", "activity")
 
 # Add XML export
-parser.add_xml_export("data/apple_export/export.xml")
+parser.add_xml_export("data/input/apple_export/export.xml")
 
 # Get combined records
 all_records = parser.get_all_records()
@@ -59,12 +62,12 @@ print(f"Total records: {len(all_records['sleep']) + len(all_records['activity'])
 
 ```bash
 # Use only XGBoost models
-big-mood predict data/health_auto_export/ \
+big-mood predict data/input/health_auto_export/ \
     --no-ensemble \
     -o xgboost_only.json
 
 # Use PAT transformer with custom weights
-big-mood predict data/health_auto_export/ \
+big-mood predict data/input/health_auto_export/ \
     --temporal \
     --model-dir /path/to/custom/models/ \
     -o custom_predictions.json
@@ -74,7 +77,7 @@ big-mood predict data/health_auto_export/ \
 
 ```bash
 # Use personalized model for user
-big-mood predict data/health_auto_export/ \
+big-mood predict data/input/health_auto_export/ \
     --user-id "patient_123" \
     --report \
     -o personalized_report.txt
@@ -90,9 +93,9 @@ from datetime import datetime, timedelta
 
 def monitor_mood(data_dir, user_id):
     """Run predictions daily and alert on changes"""
-    
+
     last_risk = {"depression": 0, "mania": 0, "hypomania": 0}
-    
+
     while True:
         # Run prediction
         result = subprocess.run([
@@ -102,15 +105,15 @@ def monitor_mood(data_dir, user_id):
             "--start-date", (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d"),
             "-o", f"monitoring/{user_id}_{datetime.now().strftime('%Y%m%d')}.json"
         ], capture_output=True)
-        
+
         # Parse results and check for significant changes
         # (Add your alerting logic here)
-        
+
         # Wait 24 hours
         time.sleep(86400)
 
 # Run monitoring
-monitor_mood("data/health_auto_export/", "patient_123")
+monitor_mood("data/input/health_auto_export/", "patient_123")
 ```
 
 ## 🏷️ Advanced Labeling Workflows
@@ -293,12 +296,12 @@ requests.post(
 
 ```bash
 # Export features for statistical analysis
-big-mood process data/health_auto_export/ \
+big-mood process data/input/health_auto_export/ \
     --output-format research \
     -o research_features.csv
 
 # Include raw time series
-big-mood process data/health_auto_export/ \
+big-mood process data/input/health_auto_export/ \
     --include-raw \
     --output-format hdf5 \
     -o time_series_data.h5
@@ -354,13 +357,13 @@ class ProductionSettings(Settings):
     # API Configuration
     api_rate_limit: int = 100
     api_timeout: int = 300
-    
+
     # Model Configuration
     ensemble_weights: dict = {
         "xgboost": 0.7,
         "pat": 0.3
     }
-    
+
     # Clinical Thresholds
     risk_thresholds: dict = {
         "depression": {
@@ -409,7 +412,7 @@ with cache:
 export BIG_MOOD_LOG_LEVEL=DEBUG
 
 # Run with verbose output
-big-mood predict data/health_auto_export/ \
+big-mood predict data/input/health_auto_export/ \
     -vvv \
     --debug \
     --profile
