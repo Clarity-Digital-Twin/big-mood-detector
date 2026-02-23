@@ -13,8 +13,24 @@ def is_fitbit_payload(data: dict[str, Any]) -> bool:
     """Return True when JSON payload looks like Fitbit export schema."""
     if not isinstance(data, dict):
         return False
-    fitbit_keys = {"activities-steps", "activities-heart", "sleep"}
+    fitbit_keys = {"activities-steps", "activities-heart"}
     return any(key in data for key in fitbit_keys)
+
+
+def is_fitbit_sleep_payload(data: dict[str, Any]) -> bool:
+    """Return True when payload looks like Fitbit sleep-only export data."""
+    if not isinstance(data, dict) or "sleep" not in data:
+        return False
+    sleep_data = data.get("sleep")
+    if isinstance(sleep_data, list) and sleep_data:
+        first = sleep_data[0]
+        return isinstance(first, dict) and {
+            "startTime",
+            "endTime",
+        }.issubset(first.keys())
+    if isinstance(sleep_data, dict):
+        return {"startTime", "endTime"}.issubset(sleep_data.keys())
+    return False
 
 
 class FitbitJSONParser:
@@ -35,6 +51,9 @@ class FitbitJSONParser:
 
     def parse_file(self, file_path: str | Path) -> dict[str, list[Any]]:
         """Parse Fitbit data from a JSON file path."""
-        with open(file_path, encoding="utf-8") as file_handle:
-            payload = json.load(file_handle)
+        try:
+            with open(file_path, encoding="utf-8") as file_handle:
+                payload = json.load(file_handle)
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise ValueError(f"Failed to parse Fitbit JSON file: {file_path}") from error
         return self.parse(payload)

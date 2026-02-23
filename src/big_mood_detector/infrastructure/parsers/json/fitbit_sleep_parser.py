@@ -16,7 +16,7 @@ class FitbitSleepParser:
         records: list[SleepRecord] = []
         for entry in data.get("sleep", []):
             try:
-                if entry.get("isMainSleep") is False:
+                if entry.get("isMainSleep") is not True:
                     continue
                 start = self._parse_datetime(entry.get("startTime"))
                 end = self._parse_datetime(entry.get("endTime"))
@@ -34,5 +34,5 @@ class FitbitSleepParser:
 
     def _parse_datetime(self, value: str | None) -> datetime:
         if not value:
-            raise ValueError("Missing Fitbit datetime")
+            raise ValueError("Missing datetime")
         return datetime.fromisoformat(value.replace("Z", "+00:00")).replace(tzinfo=None)

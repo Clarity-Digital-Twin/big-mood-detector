@@ -22,6 +22,7 @@ from .json import (
     HeartRateJSONParser,
     SleepJSONParser,
     is_fitbit_payload,
+    is_fitbit_sleep_payload,
 )
 from .xml import ActivityParser, HeartRateParser, SleepParser
 
@@ -137,8 +138,11 @@ class ParserFactory:
                     for json_file in sorted(directory.glob("*.json")):
                         if json_file in parsed_files:
                             continue
-                        with open(json_file, encoding="utf-8") as f:
-                            payload = json.load(f)
+                        try:
+                            with open(json_file, encoding="utf-8") as f:
+                                payload = json.load(f)
+                        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+                            continue
                         if is_fitbit_payload(payload):
                             fitbit_records = self.fitbit_parser.parse(payload)
                             sleep_records.extend(fitbit_records["sleep_records"])
@@ -227,7 +231,9 @@ class ParserFactory:
             with open(file_path, encoding="utf-8") as f:
                 data = json.load(f)
             source_type = cls.detect_json_source(data)
-            if source_type == "fitbit":
+            if source_type == "fitbit" or (
+                data_type == "sleep" and is_fitbit_sleep_payload(data)
+            ):
                 if data_type == "sleep":
                     return FitbitSleepParser().parse(data)
                 if data_type == "activity":

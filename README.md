@@ -6,7 +6,7 @@
 
 [![Version](https://img.shields.io/badge/version-0.5.7-blue)](CHANGELOG_v0.5.7.md) [![Tests](https://img.shields.io/badge/tests-1050%2B%20passing-brightgreen)](tests/) [![Coverage](https://img.shields.io/badge/coverage-73%25-yellow)](htmlcov/) [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
-Big Mood Detector analyzes your Apple Health data to predict mood episode risk using AI. Two complementary models:
+Big Mood Detector analyzes Apple Health and Fitbit export data to predict mood episode risk using AI. Two complementary models:
 
 - PAT transformer screens for current depression.
 - XGBoost predicts tomorrow's depression/mania/hypomania risk.

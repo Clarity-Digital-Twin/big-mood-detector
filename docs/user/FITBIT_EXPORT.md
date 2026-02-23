@@ -23,7 +23,7 @@ After unzipping, copy the relevant folders/files into:
 
 Expected structure:
 
-```
+```text
 data/input/fitbit/
 ├── profile.json
 ├── activities/
@@ -63,7 +63,7 @@ You should see daily files under `activities/`, `heart_rate/`, and `sleep/`.
 
 ```bash
 # Process Fitbit data
-big-mood process data/input/fitbit/
+big-mood process data/input/fitbit
 
 # Generate Fitbit clinical report (use explicit output name)
 big-mood predict data/input/fitbit --report --output data/output/clinical_report_fitbit.txt

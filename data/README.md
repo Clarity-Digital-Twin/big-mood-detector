@@ -69,7 +69,7 @@ Place Fitbit export files in `data/input/fitbit/` with this structure:
 ```bash
 # Process Fitbit export data
 big-mood process data/input/fitbit/
-big-mood predict data/input/fitbit/ --report --output data/output/clinical_report_fitbit.txt
+big-mood predict data/input/fitbit --report --output data/output/clinical_report_fitbit.txt
 ```
 
 ## Important Notes
@@ -77,6 +77,7 @@ big-mood predict data/input/fitbit/ --report --output data/output/clinical_repor
 - **Privacy**: This entire directory is gitignored. Never commit personal health data.
 - **Size**: Apple Health exports can be very large (500MB+). Ensure you have enough disk space.
 - **Cleanup**: Periodically clean the `output/` and `temp/` directories to save space.
+- **Migration**: Report filename changed from `clinical_report.txt` to provider-specific files (`clinical_report_apple.txt` / `clinical_report_fitbit.txt`). Update saved scripts accordingly.
 
 ## Model Weights Location
 
